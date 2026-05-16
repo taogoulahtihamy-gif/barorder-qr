@@ -30,7 +30,7 @@ function mapOrder(o) {
 }
 
 export async function createOrder(orderData) {
-  const { data } = await api.post('/public/orders', {
+  const { data } = await api.post('/api/public/orders', {
     restaurantId: parseInt(orderData.restaurantId) || 1,
     tableId: orderData.tableId || null,
     items: orderData.items,
@@ -45,11 +45,11 @@ export async function createOrder(orderData) {
 }
 
 export async function getOrder(orderNumber) {
-  const { data } = await api.get(`/public/orders/${orderNumber}`);
+  const { data } = await api.get(`/api/public/orders/${orderNumber}`);
   return mapOrder(data);
 }
 
 export async function callServer(tableId, restaurantId) {
-  const { data } = await api.post('/public/server-call', { tableId, restaurantId });
+  const { data } = await api.post('/api/public/server-call', { tableId, restaurantId });
   return data;
 }

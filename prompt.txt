@@ -1,49 +1,48 @@
-FIX table lookup for checkout.
+Fix production API route mismatch in BarOrder QR.
 
-Current checkout error:
-Table introuvable
+Current Render logs show:
+POST /public/orders 404
+GET /public/r/le-palais/menu 404
+GET /api/restaurants 404
 
-Do not touch frontend UI.
-Do not touch realtime.
-Do not redesign anything.
+But backend working route is:
+GET /api/public/menu/1
 
-Problem:
-Frontend sends tableId = 1 from /r/le-palais/table/1.
-But database restaurant_tables.table_number may contain "Table 1", not "1".
-Current lookup only checks id or exact table_number.
+Required fixes:
 
-Fix backend table resolution in POST /api/public/orders and menu table lookup.
+1. In client/src, search all API calls using:
+   /public/orders
+   /public/r/
+   /api/restaurants
+   /restaurants
 
-When resolving tableId, support all formats:
-- id = 1
-- table_number = '1'
-- table_number = 'Table 1'
-- table_number = 'table 1'
+2. All backend calls must use API base:
+   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000"
 
-Use SQL similar to:
+3. Fix customer order creation:
+   POST must call:
+   `${API_URL}/api/public/orders`
 
-SELECT id, table_number
-FROM restaurant_tables
-WHERE restaurant_id = $1
-AND (
-  id::text = $2
-  OR table_number::text = $2
-  OR LOWER(table_number::text) = LOWER('Table ' || $2)
-  OR LOWER(REPLACE(table_number::text, 'table ', '')) = LOWER($2)
-)
-LIMIT 1;
+4. Fix menu by slug:
+   GET must call:
+   `${API_URL}/api/public/r/${slug}/menu/${tableId}`
+   or match the exact backend existing route.
 
-Then use resolved table.id in orders.table_id.
+5. Fix restaurant list:
+   If backend route /api/restaurants does not exist, add it in Express OR change frontend to use the existing backend route.
+   Preferred: add backend route:
+   GET /api/restaurants
+   returning all restaurants with id, name, slug, address, phone.
 
-Add logs:
-REQUESTED TABLE:
-RESOLVED TABLE:
+6. Do not use:
+   /public/orders
+   /public/r/...
+   without /api.
 
-Do not insert order if table is not found.
+7. Remove mock fallback in production.
+   If API fails, show real error.
 
-Test:
-- /r/le-palais/table/1
-- Voir le menu
-- checkout
-- order created successfully
-- appears in /admin/orders after refresh
+8. Run:
+   npm run build
+
+9. Do not change UI design.

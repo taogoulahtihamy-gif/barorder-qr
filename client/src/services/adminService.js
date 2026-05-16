@@ -88,7 +88,7 @@ const MOCK_STATS = {
 };
 
 export async function getDashboard() {
-  const { data } = await api.get('/admin/dashboard');
+  const { data } = await api.get('/api/admin/dashboard');
   if (!data || typeof data.revenueFormatted === 'undefined') {
     throw new Error('Dashboard API returned invalid data');
   }
@@ -149,7 +149,7 @@ function mapOrder(o) {
 
 export async function getOrders() {
   console.log('FETCHING ADMIN ORDERS FROM:', `${api.defaults.baseURL}/admin/orders`);
-  const { data } = await api.get('/admin/orders');
+  const { data } = await api.get('/api/admin/orders');
   if (!Array.isArray(data)) {
     throw new Error('Orders API returned invalid data');
   }
@@ -159,12 +159,12 @@ export async function getOrders() {
 }
 
 export async function updateOrderStatus(orderId, status) {
-  const { data } = await api.patch(`/admin/orders/${orderId}/status`, { status });
+  const { data } = await api.patch(`/api/admin/orders/${orderId}/status`, { status });
   return data;
 }
 
 export async function getProducts() {
-  const { data } = await api.get('/admin/products');
+  const { data } = await api.get('/api/admin/products');
   if (!Array.isArray(data)) {
     throw new Error('Products API returned invalid data');
   }
@@ -172,27 +172,27 @@ export async function getProducts() {
 }
 
 export async function createProduct(product) {
-  const { data } = await api.post('/admin/products', product);
+  const { data } = await api.post('/api/admin/products', product);
   return data;
 }
 
 export async function updateProduct(id, product) {
-  const { data } = await api.put(`/admin/products/${id}`, product);
+  const { data } = await api.put(`/api/admin/products/${id}`, product);
   return data;
 }
 
 export async function deleteProduct(id) {
-  await api.delete(`/admin/products/${id}`);
+  await api.delete(`/api/admin/products/${id}`);
   return true;
 }
 
 export async function toggleProductAvailability(id) {
-  const { data } = await api.patch(`/admin/products/${id}/availability`);
+  const { data } = await api.patch(`/api/admin/products/${id}/availability`);
   return data;
 }
 
 export async function getCategories() {
-  const { data } = await api.get('/admin/categories');
+  const { data } = await api.get('/api/admin/categories');
   if (!Array.isArray(data)) {
     throw new Error('Categories API returned invalid data');
   }
@@ -200,22 +200,22 @@ export async function getCategories() {
 }
 
 export async function createCategory(category) {
-  const { data } = await api.post('/admin/categories', category);
+  const { data } = await api.post('/api/admin/categories', category);
   return data;
 }
 
 export async function updateCategory(id, category) {
-  const { data } = await api.put(`/admin/categories/${id}`, category);
+  const { data } = await api.put(`/api/admin/categories/${id}`, category);
   return data;
 }
 
 export async function deleteCategory(id) {
-  await api.delete(`/admin/categories/${id}`);
+  await api.delete(`/api/admin/categories/${id}`);
   return true;
 }
 
 export async function getTables() {
-  const { data } = await api.get('/admin/tables');
+  const { data } = await api.get('/api/admin/tables');
   if (!Array.isArray(data)) {
     throw new Error('Tables API returned invalid data');
   }
@@ -223,12 +223,12 @@ export async function getTables() {
 }
 
 export async function createTable(table) {
-  const { data } = await api.post('/admin/tables', table);
+  const { data } = await api.post('/api/admin/tables', table);
   return data;
 }
 
 export async function deleteTable(id) {
-  await api.delete(`/admin/tables/${id}`);
+  await api.delete(`/api/admin/tables/${id}`);
   return true;
 }
 
@@ -247,7 +247,7 @@ function mapPayment(p) {
 }
 
 export async function getPayments() {
-  const { data } = await api.get('/admin/payments');
+  const { data } = await api.get('/api/admin/payments');
   if (!Array.isArray(data)) {
     throw new Error('Payments API returned invalid data');
   }
@@ -255,7 +255,7 @@ export async function getPayments() {
 }
 
 export async function getStats() {
-  const { data } = await api.get('/admin/stats');
+  const { data } = await api.get('/api/admin/stats');
   if (!data || typeof data.totalRevenue === 'undefined') {
     throw new Error('Stats API returned invalid data');
   }
@@ -280,7 +280,7 @@ export async function getStats() {
 }
 
 export async function getServerAlerts() {
-  const { data } = await api.get('/admin/server-calls');
+  const { data } = await api.get('/api/admin/server-calls');
   if (!Array.isArray(data)) {
     throw new Error('Server alerts API returned invalid data');
   }
@@ -293,12 +293,12 @@ export async function getServerAlerts() {
 }
 
 export async function markAlertHandled(alertId) {
-  const { data } = await api.patch(`/admin/server-calls/${alertId}/status`, { status: 'handled' });
+  const { data } = await api.patch(`/api/admin/server-calls/${alertId}/status`, { status: 'handled' });
   return data;
 }
 
 export async function getSettings() {
-  const { data } = await api.get('/admin/settings');
+  const { data } = await api.get('/api/admin/settings');
   if (!data || !data.id) {
     throw new Error('Settings API returned invalid data');
   }
@@ -306,17 +306,17 @@ export async function getSettings() {
 }
 
 export async function updateSettings(settings) {
-  const { data } = await api.put('/admin/settings', settings);
+  const { data } = await api.put('/api/admin/settings', settings);
   return data;
 }
 
 export async function generateTableQR(id) {
-  const { data } = await api.post(`/admin/tables/${id}/generate-qr`);
+  const { data } = await api.post(`/api/admin/tables/${id}/generate-qr`);
   return data;
 }
 
 export async function getPrintableQR() {
-  const { data } = await api.get('/admin/tables/printable');
+  const { data } = await api.get('/api/admin/tables/printable');
   return data;
 }
 

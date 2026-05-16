@@ -29,7 +29,7 @@ export default function TableSlugPage() {
 
   useEffect(() => {
     setTableId(tableId);
-    api.get(`/public/table/${tableId}`).then((res) => {
+    api.get(`/api/public/table/${tableId}`).then((res) => {
       const { table, restaurant } = res.data;
       setData({ table, restaurant });
       setRestaurant(restaurant);

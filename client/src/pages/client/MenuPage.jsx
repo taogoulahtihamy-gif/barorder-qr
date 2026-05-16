@@ -35,7 +35,7 @@ export default function MenuPage() {
     async function load() {
       try {
         if (effectiveSlug) {
-          const result = await getMenuBySlug(effectiveSlug);
+          const result = await getMenuBySlug(effectiveSlug, tableId);
           if (cancelled) return;
           if (!result || !result.products) {
             setError('Impossible de charger le menu');
@@ -62,7 +62,7 @@ export default function MenuPage() {
           let rid = Number(restaurantId);
           if (!rid && tid) {
             try {
-              const tableRes = await api.get(`/public/table/${tid}`);
+              const tableRes = await api.get(`/api/public/table/${tid}`);
               if (!cancelled && tableRes.data?.restaurant) {
                 rid = tableRes.data.restaurant.id;
                 const rSlug = tableRes.data.restaurant.slug;
@@ -73,7 +73,7 @@ export default function MenuPage() {
             } catch {}
           }
           if (!rid) rid = 1;
-          const menuRes = await api.get(`/public/menu/${rid}`);
+          const menuRes = await api.get(`/api/public/menu/${rid}`);
           if (cancelled) return;
           const data = menuRes.data;
           const rawProducts = (data.products || []).map(p => ({
