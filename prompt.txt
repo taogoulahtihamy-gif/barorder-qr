@@ -1,48 +1,140 @@
-Fix production API route mismatch in BarOrder QR.
+Fix all responsive mobile overflow issues in the existing BarOrder QR project.
 
-Current Render logs show:
-POST /public/orders 404
-GET /public/r/le-palais/menu 404
-GET /api/restaurants 404
+Context:
+The app works in production, but the UI is not responsive on mobile. Pages overflow horizontally on iPhone/Safari. Admin dashboard, orders, kitchen, payments, stats, and customer pages must fit cleanly on mobile.
 
-But backend working route is:
-GET /api/public/menu/1
+Main problems seen:
+- Horizontal overflow on admin pages.
+- Admin cards and Kanban columns exceed screen width.
+- Orders/payments lists are cut on the left/right.
+- Kitchen columns are too wide and force sideways scrolling.
+- Customer pages have large fixed widths and content overflows.
+- Bottom bars/header overlap content.
+- Some amounts/status/date blocks do not wrap correctly.
+- Mobile Safari address bar area needs safe-area spacing.
 
-Required fixes:
+Required global fixes:
+1. Add global CSS reset:
+   - html, body, #root width: 100%; min-height: 100%;
+   - overflow-x: hidden;
+   - box-sizing: border-box for all elements.
+   - img, video, canvas, svg max-width: 100%.
+   - use min-width: 0 on flex/grid children.
 
-1. In client/src, search all API calls using:
-   /public/orders
-   /public/r/
-   /api/restaurants
-   /restaurants
+2. Audit all client/src pages/components for fixed widths:
+   Replace width/min-width like 900px, 1200px, 1400px, 100vw causing overflow.
+   Use:
+   - width: 100%;
+   - max-width: 100%;
+   - min-width: 0;
+   - clamp() for font sizes.
+   - responsive grid with auto-fit/minmax.
 
-2. All backend calls must use API base:
-   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000"
+3. Customer mobile pages:
+   For routes:
+   - /
+   - /restaurants
+   - /r/:slug/table/:tableId
+   - /r/:slug/menu/:tableId
+   - /checkout
+   - /r/:slug/order/:orderNumber
+   Make layout mobile-first:
+   - max-width: 100%;
+   - padding: 16px on mobile.
+   - header icons must not overflow.
+   - cart button must stay visible.
+   - bottom navigation must use safe-area inset:
+     padding-bottom: calc(12px + env(safe-area-inset-bottom)).
+   - content must have bottom padding so fixed bottom buttons do not cover it.
+   - order cards must wrap text, prices, dates and statuses.
 
-3. Fix customer order creation:
-   POST must call:
-   `${API_URL}/api/public/orders`
+4. Admin mobile pages:
+   For routes:
+   - /admin/dashboard
+   - /admin/orders
+   - /admin/kitchen
+   - /admin/payments
+   - /admin/products
+   - /admin/categories
+   - /admin/tables
+   - /admin/stats
+   - /admin/settings
+   Make responsive:
+   - Sidebar becomes a mobile drawer/offcanvas under 768px.
+   - Header stays compact.
+   - Main content width must be calc(100% - sidebar) on desktop and 100% on mobile.
+   - No page should require horizontal scroll except intentional tables wrapped inside .table-scroll.
+   - Dashboard KPI grid becomes 1 column on mobile, 2 columns on tablet, 3 columns desktop.
+   - Lists/cards become single-column on mobile.
+   - Buttons wrap into vertical stack on mobile.
+   - Filters become horizontal scroll chips only inside their container, not whole page.
 
-4. Fix menu by slug:
-   GET must call:
-   `${API_URL}/api/public/r/${slug}/menu/${tableId}`
-   or match the exact backend existing route.
+5. Kitchen Kanban page:
+   Current columns overflow badly.
+   Fix:
+   - Desktop: horizontal kanban allowed inside a contained scroll area.
+   - Mobile: columns must stack vertically one under another, width 100%.
+   - Order cards must fit screen.
+   - Buttons must be full width or wrap.
+   - No body horizontal scroll.
 
-5. Fix restaurant list:
-   If backend route /api/restaurants does not exist, add it in Express OR change frontend to use the existing backend route.
-   Preferred: add backend route:
-   GET /api/restaurants
-   returning all restaurants with id, name, slug, address, phone.
+6. Orders and payments pages:
+   - Cards must use flex-wrap.
+   - Long order numbers should wrap or truncate with ellipsis.
+   - Amount/status/payment reference must not push card outside screen.
+   - Use responsive layout:
+     mobile: vertical card content
+     desktop: horizontal card content.
 
-6. Do not use:
-   /public/orders
-   /public/r/...
-   without /api.
+7. Tables/products/categories pages:
+   - Card grid:
+     mobile: 1 column
+     tablet: 2 columns
+     desktop: 3+ columns.
+   - Action buttons must wrap and remain tappable.
+   - QR modal must fit mobile viewport:
+     width: min(92vw, 520px)
+     max-height: 90vh
+     overflow-y: auto.
 
-7. Remove mock fallback in production.
-   If API fails, show real error.
+8. Forms/modals:
+   - All modals use:
+     width: min(92vw, 560px)
+     max-height: 90dvh
+     overflow-y: auto
+   - Inputs/buttons width 100% on mobile.
+   - Sticky submit buttons must respect safe area.
 
-8. Run:
-   npm run build
+9. CSS implementation:
+   Create or update a responsive stylesheet, for example:
+   client/src/styles/responsive.css
+   Import it once in main.jsx or App.jsx after global styles.
 
-9. Do not change UI design.
+10. Add utility classes if needed:
+   .page
+   .page-content
+   .responsive-grid
+   .mobile-stack
+   .table-scroll
+   .no-overflow
+   .truncate
+   .safe-bottom
+
+11. Do not change backend/API logic.
+12. Do not break existing design/theme.
+13. Keep premium dark UI.
+14. Keep all current routes working.
+15. Run npm run build and fix all errors.
+
+Acceptance tests:
+- On iPhone width 390px:
+  /r/le-palais/table/1 fits without horizontal overflow.
+  /r/le-palais/menu/1 fits without horizontal overflow.
+  /checkout fits without horizontal overflow.
+  /admin/dashboard fits without horizontal overflow.
+  /admin/orders fits without horizontal overflow.
+  /admin/kitchen stacks columns vertically and fits.
+  /admin/payments fits.
+- document.documentElement.scrollWidth must equal window.innerWidth on mobile pages.
+- No content is hidden under bottom nav or sticky buttons.
+- No card is cut on the left or right.

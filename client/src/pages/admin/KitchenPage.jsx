@@ -141,7 +141,7 @@ export default function KitchenPage() {
         </button>
       </div>
 
-      <div className={`flex gap-4 overflow-x-auto pb-4 ${isFullscreen ? 'h-[calc(100vh-64px)] px-4' : ''}`}
+      <div className={`flex flex-col md:flex-row gap-4 md:overflow-x-auto pb-4 ${isFullscreen ? 'md:h-[calc(100vh-64px)] px-4' : ''}`}
         style={{ scrollbarWidth: 'thin', scrollbarColor: '#27272a transparent' }}
       >
         {KANBAN_COLUMNS.map((column) => {
@@ -149,7 +149,7 @@ export default function KitchenPage() {
           return (
             <div
               key={column.key}
-              className={`flex-shrink-0 w-[320px] md:w-[360px] rounded-xl border ${column.border} bg-gradient-to-b ${column.color} backdrop-blur-sm flex flex-col ${isFullscreen ? 'h-full' : 'max-h-[calc(100vh-200px)]'}`}
+              className={`w-full md:w-[360px] md:flex-shrink-0 rounded-xl border ${column.border} bg-gradient-to-b ${column.color} backdrop-blur-sm flex flex-col ${isFullscreen ? 'md:h-full' : 'md:max-h-[calc(100vh-200px)]'}`}
             >
               <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 sticky top-0 bg-black/20 backdrop-blur-sm rounded-t-xl">
                 <h2 className="font-semibold text-white text-sm">{column.label}</h2>
