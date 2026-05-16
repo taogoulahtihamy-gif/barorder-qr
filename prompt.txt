@@ -1,0 +1,49 @@
+FIX table lookup for checkout.
+
+Current checkout error:
+Table introuvable
+
+Do not touch frontend UI.
+Do not touch realtime.
+Do not redesign anything.
+
+Problem:
+Frontend sends tableId = 1 from /r/le-palais/table/1.
+But database restaurant_tables.table_number may contain "Table 1", not "1".
+Current lookup only checks id or exact table_number.
+
+Fix backend table resolution in POST /api/public/orders and menu table lookup.
+
+When resolving tableId, support all formats:
+- id = 1
+- table_number = '1'
+- table_number = 'Table 1'
+- table_number = 'table 1'
+
+Use SQL similar to:
+
+SELECT id, table_number
+FROM restaurant_tables
+WHERE restaurant_id = $1
+AND (
+  id::text = $2
+  OR table_number::text = $2
+  OR LOWER(table_number::text) = LOWER('Table ' || $2)
+  OR LOWER(REPLACE(table_number::text, 'table ', '')) = LOWER($2)
+)
+LIMIT 1;
+
+Then use resolved table.id in orders.table_id.
+
+Add logs:
+REQUESTED TABLE:
+RESOLVED TABLE:
+
+Do not insert order if table is not found.
+
+Test:
+- /r/le-palais/table/1
+- Voir le menu
+- checkout
+- order created successfully
+- appears in /admin/orders after refresh

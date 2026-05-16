@@ -1,0 +1,233 @@
+import { useEffect, useState, useCallback, useRef } from 'react';
+import toast from 'react-hot-toast';
+import { Clock, Maximize, Minimize } from 'lucide-react';
+import Card from '../../components/Card';
+import Button from '../../components/Button';
+import LoadingSpinner from '../../components/LoadingSpinner';
+import { useApp } from '../../context/AppContext';
+import { getOrders, updateOrderStatus } from '../../services/adminService';
+import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated } from '../../services/socketService';
+
+const KANBAN_COLUMNS = [
+  { key: 'new', label: 'Nouvelle', color: 'from-rose-500/20 to-rose-500/5', border: 'border-rose-500/30' },
+  { key: 'accepted', label: 'Acceptée', color: 'from-amber-500/20 to-amber-500/5', border: 'border-amber-500/30' },
+  { key: 'preparing', label: 'En préparation', color: 'from-blue-500/20 to-blue-500/5', border: 'border-blue-500/30' },
+  { key: 'ready', label: 'Prête', color: 'from-emerald-500/20 to-emerald-500/5', border: 'border-emerald-500/30' },
+  { key: 'served', label: 'Servie', color: 'from-zinc-500/20 to-zinc-500/5', border: 'border-zinc-500/30' },
+];
+
+const columnActions = {
+  new: [{ label: 'Accepter', status: 'accepted', variant: 'gold' }],
+  accepted: [{ label: 'En préparation', status: 'preparing', variant: 'primary' }],
+  preparing: [{ label: 'Prête', status: 'ready', variant: 'primary' }],
+  ready: [{ label: 'Servie', status: 'served', variant: 'primary' }],
+  served: [],
+};
+
+function normalizeStatus(s) {
+  if (s === 'pending') return 'new';
+  return s;
+}
+
+function ElapsedTime({ createdAt }) {
+  const [elapsed, setElapsed] = useState('');
+  useEffect(() => {
+    const update = () => {
+      if (!createdAt) { setElapsed(''); return; }
+      const diff = Date.now() - new Date(createdAt).getTime();
+      const mins = Math.floor(diff / 60000);
+      if (mins < 1) setElapsed("à l'instant");
+      else if (mins < 60) setElapsed(`${mins} min`);
+      else setElapsed(`${Math.floor(mins / 60)}h ${mins % 60}min`);
+    };
+    update();
+    const iv = setInterval(update, 30000);
+    return () => clearInterval(iv);
+  }, [createdAt]);
+  return <>{elapsed}</>;
+}
+
+export default function KitchenPage() {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const { t } = useApp();
+  const glowTimeouts = useRef({});
+
+  const refreshOrders = useCallback(async () => {
+    try {
+      const result = await getOrders();
+      setOrders(Array.isArray(result) ? result : []);
+    } catch (err) {
+      console.error('[KitchenPage] refresh failed:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    refreshOrders().finally(() => setLoading(false));
+
+    const polling = setInterval(refreshOrders, 5000);
+
+    const socket = connectSocket();
+    const unsubNew = socket ? onNewOrder(() => {
+      refreshOrders();
+      toast.success('Nouvelle commande !');
+    }) : () => {};
+    const unsubStatus = socket ? onOrderStatusUpdated(() => {
+      refreshOrders();
+    }) : () => {};
+    const unsubPay = socket ? onPaymentUpdated(() => {
+      refreshOrders();
+    }) : () => {};
+
+    return () => {
+      clearInterval(polling);
+      unsubNew();
+      unsubStatus();
+      unsubPay();
+      Object.values(glowTimeouts.current).forEach(clearTimeout);
+    };
+  }, [refreshOrders]);
+
+  const handleStatusUpdate = useCallback(async (orderId, newStatus) => {
+    try {
+      await updateOrderStatus(orderId, newStatus);
+      await refreshOrders();
+      toast.success('Statut mis à jour');
+    } catch (e) {
+      toast.error(e?.response?.data?.error || 'Erreur de mise à jour');
+    }
+  }, [refreshOrders]);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => {});
+    } else {
+      document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {});
+    }
+  };
+
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handler);
+    return () => document.removeEventListener('fullscreenchange', handler);
+  }, []);
+
+  const grouped = {};
+  KANBAN_COLUMNS.forEach((col) => { grouped[col.key] = []; });
+  orders.forEach((o) => {
+    const key = normalizeStatus(o.status);
+    if (grouped[key]) grouped[key].push(o);
+  });
+
+  if (loading) return <LoadingSpinner size="lg" />;
+
+  return (
+    <div className={isFullscreen ? 'h-screen overflow-hidden bg-black' : ''}>
+      <div className={`flex items-center justify-between mb-6 ${isFullscreen ? 'px-4 pt-4' : ''}`}>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-white">Cuisine</h1>
+          <span className="text-sm text-white/30">
+            {orders.length} commande{orders.length !== 1 ? 's' : ''}
+          </span>
+        </div>
+        <button
+          onClick={toggleFullscreen}
+          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white/70 hover:text-white transition-colors text-sm"
+        >
+          {isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
+          {isFullscreen ? 'Quitter' : 'Plein écran'}
+        </button>
+      </div>
+
+      <div className={`flex gap-4 overflow-x-auto pb-4 ${isFullscreen ? 'h-[calc(100vh-64px)] px-4' : ''}`}
+        style={{ scrollbarWidth: 'thin', scrollbarColor: '#27272a transparent' }}
+      >
+        {KANBAN_COLUMNS.map((column) => {
+          const colOrders = grouped[column.key] || [];
+          return (
+            <div
+              key={column.key}
+              className={`flex-shrink-0 w-[320px] md:w-[360px] rounded-xl border ${column.border} bg-gradient-to-b ${column.color} backdrop-blur-sm flex flex-col ${isFullscreen ? 'h-full' : 'max-h-[calc(100vh-200px)]'}`}
+            >
+              <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 sticky top-0 bg-black/20 backdrop-blur-sm rounded-t-xl">
+                <h2 className="font-semibold text-white text-sm">{column.label}</h2>
+                <span className="text-xs text-white/40 bg-white/5 px-2 py-0.5 rounded-full">{colOrders.length}</span>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-3 space-y-3"
+                style={{ scrollbarWidth: 'thin', scrollbarColor: '#27272a transparent' }}
+              >
+                {colOrders.map((order) => (
+                  <div
+                    key={order.id}
+                    className="rounded-xl bg-zinc-900/80 border border-white/5 overflow-hidden"
+                  >
+                    <div className="p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-white text-sm">{order.orderNumber || `#${order.id}`}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-white/40 text-xs">
+                          <Clock size={12} />
+                          <ElapsedTime createdAt={order.createdAt} />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className="text-white/50">Table</span>
+                        <span className="font-semibold text-white bg-white/5 px-2 py-0.5 rounded-md">{order.table}</span>
+                        <span className={`ml-auto text-[10px] px-2 py-0.5 rounded-full ${
+                          order.payment === 'Wave' ? 'bg-blue-500/10 text-blue-400' :
+                          order.payment === 'Orange Money' ? 'bg-orange-500/10 text-orange-400' :
+                          'bg-emerald-500/10 text-emerald-400'
+                        }`}>
+                          {order.payment}
+                        </span>
+                      </div>
+
+                      <div className="space-y-1 pt-1 border-t border-white/5">
+                        {order.items && order.items.map((item, i) => (
+                          <div key={i} className="flex items-center gap-2 text-sm">
+                            <span className="text-white/30 font-mono text-xs w-6 text-right flex-shrink-0">x{item.qty || 1}</span>
+                            <span className="text-white/80 truncate">{item.name}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {order.kitchenNote && (
+                        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-3 py-2">
+                          <p className="text-xs text-yellow-400/80 italic">Note: {order.kitchenNote}</p>
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between pt-1 border-t border-white/5">
+                        <span className="text-sm font-bold text-gold-500">{order.total}</span>
+                        <div className="flex gap-1.5">
+                          {(columnActions[column.key] || []).map((action) => (
+                            <Button
+                              key={action.status}
+                              variant={action.variant}
+                              className="text-xs px-3 py-1"
+                              onClick={() => handleStatusUpdate(order.id, action.status)}
+                            >
+                              {action.label}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {colOrders.length === 0 && (
+                  <div className="text-center py-8 text-white/20 text-sm">Aucune commande</div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
