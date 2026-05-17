@@ -40,7 +40,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gold-500 mb-2">BarOrder</h1>
-          <p className="text-white/50 text-sm">{t('Admin Panel')}</p>
+          <p className="text-white/50 text-sm">Connexion administration</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
@@ -71,14 +71,6 @@ export default function LoginPage() {
           <Button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-2">
             {loading ? <span className="animate-pulse">{t('Sign In')}...</span> : <><LogIn size={18} /> {t('Sign In')}</>}
           </Button>
-
-          <div className="text-xs text-white/60 text-center mt-4 space-y-0.5">
-            <p>super@barorder.sn / admin123</p>
-            <p>manager@barorder.sn / admin123</p>
-            <p>waiter@barorder.sn / admin123</p>
-            <p>kitchen@barorder.sn / admin123</p>
-            <p>cashier@barorder.sn / admin123</p>
-          </div>
         </form>
       </div>
     </div>

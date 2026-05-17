@@ -4,6 +4,11 @@ import { getRestaurantId } from '../utils/restaurantId.js';
 
 const VALID_ROLES = ['admin', 'super_admin', 'manager', 'waiter', 'kitchen', 'cashier'];
 
+const CAN_CREATE_ROLE = {
+  super_admin: ['admin', 'super_admin', 'manager', 'waiter', 'kitchen', 'cashier'],
+  admin: ['admin', 'manager', 'waiter', 'kitchen', 'cashier'],
+};
+
 export async function getUsers(req, res) {
   try {
     const rid = Number(getRestaurantId(req));
@@ -28,6 +33,10 @@ export async function createUser(req, res) {
     if (!VALID_ROLES.includes(role)) {
       return res.status(400).json({ error: 'Invalid role' });
     }
+    const allowed = CAN_CREATE_ROLE[req.user.role] || [];
+    if (!allowed.includes(role)) {
+      return res.status(403).json({ error: 'You cannot create this role' });
+    }
     const existing = await queryOne('SELECT id FROM users WHERE email = $1', [email]);
     if (existing) return res.status(400).json({ error: 'Email already used' });
     const hash = await bcrypt.hash(password, 10);
@@ -50,6 +59,10 @@ export async function updateUser(req, res) {
     const existing = await queryOne('SELECT id FROM users WHERE id = $1 AND restaurant_id = $2', [userId, rid]);
     if (!existing) return res.status(404).json({ error: 'User not found' });
     if (role && !VALID_ROLES.includes(role)) return res.status(400).json({ error: 'Invalid role' });
+    if (role) {
+      const allowed = CAN_CREATE_ROLE[req.user.role] || [];
+      if (!allowed.includes(role)) return res.status(403).json({ error: 'You cannot set this role' });
+    }
     const sets = [];
     const vals = [];
     let i = 1;
@@ -93,10 +106,33 @@ export async function deleteUser(req, res) {
   try {
     const rid = Number(getRestaurantId(req));
     const userId = Number(req.params.id);
+    const target = await queryOne('SELECT role FROM users WHERE id = $1 AND restaurant_id = $2', [userId, rid]);
+    if (!target) return res.status(404).json({ error: 'User not found' });
+    const allowed = CAN_CREATE_ROLE[req.user.role] || [];
+    if (!allowed.includes(target.role)) return res.status(403).json({ error: 'Cannot delete this user' });
     await query('DELETE FROM users WHERE id = $1 AND restaurant_id = $2', [userId, rid]);
     res.json({ message: 'Deleted' });
   } catch (err) {
     console.error('[deleteUser]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+}
+
+export async function resetPassword(req, res) {
+  try {
+    const rid = Number(getRestaurantId(req));
+    const userId = Number(req.params.id);
+    const { password } = req.body;
+    if (!password) return res.status(400).json({ error: 'password required' });
+    const target = await queryOne('SELECT role FROM users WHERE id = $1 AND restaurant_id = $2', [userId, rid]);
+    if (!target) return res.status(404).json({ error: 'User not found' });
+    const allowed = CAN_CREATE_ROLE[req.user.role] || [];
+    if (!allowed.includes(target.role)) return res.status(403).json({ error: 'Cannot reset password for this user' });
+    const hash = await bcrypt.hash(password, 10);
+    await query('UPDATE users SET password_hash = $1 WHERE id = $2 AND restaurant_id = $3', [hash, userId, rid]);
+    res.json({ message: 'Password updated' });
+  } catch (err) {
+    console.error('[resetPassword]', err.message);
     res.status(500).json({ error: err.message });
   }
 }
