@@ -1,54 +1,59 @@
-You are not modifying the real files.
+Production still connects to localhost:5000.
 
-Git still says:
-"nothing to commit, working tree clean"
+Search the ENTIRE repository for ALL occurrences of:
 
-Now directly edit the actual project files.
-
-TASK 1 — Fix invisible demo accounts text
-
-Open the real login page component:
-- client/src/pages/admin/LoginPage.jsx
-OR
-- client/src/pages/LoginPage.jsx
-
-Find:
-text-white/20
-
-Replace ALL occurrences with:
-text-white/60
-
-Also ensure:
-- demo accounts container uses readable opacity
-- no black text on black background
-- spacing between demo account lines is clean
-
-TASK 2 — Fix production socket URL
-
-Search the entire repository for:
 localhost:5000
+socket.io
+io(
+new WebSocket(
+VITE_SOCKET_URL
+VITE_API_URL
 
-Replace ALL production socket/API localhost references with:
-
-https://barorder-qr.onrender.com
+Fix ALL production socket connections.
 
 IMPORTANT:
-- socket.io must never connect to localhost in production
-- use VITE_API_URL or the Render URL
-- frontend deployed on Vercel must connect to Render backend
+The deployed Vercel frontend MUST connect ONLY to:
+https://barorder-qr.onrender.com
 
-TASK 3 — Verify changes are REAL
+Tasks:
 
-After editing:
-run:
-git status
+1. Remove EVERY hardcoded localhost socket/API URL.
+2. Fix socket connection in all files:
+- socket.js
+- socketService.js
+- websocket.js
+- api.js
+- axios.js
+- hooks
+- services
+- admin pages
+- realtime listeners
 
-It MUST show modified files.
+3. Production logic:
+- if production:
+  use https://barorder-qr.onrender.com
+- if local dev:
+  use localhost only in development mode
 
-Then run:
+4. Use:
+const API_URL = import.meta.env.VITE_API_URL || "https://barorder-qr.onrender.com"
+
+5. Use the same URL for socket.io.
+
+6. Rebuild frontend completely.
+
+7. Delete old dist/build cache if needed.
+
+8. Run:
+npm run build
+
+9. Commit real changes:
 git add .
-git commit -m "Fix login visibility and production socket URL"
+git commit -m "Fix production socket URL"
 git push origin main
 
-FINAL REQUIREMENT:
-Do not say “fixed” unless git status actually showed modified files and commit/push succeeded.
+10. Confirm with:
+git grep "localhost:5000"
+
+Expected result:
+NO localhost:5000 remaining in production frontend code.
