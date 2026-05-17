@@ -167,12 +167,12 @@ export default function OrdersPage() {
     <div>
       <h1 className="text-2xl font-bold text-white mb-6">{t('Commandes')}</h1>
 
-      <div className="flex gap-2 overflow-x-auto mb-6 pb-1">
+      <div className="filter-scroll mb-6">
         {statusFilters.map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${
+            className={`rounded-full text-sm transition-colors ${
               filter === f ? 'bg-gold-500 text-black' : 'bg-zinc-900 text-white/60 hover:text-white'
             }`}
           >

@@ -147,6 +147,15 @@ img, video, canvas, svg {
   }
 }
 
+@supports (padding: env(safe-area-inset-bottom)) {
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
 .modal-mobile {
   width: min(92vw, 560px) !important;
   max-height: 90dvh !important;
@@ -171,3 +180,29 @@ img, video, canvas, svg {
 .content-with-fixed-bottom {
   padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
 }
+
+.filter-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 10px;
+  width: 100%;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.filter-scroll::-webkit-scrollbar {
+  display: none;
+}
+.filter-scroll > * {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  min-height: 44px;
+  padding: 0 18px;
+}
+
+input, select, textarea, button {
+  font-size: 16px;
+}
+

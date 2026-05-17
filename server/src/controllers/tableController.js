@@ -24,7 +24,7 @@ export async function getTables(req, res) {
       capacity: t.capacity || 4,
       status: t.order_number ? 'occupied' : 'free',
       qr_url: t.qr_code_url,
-      qrUrl: `/r/${slug}/menu/${t.id}`,
+      qrUrl: `/r/${slug}/table/${t.id}`,
       slug,
       restaurant_name: restaurantName,
       order_number: t.order_number,
@@ -53,8 +53,8 @@ export async function createTable(req, res) {
     const restaurantName = rest?.name || '';
     const slug = rest?.slug || 'restaurant';
     const appUrl = config.publicAppUrl.replace(/\/+$/, '');
-    const fullUrl = `${appUrl}/r/${slug}/menu/${table.id}`;
-    const qrUrl = `/r/${slug}/menu/${table.id}`;
+    const fullUrl = `${appUrl}/r/${slug}/table/${table.id}`;
+    const qrUrl = `/r/${slug}/table/${table.id}`;
     const qrData = `${restaurantName}\n${name} — N°${name}\n\n${fullUrl}`;
     const qrCodeUrl = await QRCode.toDataURL(qrData, { width: 300, margin: 2 });
 
@@ -86,8 +86,8 @@ export async function generateTableQR(req, res) {
     const restaurantName = table.restaurant_name || '';
     const slug = table.slug || 'restaurant';
     const appUrl = config.publicAppUrl.replace(/\/+$/, '');
-    const fullUrl = `${appUrl}/r/${slug}/menu/${table.id}`;
-    const qrUrl = `/r/${slug}/menu/${table.id}`;
+    const fullUrl = `${appUrl}/r/${slug}/table/${table.id}`;
+    const qrUrl = `/r/${slug}/table/${table.id}`;
     const qrData = `${restaurantName}\n${table.table_number} — N°${table.table_number}\n\n${fullUrl}`;
     const qrCodeUrl = await QRCode.toDataURL(qrData, { width: 400, margin: 2 });
 
@@ -129,7 +129,7 @@ export async function getPrintableQR(req, res) {
       table_number: t.table_number,
       capacity: t.capacity || 4,
       qr_code_url: t.qr_code_url,
-      qrUrl: `/r/${slug}/menu/${t.id}`,
+      qrUrl: `/r/${slug}/table/${t.id}`,
     }));
 
     res.json({

@@ -74,7 +74,7 @@ export default function TablesPage() {
   };
 
   const absoluteUrl = (table) => {
-    const path = table.qrUrl || `/r/${table.slug || 'restaurant'}/menu/${table.id}`;
+    const path = table.qrUrl || `/r/${table.slug || 'restaurant'}/table/${table.id}`;
     return `${window.location.origin}${path}`;
   };
 

@@ -53,14 +53,14 @@ const MOCK_CATEGORIES = [
 ];
 
 const MOCK_TABLES = [
-  { id: 1, name: 'Table 1', table_number: 'Table 1', capacity: 4, status: 'occupied', order: '#1042', qrUrl: '/r/barorder/menu/1', slug: 'barorder', restaurant_name: 'BarOrder', qr_url: null },
-  { id: 2, name: 'Table 2', table_number: 'Table 2', capacity: 2, status: 'free', qrUrl: '/r/barorder/menu/2', slug: 'barorder', restaurant_name: 'BarOrder', qr_url: null },
-  { id: 3, name: 'Table 3', table_number: 'Table 3', capacity: 6, status: 'occupied', order: '#1041', qrUrl: '/r/barorder/menu/3', slug: 'barorder', restaurant_name: 'BarOrder', qr_url: null },
-  { id: 4, name: 'Table 4', table_number: 'Table 4', capacity: 4, status: 'free', qrUrl: '/r/barorder/menu/4', slug: 'barorder', restaurant_name: 'BarOrder', qr_url: null },
-  { id: 5, name: 'Table 5', table_number: 'Table 5', capacity: 4, status: 'occupied', order: '#1040', qrUrl: '/r/barorder/menu/5', slug: 'barorder', restaurant_name: 'BarOrder', qr_url: null },
-  { id: 6, name: 'Table 6', table_number: 'Table 6', capacity: 2, status: 'free', qrUrl: '/r/barorder/menu/6', slug: 'barorder', restaurant_name: 'BarOrder', qr_url: null },
-  { id: 7, name: 'Table 7', table_number: 'Table 7', capacity: 8, status: 'occupied', order: '#1039', qrUrl: '/r/barorder/menu/7', slug: 'barorder', restaurant_name: 'BarOrder', qr_url: null },
-  { id: 8, name: 'Table 8', table_number: 'Table 8', capacity: 4, status: 'free', qrUrl: '/r/barorder/menu/8', slug: 'barorder', restaurant_name: 'BarOrder', qr_url: null },
+  { id: 1, name: 'Table 1', table_number: 'Table 1', capacity: 4, status: 'occupied', order: '#1042', qrUrl: '/r/barorder/table/1', slug: 'barorder', restaurant_name: 'BarOrder', qr_url: null },
+  { id: 2, name: 'Table 2', table_number: 'Table 2', capacity: 2, status: 'free', qrUrl: '/r/barorder/table/2', slug: 'barorder', restaurant_name: 'BarOrder', qr_url: null },
+  { id: 3, name: 'Table 3', table_number: 'Table 3', capacity: 6, status: 'occupied', order: '#1041', qrUrl: '/r/barorder/table/3', slug: 'barorder', restaurant_name: 'BarOrder', qr_url: null },
+  { id: 4, name: 'Table 4', table_number: 'Table 4', capacity: 4, status: 'free', qrUrl: '/r/barorder/table/4', slug: 'barorder', restaurant_name: 'BarOrder', qr_url: null },
+  { id: 5, name: 'Table 5', table_number: 'Table 5', capacity: 4, status: 'occupied', order: '#1040', qrUrl: '/r/barorder/table/5', slug: 'barorder', restaurant_name: 'BarOrder', qr_url: null },
+  { id: 6, name: 'Table 6', table_number: 'Table 6', capacity: 2, status: 'free', qrUrl: '/r/barorder/table/6', slug: 'barorder', restaurant_name: 'BarOrder', qr_url: null },
+  { id: 7, name: 'Table 7', table_number: 'Table 7', capacity: 8, status: 'occupied', order: '#1039', qrUrl: '/r/barorder/table/7', slug: 'barorder', restaurant_name: 'BarOrder', qr_url: null },
+  { id: 8, name: 'Table 8', table_number: 'Table 8', capacity: 4, status: 'free', qrUrl: '/r/barorder/table/8', slug: 'barorder', restaurant_name: 'BarOrder', qr_url: null },
 ];
 
 const MOCK_PAYMENTS = [
