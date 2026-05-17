@@ -1,117 +1,68 @@
-Build a professional waiter call + realtime notification system in the existing BarOrder QR project.
+Fix the mobile responsive layout of the "Server Calls" page in BarOrder QR.
 
 IMPORTANT:
-- Do not redesign the existing UI.
-- Do not break working orders, payments, kitchen, dashboard, or QR flow.
-- Keep current architecture.
-- Apply changes directly to project files.
+- Directly modify existing project files.
+- Do not explain.
+- Do not output code examples only.
+- Apply the fixes in the actual workspace files.
+- Keep the current design system and colors.
 
-GOAL
-Customers can press:
-"Appeler un serveur"
-from the table page/menu page.
+PROBLEMS TO FIX:
 
-Admins/staff instantly receive the call in realtime.
+1. Status badge overlaps table text
+- "En attente" overlaps "Table 1"
+- Add proper spacing and responsive wrapping.
 
-FEATURES
+2. Mobile card layout is too compressed
+- Current horizontal layout breaks on iPhone screens.
+- On mobile (<640px):
+  - stack content vertically
+  - icon on top/left
+  - table + status below
+  - action buttons below content
 
-1. Customer side
-Routes:
-- /r/:slug/table/:tableId
-- /r/:slug/menu/:tableId
+3. Buttons overflow
+- "Accepter" and "Résoudre" must:
+  - wrap correctly
+  - stay inside card
+  - become full width on very small screens
 
-Add a working "Appeler un serveur" action.
+4. Improve spacing
+- Add proper gaps between:
+  - icon
+  - table text
+  - status badge
+  - datetime
+  - buttons
 
-When pressed:
-- create a server_call record in PostgreSQL
-- emit realtime socket event:
-  new_server_call
+5. Typography
+- Prevent text collision.
+- Prevent badge overflow.
+- Use truncate/wrap correctly.
 
-Payload:
-- restaurant_id
-- table_id
-- table_number
-- message (optional)
-- status = pending
-- created_at
+6. Responsive structure
+Desktop:
+- horizontal layout
 
-2. Backend
-Create/check API routes:
-POST /api/public/server-call
-GET /api/admin/server-calls
-PATCH /api/admin/server-calls/:id/status
+Mobile:
+- vertical stacked layout
 
-Statuses:
-- pending
-- acknowledged
-- resolved
+7. Add safe responsive utilities
+- min-width:0
+- flex-wrap
+- overflow-hidden
+- break-words
+- gap utilities
+- responsive padding
 
-3. Database
-Use existing server_calls table if present.
-If missing, create migration safely.
+8. Verify:
+- no overlap
+- no horizontal scroll
+- buttons fully visible
+- cards readable on iPhone SE and iPhone 12/13
 
-Required fields:
-- id
-- restaurant_id
-- table_id
-- table_number
-- message
-- status
-- created_at
+9. Build project after modifications
+Run:
+npm run build
 
-4. Realtime notifications
-Emit:
-- new_server_call
-- server_call_updated
-
-Kitchen/admin pages must listen.
-
-5. Admin notification center
-Create:
-- bell notification icon in admin header
-- realtime badge counter
-- dropdown list of latest waiter calls
-
-6. Admin waiter calls page
-Create:
-/admin/server-calls
-
-Features:
-- pending calls
-- acknowledge
-- resolve
-- filter by status
-- sort newest first
-
-7. Kitchen integration
-On /admin/kitchen:
-- show floating notification/toast for new waiter calls
-- subtle sound notification
-- clickable shortcut to call list
-
-8. Customer feedback
-When customer presses button:
-- show success toast:
-  "Un serveur arrive bientôt"
-- disable spam clicking for 30 seconds
-
-9. Mobile responsive
-Must work perfectly on iPhone/mobile.
-No overflow.
-
-10. Cleanup
-- no mock data
-- no fake calls
-- no console spam
-- remove duplicate listeners
-
-11. Build
-Run npm run build and fix all errors.
-
-ACCEPTANCE TEST
-- customer presses "Appeler un serveur"
-- admin instantly sees notification
-- kitchen sees toast/sound
-- call appears in /admin/server-calls
-- admin can acknowledge and resolve
-- realtime updates everywhere
+Fix all responsive errors automatically.

@@ -70,21 +70,21 @@ export default function ServerCallsPage() {
   const filters = ['', 'pending', 'acknowledged', 'resolved'];
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
+    <div className="overflow-hidden">
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-white">Appels serveur</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Appels serveur</h1>
           <span className="text-sm text-white/30">{calls.length} appel{calls.length !== 1 ? 's' : ''}</span>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2">
+      <div className="flex items-center gap-2 mb-4 sm:mb-6 overflow-x-auto pb-2">
         <Filter size={16} className="text-white/30 flex-shrink-0" />
         {filters.map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-colors ${
+            className={`px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-colors flex-shrink-0 ${
               filter === f ? 'bg-gold-500 text-black font-medium' : 'bg-zinc-800 text-white/60 hover:text-white'
             }`}
           >
@@ -103,32 +103,34 @@ export default function ServerCallsPage() {
           calls.map((call) => {
             const cfg = STATUS_CONFIG[call.status] || STATUS_CONFIG.pending;
             return (
-              <Card key={call.id}>
-                <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    call.status === 'pending' ? 'bg-yellow-500/10' :
-                    call.status === 'acknowledged' ? 'bg-blue-500/10' : 'bg-green-500/10'
-                  }`}>
-                    <Bell size={18} className={cfg.color} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-sm font-semibold text-white">Table {call.tableNumber || call.tableId}</span>
-                      <Badge variant={cfg.variant}>{cfg.label}</Badge>
+              <Card key={call.id} className="overflow-hidden">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                  <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                      call.status === 'pending' ? 'bg-yellow-500/10' :
+                      call.status === 'acknowledged' ? 'bg-blue-500/10' : 'bg-green-500/10'
+                    }`}>
+                      <Bell size={18} className={cfg.color} />
                     </div>
-                    {call.message && (
-                      <p className="text-xs text-white/50 mb-0.5">{call.message}</p>
-                    )}
-                    <div className="flex items-center gap-1.5 text-xs text-white/30">
-                      <Clock size={12} />
-                      <span>{new Date(call.createdAt).toLocaleString('fr-FR')}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <span className="text-sm font-semibold text-white break-words">Table {call.tableNumber || call.tableId}</span>
+                        <Badge variant={cfg.variant} className="flex-shrink-0">{cfg.label}</Badge>
+                      </div>
+                      {call.message && (
+                        <p className="text-xs text-white/50 mb-1 break-words">{call.message}</p>
+                      )}
+                      <div className="flex items-center gap-1.5 text-xs text-white/30">
+                        <Clock size={12} className="flex-shrink-0" />
+                        <span className="truncate">{new Date(call.createdAt).toLocaleString('fr-FR')}</span>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex gap-2 flex-shrink-0">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:flex-shrink-0 w-full sm:w-auto">
                     {call.status === 'pending' && (
                       <Button
                         variant="primary"
-                        className="text-xs px-3 py-1.5"
+                        className="text-xs px-3 py-1.5 w-full sm:w-auto justify-center"
                         onClick={() => handleAcknowledge(call.id)}
                       >
                         <CheckCircle size={14} className="mr-1" /> Accepter
@@ -137,7 +139,7 @@ export default function ServerCallsPage() {
                     {call.status !== 'resolved' && (
                       <Button
                         variant="ghost"
-                        className="text-xs px-3 py-1.5 text-white/50 hover:text-white"
+                        className="text-xs px-3 py-1.5 text-white/50 hover:text-white w-full sm:w-auto justify-center"
                         onClick={() => handleResolve(call.id)}
                       >
                         <XCircle size={14} className="mr-1" /> Résoudre
