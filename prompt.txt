@@ -1,29 +1,54 @@
-Fix admin login demo accounts visibility.
+You are not modifying the real files.
 
-Problem:
-On /admin/login, the demo account list under the login button is too dark.
-From waiter@barorder.sn down, the text appears almost black on black background.
+Git still says:
+"nothing to commit, working tree clean"
 
-Tasks:
-1. Directly modify the real frontend files.
-2. Fix the demo credentials text contrast.
-3. Make all demo accounts clearly readable on desktop and mobile.
-4. Use a consistent muted gray color, not black.
-5. Ensure spacing between demo account lines is clean.
-6. Keep the current design, do not redesign the page.
-7. Verify all these are visible:
-   - super@barorder.sn / admin123
-   - manager@barorder.sn / admin123
-   - waiter@barorder.sn / admin123
-   - kitchen@barorder.sn / admin123
-   - cashier@barorder.sn / admin123
-8. Run npm run build.
-9. Commit and push changes.
+Now directly edit the actual project files.
 
-Acceptance:
-All demo credentials are readable on black background.
-No line disappears or becomes black.
+TASK 1 — Fix invisible demo accounts text
 
-Also fix production socket URL.
-The deployed Vercel frontend must never connect to http://localhost:5000.
-Use VITE_API_URL in production for both API and socket connection.
+Open the real login page component:
+- client/src/pages/admin/LoginPage.jsx
+OR
+- client/src/pages/LoginPage.jsx
+
+Find:
+text-white/20
+
+Replace ALL occurrences with:
+text-white/60
+
+Also ensure:
+- demo accounts container uses readable opacity
+- no black text on black background
+- spacing between demo account lines is clean
+
+TASK 2 — Fix production socket URL
+
+Search the entire repository for:
+localhost:5000
+
+Replace ALL production socket/API localhost references with:
+
+https://barorder-qr.onrender.com
+
+IMPORTANT:
+- socket.io must never connect to localhost in production
+- use VITE_API_URL or the Render URL
+- frontend deployed on Vercel must connect to Render backend
+
+TASK 3 — Verify changes are REAL
+
+After editing:
+run:
+git status
+
+It MUST show modified files.
+
+Then run:
+git add .
+git commit -m "Fix login visibility and production socket URL"
+git push origin main
+
+FINAL REQUIREMENT:
+Do not say “fixed” unless git status actually showed modified files and commit/push succeeded.

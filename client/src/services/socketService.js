@@ -5,9 +5,7 @@ let socket = null;
 export function connectSocket() {
   if (socket?.connected) return socket;
   try {
-    const apiUrl = import.meta.env.VITE_API_URL || '';
-    const baseUrl = import.meta.env.VITE_SOCKET_URL || apiUrl.replace(/\/api$/, '') || window.location.origin;
-    socket = io(baseUrl, {
+    socket = io(import.meta.env.VITE_SOCKET_URL || 'https://barorder-qr.onrender.com', {
       autoConnect: true,
       reconnection: true,
     });
