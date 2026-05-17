@@ -1,6 +1,14 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { useLocale } from '../utils/translations';
 
+const PERMISSIONS = {
+  super_admin: ['restaurants','users','settings','payments','analytics','products','categories','tables','orders','kitchen','server_calls','dashboard','stats'],
+  manager: ['dashboard','orders','kitchen','server_calls','products','categories','tables','payments','stats','settings'],
+  waiter: ['orders','server_calls','tables'],
+  kitchen: ['kitchen','orders'],
+  cashier: ['orders','payments'],
+};
+
 const AppContext = createContext();
 
 function loadCart() {
@@ -12,8 +20,16 @@ function loadCart() {
   }
 }
 
+function loadUser() {
+  try {
+    const saved = localStorage.getItem('user');
+    return saved ? JSON.parse(saved) : null;
+  } catch { return null; }
+}
+
 export function AppProvider({ children }) {
   const [cart, setCart] = useState(loadCart);
+  const [user, setUser] = useState(loadUser);
   const [tableId, setTableId] = useState(() => localStorage.getItem('tableId') || null);
   const [restaurantId, setRestaurantId] = useState(() => localStorage.getItem('restaurantId') || null);
   const [restaurantSlug, setRestaurantSlug] = useState(() => localStorage.getItem('restaurantSlug') || '');
@@ -44,6 +60,22 @@ export function AppProvider({ children }) {
   useEffect(() => {
     if (restaurant) localStorage.setItem('restaurant', JSON.stringify(restaurant));
   }, [restaurant]);
+
+  useEffect(() => {
+    if (user) localStorage.setItem('user', JSON.stringify(user));
+    else localStorage.removeItem('user');
+  }, [user]);
+
+  const hasRole = useCallback((...roles) => {
+    if (!user || !user.role) return false;
+    return roles.includes(user.role);
+  }, [user]);
+
+  const canAccess = useCallback((permission) => {
+    if (!user || !user.role) return false;
+    const perms = PERMISSIONS[user.role] || [];
+    return perms.includes(permission);
+  }, [user]);
 
   const addToCart = useCallback((item) => {
     setCart((prev) => {
@@ -83,6 +115,8 @@ export function AppProvider({ children }) {
     <AppContext.Provider
       value={{
         cart, cartTotal, cartCount, tableId, restaurantId, restaurantSlug, restaurant,
+        user, setUser,
+        hasRole, canAccess,
         setTableId, setRestaurantId, setRestaurantSlug, setRestaurant,
         addToCart, removeFromCart, updateQuantity, clearCart,
         locale, toggleLanguage, t,

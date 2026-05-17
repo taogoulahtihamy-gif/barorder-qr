@@ -25,6 +25,7 @@ import PaymentsPage from '../pages/admin/PaymentsPage';
 import StatsPage from '../pages/admin/StatsPage';
 import SettingsPage from '../pages/admin/SettingsPage';
 import ServerCallsPage from '../pages/admin/ServerCallsPage';
+import UsersPage from '../pages/admin/UsersPage';
 
 export default function AppRouter() {
   return (
@@ -45,17 +46,18 @@ export default function AppRouter() {
       <Route path="/admin/login" element={<LoginPage />} />
       <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
         <Route index element={<DashboardPage />} />
-        <Route path="dashboard" element={<DashboardPage />} />
-        <Route path="orders" element={<OrdersPage />} />
-        <Route path="kitchen" element={<KitchenPage />} />
-        <Route path="products" element={<ProductsPage />} />
-        <Route path="categories" element={<CategoriesPage />} />
-        <Route path="tables/printable-qr" element={<PrintableQRPage />} />
-        <Route path="tables" element={<TablesPage />} />
-        <Route path="payments" element={<PaymentsPage />} />
-        <Route path="stats" element={<StatsPage />} />
-        <Route path="server-calls" element={<ServerCallsPage />} />
-        <Route path="settings" element={<SettingsPage />} />
+        <Route path="dashboard" element={<ProtectedRoute roles={['super_admin','manager']}><DashboardPage /></ProtectedRoute>} />
+        <Route path="orders" element={<ProtectedRoute roles={['super_admin','manager','waiter','cashier','kitchen']}><OrdersPage /></ProtectedRoute>} />
+        <Route path="kitchen" element={<ProtectedRoute roles={['super_admin','manager','kitchen']}><KitchenPage /></ProtectedRoute>} />
+        <Route path="products" element={<ProtectedRoute roles={['super_admin','manager','waiter']}><ProductsPage /></ProtectedRoute>} />
+        <Route path="categories" element={<ProtectedRoute roles={['super_admin','manager','waiter']}><CategoriesPage /></ProtectedRoute>} />
+        <Route path="tables/printable-qr" element={<ProtectedRoute roles={['super_admin','manager']}><PrintableQRPage /></ProtectedRoute>} />
+        <Route path="tables" element={<ProtectedRoute roles={['super_admin','manager','waiter']}><TablesPage /></ProtectedRoute>} />
+        <Route path="payments" element={<ProtectedRoute roles={['super_admin','manager','cashier']}><PaymentsPage /></ProtectedRoute>} />
+        <Route path="stats" element={<ProtectedRoute roles={['super_admin','manager']}><StatsPage /></ProtectedRoute>} />
+        <Route path="server-calls" element={<ProtectedRoute roles={['super_admin','manager','waiter']}><ServerCallsPage /></ProtectedRoute>} />
+        <Route path="settings" element={<ProtectedRoute roles={['super_admin','manager']}><SettingsPage /></ProtectedRoute>} />
+        <Route path="users" element={<ProtectedRoute roles={['super_admin']}><UsersPage /></ProtectedRoute>} />
       </Route>
     </Routes>
   );

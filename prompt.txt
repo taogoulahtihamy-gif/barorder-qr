@@ -1,68 +1,165 @@
-Fix the mobile responsive layout of the "Server Calls" page in BarOrder QR.
+Build professional role-based admin access for BarOrder QR.
 
 IMPORTANT:
-- Directly modify existing project files.
-- Do not explain.
-- Do not output code examples only.
-- Apply the fixes in the actual workspace files.
-- Keep the current design system and colors.
+- Do not rewrite the project.
+- Do not redesign the UI.
+- Do not break working orders, kitchen, payments, QR, menu, server calls, or dashboard.
+- Apply changes directly to project files.
 
-PROBLEMS TO FIX:
+GOAL:
+Create a professional admin/user role system for restaurant operations.
 
-1. Status badge overlaps table text
-- "En attente" overlaps "Table 1"
-- Add proper spacing and responsive wrapping.
+ROLES:
+1. super_admin
+2. manager
+3. waiter
+4. kitchen
+5. cashier
 
-2. Mobile card layout is too compressed
-- Current horizontal layout breaks on iPhone screens.
-- On mobile (<640px):
-  - stack content vertically
-  - icon on top/left
-  - table + status below
-  - action buttons below content
+PERMISSIONS:
 
-3. Buttons overflow
-- "Accepter" and "Résoudre" must:
-  - wrap correctly
-  - stay inside card
-  - become full width on very small screens
+super_admin:
+- full access to everything
+- restaurants
+- users
+- settings
+- payments
+- analytics
+- products
+- categories
+- tables
+- orders
+- kitchen
+- server calls
 
-4. Improve spacing
-- Add proper gaps between:
-  - icon
-  - table text
-  - status badge
-  - datetime
-  - buttons
+manager:
+- dashboard
+- orders
+- kitchen
+- server calls
+- products
+- categories
+- tables
+- payments
+- stats
+- settings
 
-5. Typography
-- Prevent text collision.
-- Prevent badge overflow.
-- Use truncate/wrap correctly.
+waiter:
+- orders
+- server calls
+- tables
+- customer service actions
+- cannot delete products/categories
+- cannot access settings
 
-6. Responsive structure
-Desktop:
-- horizontal layout
+kitchen:
+- kitchen page only
+- orders preparation statuses only
+- cannot see payments/settings/stats
 
-Mobile:
-- vertical stacked layout
+cashier:
+- orders
+- payments
+- mark as paid
+- cannot edit products/categories/settings
 
-7. Add safe responsive utilities
-- min-width:0
-- flex-wrap
-- overflow-hidden
-- break-words
-- gap utilities
-- responsive padding
+TASKS:
 
-8. Verify:
-- no overlap
-- no horizontal scroll
-- buttons fully visible
-- cards readable on iPhone SE and iPhone 12/13
+1. Backend auth
+- Extend users table if needed with:
+  role
+  restaurant_id
+  is_active
+- Ensure login returns:
+  id, name, email, role, restaurant_id
 
-9. Build project after modifications
-Run:
-npm run build
+2. JWT
+- Include role and restaurant_id in JWT payload.
 
-Fix all responsive errors automatically.
+3. Backend middleware
+Create:
+- requireAuth
+- requireRole(...)
+- requirePermission(...)
+
+4. Protect API routes
+Apply permissions to:
+- products CRUD
+- categories CRUD
+- tables CRUD
+- orders status
+- payments
+- stats
+- settings
+- kitchen
+- server calls
+
+5. Frontend auth context
+- Store user role.
+- Expose:
+  hasRole()
+  canAccess()
+
+6. Route protection
+Protect admin routes by role:
+- /admin/dashboard
+- /admin/orders
+- /admin/kitchen
+- /admin/server-calls
+- /admin/products
+- /admin/categories
+- /admin/tables
+- /admin/payments
+- /admin/stats
+- /admin/settings
+
+7. Sidebar
+- Show only pages allowed for current role.
+
+8. Users management page
+Create:
+/admin/users
+
+Manager/super_admin can:
+- create user
+- edit user
+- deactivate user
+- assign role
+
+Fields:
+- name
+- email
+- password
+- role
+- is_active
+
+9. Demo users seed
+Create or update demo users:
+- super@barorder.sn / admin123 / super_admin
+- manager@barorder.sn / admin123 / manager
+- waiter@barorder.sn / admin123 / waiter
+- kitchen@barorder.sn / admin123 / kitchen
+- cashier@barorder.sn / admin123 / cashier
+
+10. UX
+- If user accesses forbidden page:
+  show "Accès non autorisé"
+- Do not crash.
+- Redirect unauthenticated users to login.
+
+11. Security
+- Never return password_hash.
+- Hash passwords with bcrypt.
+- Validate role values.
+- Do not allow normal users to create super_admin unless current user is super_admin.
+
+12. Build
+Run npm run build and fix errors.
+
+ACCEPTANCE TEST:
+- kitchen user sees only Kitchen.
+- waiter sees Orders + Server Calls + Tables.
+- cashier sees Orders + Payments.
+- manager sees operational pages.
+- super_admin sees everything including Users.
+- forbidden routes show access denied.

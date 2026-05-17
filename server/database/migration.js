@@ -15,6 +15,8 @@ export async function runMigrations() {
     `ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_name VARCHAR(150)`,
     `ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_phone VARCHAR(50)`,
     `ALTER TABLE orders ADD COLUMN IF NOT EXISTS kitchen_note TEXT`,
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE`,
+    `ALTER TABLE users ALTER COLUMN role SET DEFAULT 'waiter'`,
     `ALTER TABLE server_calls ADD COLUMN IF NOT EXISTS restaurant_id INTEGER REFERENCES restaurants(id) ON DELETE CASCADE`,
     `ALTER TABLE server_calls ADD COLUMN IF NOT EXISTS table_number VARCHAR(20)`,
     `UPDATE server_calls sc SET restaurant_id = rt.restaurant_id FROM restaurant_tables rt WHERE rt.id = sc.table_id AND sc.restaurant_id IS NULL`,

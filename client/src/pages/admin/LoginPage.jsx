@@ -13,7 +13,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { t } = useApp();
+  const { t, setUser } = useApp();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -26,7 +26,7 @@ export default function LoginPage() {
     try {
       const result = await login(email, password);
       localStorage.setItem('token', result.token);
-      if (result.user) localStorage.setItem('user', JSON.stringify(result.user));
+      if (result.user) { setUser(result.user); }
       navigate('/admin/dashboard');
     } catch (err) {
       setError(err.message || 'Email ou mot de passe incorrect');
@@ -72,9 +72,13 @@ export default function LoginPage() {
             {loading ? <span className="animate-pulse">{t('Sign In')}...</span> : <><LogIn size={18} /> {t('Sign In')}</>}
           </Button>
 
-          <p className="text-xs text-white/20 text-center mt-4">
-            demo: admin@barorder.sn / admin123
-          </p>
+          <div className="text-xs text-white/20 text-center mt-4 space-y-0.5">
+            <p>super@barorder.sn / admin123</p>
+            <p>manager@barorder.sn / admin123</p>
+            <p>waiter@barorder.sn / admin123</p>
+            <p>kitchen@barorder.sn / admin123</p>
+            <p>cashier@barorder.sn / admin123</p>
+          </div>
         </form>
       </div>
     </div>

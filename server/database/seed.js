@@ -21,11 +21,21 @@ async function seed() {
   const rc = await pool.query(`SELECT id FROM restaurants LIMIT 1`);
   const restaurantId = rc.rows[0].id;
 
-  await pool.query(`
-    INSERT INTO users (restaurant_id, name, email, password_hash, role)
-    VALUES ($1, 'Admin', 'admin@barorder.sn', $2, 'admin')
-    ON CONFLICT (email) DO NOTHING;
-  `, [restaurantId, passwordHash]);
+  const demoUsers = [
+    { name: 'Super Admin', email: 'super@barorder.sn', role: 'super_admin' },
+    { name: 'Manager', email: 'manager@barorder.sn', role: 'manager' },
+    { name: 'Waiter', email: 'waiter@barorder.sn', role: 'waiter' },
+    { name: 'Kitchen', email: 'kitchen@barorder.sn', role: 'kitchen' },
+    { name: 'Cashier', email: 'cashier@barorder.sn', role: 'cashier' },
+  ];
+
+  for (const u of demoUsers) {
+    await pool.query(`
+      INSERT INTO users (restaurant_id, name, email, password_hash, role, is_active)
+      VALUES ($1, $2, $3, $4, $5, true)
+      ON CONFLICT (email) DO UPDATE SET role = $5, is_active = true;
+    `, [restaurantId, u.name, u.email, passwordHash, u.role]);
+  }
 
   for (let i = 1; i <= 10; i++) {
     await pool.query(`
@@ -144,7 +154,12 @@ async function seed() {
   `, [tables[1].id]);
 
   console.log('Seed complete!');
-  console.log('Demo admin: admin@barorder.sn / admin123');
+  console.log('Demo users:');
+  console.log('  super@barorder.sn / admin123 (super_admin)');
+  console.log('  manager@barorder.sn / admin123 (manager)');
+  console.log('  waiter@barorder.sn / admin123 (waiter)');
+  console.log('  kitchen@barorder.sn / admin123 (kitchen)');
+  console.log('  cashier@barorder.sn / admin123 (cashier)');
   await pool.end();
 }
 

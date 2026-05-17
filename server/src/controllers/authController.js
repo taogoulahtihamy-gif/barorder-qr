@@ -22,6 +22,9 @@ export async function login(req, res) {
     if (!valid) {
       return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
     }
+    if (user.is_active === false) {
+      return res.status(403).json({ error: 'Compte désactivé' });
+    }
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role, restaurant_id: user.restaurant_id },
       config.jwtSecret,
@@ -37,7 +40,7 @@ export async function login(req, res) {
 export async function me(req, res) {
   try {
     const user = await queryOne(`
-      SELECT u.id, u.name, u.email, u.role, u.restaurant_id, u.created_at,
+      SELECT u.id, u.name, u.email, u.role, u.restaurant_id, u.is_active, u.created_at,
              r.name as restaurant_name, r.slug as restaurant_slug, r.logo_url as restaurant_logo,
              r.primary_color as restaurant_color, r.currency as restaurant_currency
       FROM users u
