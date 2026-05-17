@@ -1,33 +1,23 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, ShoppingBag, Package, Tags, Grid3X3,
-  Wallet, BarChart3, Settings, LogOut, Globe, Menu, X, ChefHat, Bell, Users,
+  Wallet, BarChart3, Settings, LogOut, Globe, Menu, X, ChefHat, Bell,
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { connectSocket, onNewServerCall, onServerCallUpdated } from '../services/socketService';
 
-const PERMISSIONS = {
-  admin: ['restaurants','users','settings','payments','analytics','products','categories','tables','orders','kitchen','server_calls','dashboard','stats'],
-  super_admin: ['restaurants','users','settings','payments','analytics','products','categories','tables','orders','kitchen','server_calls','dashboard','stats'],
-  manager: ['dashboard','orders','kitchen','server_calls','products','categories','tables','payments','stats','settings'],
-  waiter: ['orders','server_calls','tables'],
-  kitchen: ['kitchen','orders'],
-  cashier: ['orders','payments'],
-};
-
-const ALL_NAV_ITEMS = [
-  { path: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, permission: 'dashboard' },
-  { path: '/admin/orders', label: 'Orders', icon: ShoppingBag, permission: 'orders' },
-  { path: '/admin/kitchen', label: 'Cuisine', icon: ChefHat, permission: 'kitchen' },
-  { path: '/admin/server-calls', label: 'Appels serveur', icon: Bell, permission: 'server_calls' },
-  { path: '/admin/products', label: 'Products', icon: Package, permission: 'products' },
-  { path: '/admin/categories', label: 'Categories', icon: Tags, permission: 'categories' },
-  { path: '/admin/tables', label: 'Tables', icon: Grid3X3, permission: 'tables' },
-  { path: '/admin/payments', label: 'Payments', icon: Wallet, permission: 'payments' },
-  { path: '/admin/stats', label: 'Statistics', icon: BarChart3, permission: 'stats' },
-  { path: '/admin/users', label: 'Users', icon: Users, permission: 'users' },
-  { path: '/admin/settings', label: 'Settings', icon: Settings, permission: 'settings' },
+const navItems = [
+  { path: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/admin/orders', label: 'Orders', icon: ShoppingBag },
+  { path: '/admin/kitchen', label: 'Cuisine', icon: ChefHat },
+  { path: '/admin/server-calls', label: 'Appels serveur', icon: Bell },
+  { path: '/admin/products', label: 'Products', icon: Package },
+  { path: '/admin/categories', label: 'Categories', icon: Tags },
+  { path: '/admin/tables', label: 'Tables', icon: Grid3X3 },
+  { path: '/admin/payments', label: 'Payments', icon: Wallet },
+  { path: '/admin/stats', label: 'Statistics', icon: BarChart3 },
+  { path: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 
 export default function AdminLayout() {
@@ -35,7 +25,7 @@ export default function AdminLayout() {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { locale, toggleLanguage, t, user, setUser } = useApp();
+  const { locale, toggleLanguage, t } = useApp();
   const [pendingCalls, setPendingCalls] = useState([]);
   const [bellOpen, setBellOpen] = useState(false);
   const bellRef = useRef(null);
@@ -68,7 +58,6 @@ export default function AdminLayout() {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    setUser(null);
     navigate('/admin/login');
   };
 
@@ -81,11 +70,6 @@ export default function AdminLayout() {
   if (location.pathname === '/admin/login') {
     return <Outlet />;
   }
-
-  const navItems = ALL_NAV_ITEMS.filter((item) => {
-    if (item.permission === 'users') return user?.role === 'super_admin' || user?.role === 'admin';
-    return user?.role ? PERMISSIONS[user.role]?.includes(item.permission) : false;
-  });
 
   const sidebarContent = (
     <div className={`${collapsed ? 'w-16' : 'w-56'} transition-all duration-300 bg-zinc-950 border-r border-white/10 flex flex-col h-full`}>

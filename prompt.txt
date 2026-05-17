@@ -1,23 +1,32 @@
-Fix the authentication backend now.
+EMERGENCY FIX FOR RENDER CRASH.
 
-The Neon users table uses the column:
+The backend crashes because:
 
-password_hash
+src/routes/users.js imports:
+updateUser,
+deleteUser
 
-NOT password.
+from:
+../controllers/userController.js
 
-Directly edit the backend auth/login code and replace every usage of:
+but userController.js does not export updateUser/deleteUser.
 
-user.password
+Fix immediately.
 
-or SQL selecting password
+Open:
+src/routes/users.js
 
-with:
+Do this:
+1. Remove updateUser and deleteUser from the import.
+2. Remove or comment any routes using updateUser/deleteUser.
+3. Keep only getUsers and createUser routes.
+4. Do not touch working routes: public restaurants, menu, orders, payments, kitchen, server-calls.
+5. Run/start backend and make sure there is no crash.
+6. Run build if needed.
+7. Commit the fix.
 
-password_hash
-
-The login endpoint must compare bcrypt against user.password_hash.
-
-Do not explain.
-
-Directly modify the backend files and rebuild successfully.
+Acceptance:
+- backend starts without "does not provide an export named updateUser"
+- Render deploy succeeds
+- /api/public/restaurants returns 200
+- admin login page still opens
