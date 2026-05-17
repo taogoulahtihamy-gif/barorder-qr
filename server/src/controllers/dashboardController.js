@@ -41,7 +41,7 @@ export async function getDashboard(req, res) {
       query(`
         SELECT sc.*, rt.table_number FROM server_calls sc
         JOIN restaurant_tables rt ON rt.id = sc.table_id
-        WHERE (rt.restaurant_id = $1 OR rt.restaurant_id IS NULL) AND sc.status = 'new'
+        WHERE (rt.restaurant_id = $1 OR rt.restaurant_id IS NULL) AND sc.status = 'pending'
         ORDER BY sc.created_at DESC LIMIT 10
       `, [rid]),
     ]);

@@ -24,6 +24,7 @@ import PrintableQRPage from '../pages/admin/PrintableQRPage';
 import PaymentsPage from '../pages/admin/PaymentsPage';
 import StatsPage from '../pages/admin/StatsPage';
 import SettingsPage from '../pages/admin/SettingsPage';
+import ServerCallsPage from '../pages/admin/ServerCallsPage';
 
 export default function AppRouter() {
   return (
@@ -53,6 +54,7 @@ export default function AppRouter() {
         <Route path="tables" element={<TablesPage />} />
         <Route path="payments" element={<PaymentsPage />} />
         <Route path="stats" element={<StatsPage />} />
+        <Route path="server-calls" element={<ServerCallsPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
     </Routes>

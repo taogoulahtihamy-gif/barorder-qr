@@ -211,14 +211,36 @@ export async function getServerAlerts() {
   }
   return data.map(c => ({
     id: c.id,
-    table: c.table_id || c.table_number,
+    table: c.table_number || c.table_id,
     time: c.created_at,
-    handled: c.status !== 'new',
+    status: c.status || 'pending',
+    table_id: c.table_id,
   }));
 }
 
 export async function markAlertHandled(alertId) {
-  const { data } = await api.patch(`/api/admin/server-calls/${alertId}/status`, { status: 'handled' });
+  const { data } = await api.patch(`/api/admin/server-calls/${alertId}/status`, { status: 'resolved' });
+  return data;
+}
+
+export async function getServerCalls(status) {
+  const params = status ? { params: { status } } : {};
+  const { data } = await api.get('/api/admin/server-calls', params);
+  if (!Array.isArray(data)) {
+    throw new Error('Server calls API returned invalid data');
+  }
+  return data.map(c => ({
+    id: c.id,
+    tableId: c.table_id,
+    tableNumber: c.table_number,
+    status: c.status || 'pending',
+    message: c.message || '',
+    createdAt: c.created_at,
+  }));
+}
+
+export async function updateServerCallStatus(callId, status) {
+  const { data } = await api.patch(`/api/admin/server-calls/${callId}/status`, { status });
   return data;
 }
 

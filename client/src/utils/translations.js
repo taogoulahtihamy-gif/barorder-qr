@@ -250,6 +250,17 @@ const fr = {
   'Temps estimé': 'Temps estimé',
   'Client': 'Client',
   'Commande': 'Commande',
+  'Appels serveur': 'Appels serveur',
+  'Serveur appelé': 'Serveur appelé',
+  'En attente': 'En attente',
+  'Accepté': 'Accepté',
+  'Résolu': 'Résolu',
+  'Résoudre': 'Résoudre',
+  'Voir tous les appels': 'Voir tous les appels',
+  'Aucun appel': 'Aucun appel',
+  'Appel serveur': 'Appel serveur',
+  'Un serveur arrive bientôt': 'Un serveur arrive bientôt',
+  'Erreur lors de l\'appel': 'Erreur lors de l\'appel',
   'Table': 'Table',
 };
 

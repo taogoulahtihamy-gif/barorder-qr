@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Plus, Search, ShoppingCart, Minus, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Plus, Search, ShoppingCart, Minus, RefreshCw, AlertTriangle, Phone, CheckCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import Badge from '../../components/Badge';
@@ -8,13 +9,14 @@ import LoadingSpinner from '../../components/LoadingSpinner';
 import CartDrawer from '../../components/CartDrawer';
 import { useApp } from '../../context/AppContext';
 import { formatPrice } from '../../utils/formatters';
+import { callServer } from '../../services/serverCallService';
 import { getMenuBySlug } from '../../services/menuService';
 import api from '../../services/api';
 
 export default function MenuPage() {
   const { restaurantId, restaurantSlug, slug: slugParam, tableId } = useParams();
   const navigate = useNavigate();
-  const { addToCart, removeFromCart, updateQuantity, cart, cartTotal, cartCount, t, setTableId, setRestaurantId, setRestaurantSlug, setRestaurant } = useApp();
+  const { addToCart, removeFromCart, updateQuantity, cart, cartTotal, cartCount, t, setTableId, setRestaurantId, setRestaurantSlug, setRestaurant, restaurant } = useApp();
   const [items, setItems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,8 +24,17 @@ export default function MenuPage() {
   const [activeCategory, setActiveCategory] = useState('Tout');
   const [search, setSearch] = useState('');
   const [cartOpen, setCartOpen] = useState(false);
+  const [calling, setCalling] = useState(false);
+  const [callCooldown, setCallCooldown] = useState(false);
+  const cooldownTimer = useRef(null);
 
   const effectiveSlug = slugParam || restaurantSlug || '';
+
+  useEffect(() => {
+    return () => {
+      if (cooldownTimer.current) clearTimeout(cooldownTimer.current);
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -111,6 +122,22 @@ export default function MenuPage() {
     return () => { cancelled = true; };
   }, [restaurantId, restaurantSlug, slugParam, tableId, effectiveSlug, setTableId, setRestaurantId, setRestaurantSlug, setRestaurant]);
 
+  const handleCallServer = async () => {
+    if (callCooldown || calling) return;
+    setCalling(true);
+    try {
+      const rid = restaurant?.id || restaurantId || '1';
+      await callServer(tableId, rid);
+      toast.success('Un serveur arrive bientôt');
+      setCallCooldown(true);
+      cooldownTimer.current = setTimeout(() => setCallCooldown(false), 30000);
+    } catch (e) {
+      toast.error('Erreur lors de l\'appel');
+    } finally {
+      setCalling(false);
+    }
+  };
+
   if (loading) return <LoadingSpinner size="lg" />;
 
   if (error) {
@@ -145,6 +172,19 @@ export default function MenuPage() {
         <h1 className="text-xl font-bold text-white mb-1">{t('Our Menu')}</h1>
         <p className="text-sm text-white/40">{t('Table')} {tableId}</p>
       </div>
+
+      <button
+        onClick={handleCallServer}
+        disabled={callCooldown}
+        className={`w-full flex items-center justify-center gap-2 mb-4 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+          callCooldown
+            ? 'bg-zinc-800/50 text-white/30 cursor-not-allowed'
+            : 'bg-gold-500/10 text-gold-500 hover:bg-gold-500/20 active:bg-gold-500/30'
+        }`}
+      >
+        {callCooldown ? <CheckCircle size={18} /> : <Phone size={18} />}
+        {callCooldown ? 'Serveur appelé' : t('Appeler un serveur')}
+      </button>
 
       <div className="relative mb-4">
         <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />

@@ -1,15 +1,17 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, ShoppingBag, Package, Tags, Grid3X3,
-  Wallet, BarChart3, Settings, LogOut, Globe, Menu, X, ChefHat,
+  Wallet, BarChart3, Settings, LogOut, Globe, Menu, X, ChefHat, Bell,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
+import { connectSocket, onNewServerCall, onServerCallUpdated } from '../services/socketService';
 
 const navItems = [
   { path: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/admin/orders', label: 'Orders', icon: ShoppingBag },
   { path: '/admin/kitchen', label: 'Cuisine', icon: ChefHat },
+  { path: '/admin/server-calls', label: 'Appels serveur', icon: Bell },
   { path: '/admin/products', label: 'Products', icon: Package },
   { path: '/admin/categories', label: 'Categories', icon: Tags },
   { path: '/admin/tables', label: 'Tables', icon: Grid3X3 },
@@ -24,6 +26,34 @@ export default function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { locale, toggleLanguage, t } = useApp();
+  const [pendingCalls, setPendingCalls] = useState([]);
+  const [bellOpen, setBellOpen] = useState(false);
+  const bellRef = useRef(null);
+
+  useEffect(() => {
+    const socket = connectSocket();
+    if (!socket) return;
+    const unsubNew = onNewServerCall((call) => {
+      setPendingCalls((prev) => [call, ...prev].slice(0, 10));
+    });
+    const unsubUpd = onServerCallUpdated((call) => {
+      setPendingCalls((prev) => prev.filter((c) => c.id !== call.id));
+    });
+    return () => {
+      unsubNew();
+      unsubUpd();
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (bellRef.current && !bellRef.current.contains(e.target)) {
+        setBellOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -34,6 +64,7 @@ export default function AdminLayout() {
   const handleNav = (path) => {
     navigate(path);
     setMobileOpen(false);
+    setBellOpen(false);
   };
 
   if (location.pathname === '/admin/login') {
@@ -109,12 +140,112 @@ export default function AdminLayout() {
           </button>
           <h1 className="text-lg font-bold text-gold-500">BarOrder</h1>
           <div className="ml-auto flex items-center gap-2">
+            <div className="relative" ref={bellRef}>
+              <button
+                onClick={() => setBellOpen(!bellOpen)}
+                className="p-1.5 text-white/60 hover:text-gold-500 relative"
+              >
+                <Bell size={18} />
+                {pendingCalls.length > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                    {pendingCalls.length > 9 ? '9+' : pendingCalls.length}
+                  </span>
+                )}
+              </button>
+              {bellOpen && (
+                <div className="absolute right-0 top-full mt-2 w-72 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
+                  <div className="p-3 border-b border-white/10 flex items-center justify-between">
+                    <span className="text-sm font-semibold text-white">Appels serveur</span>
+                    <span className="text-xs text-white/40">{pendingCalls.length} en attente</span>
+                  </div>
+                  <div className="max-h-64 overflow-y-auto">
+                    {pendingCalls.length === 0 ? (
+                      <p className="text-sm text-white/30 text-center py-4">Aucun appel</p>
+                    ) : (
+                      pendingCalls.map((call) => (
+                        <div key={call.id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 border-b border-white/5 last:border-0">
+                          <div className="w-2 h-2 rounded-full bg-red-400 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-white font-medium">Table {call.table_number || call.table_id}</p>
+                            <p className="text-xs text-white/40 truncate">
+                              {new Date(call.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  {pendingCalls.length > 0 && (
+                    <button
+                      onClick={() => handleNav('/admin/server-calls')}
+                      className="w-full p-2.5 text-xs font-medium text-gold-500 hover:bg-gold-500/10 transition-colors border-t border-white/10"
+                    >
+                      Voir tous les appels
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
             <button onClick={toggleLanguage} className="p-1.5 text-white/40 hover:text-wave-500 text-xs font-medium">
               <Globe size={16} className="inline mr-0.5" />
               {locale === 'fr' ? 'EN' : 'FR'}
             </button>
           </div>
         </header>
+
+        <header className="sticky top-0 z-40 bg-black/90 backdrop-blur border-b border-white/10 px-6 py-3 hidden lg:flex items-center justify-end gap-4">
+          <div className="relative" ref={bellRef}>
+            <button
+              onClick={() => setBellOpen(!bellOpen)}
+              className="p-2 text-white/60 hover:text-gold-500 relative transition-colors"
+            >
+              <Bell size={20} />
+              {pendingCalls.length > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] font-bold w-4.5 h-4.5 rounded-full flex items-center justify-center min-w-[18px] min-h-[18px] px-1">
+                  {pendingCalls.length > 99 ? '99+' : pendingCalls.length}
+                </span>
+              )}
+            </button>
+            {bellOpen && (
+              <div className="absolute right-0 top-full mt-2 w-80 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
+                <div className="p-3 border-b border-white/10 flex items-center justify-between">
+                  <span className="text-sm font-semibold text-white">Appels serveur</span>
+                  <span className="text-xs text-white/40">{pendingCalls.length} en attente</span>
+                </div>
+                <div className="max-h-72 overflow-y-auto">
+                  {pendingCalls.length === 0 ? (
+                    <p className="text-sm text-white/30 text-center py-4">Aucun appel</p>
+                  ) : (
+                    pendingCalls.map((call) => (
+                      <div key={call.id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 border-b border-white/5 last:border-0">
+                        <div className="w-2 h-2 rounded-full bg-red-400 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-white font-medium">Table {call.table_number || call.table_id}</p>
+                          <p className="text-xs text-white/40 truncate">
+                            {new Date(call.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+                {pendingCalls.length > 0 && (
+                  <button
+                    onClick={() => handleNav('/admin/server-calls')}
+                    className="w-full p-2.5 text-xs font-medium text-gold-500 hover:bg-gold-500/10 transition-colors border-t border-white/10"
+                  >
+                    Voir tous les appels
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+          <button onClick={toggleLanguage} className="p-1.5 text-white/40 hover:text-wave-500 text-xs font-medium flex items-center gap-1">
+            <Globe size={16} />
+            {locale === 'fr' ? 'EN' : 'FR'}
+          </button>
+        </header>
+
         <div className="flex-1 overflow-auto p-4 lg:p-6">
           <Outlet />
         </div>

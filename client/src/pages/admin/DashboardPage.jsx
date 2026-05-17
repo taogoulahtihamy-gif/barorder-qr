@@ -6,7 +6,7 @@ import Button from '../../components/Button';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { useApp } from '../../context/AppContext';
 import { getDashboard, markAlertHandled } from '../../services/adminService';
-import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated } from '../../services/socketService';
+import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated, onNewServerCall, onServerCallUpdated } from '../../services/socketService';
 
 export default function DashboardPage() {
   const { t } = useApp();
@@ -32,12 +32,16 @@ export default function DashboardPage() {
     const unsub1 = socket ? onNewOrder(refresh) : () => {};
     const unsub2 = socket ? onOrderStatusUpdated(refresh) : () => {};
     const unsub3 = socket ? onPaymentUpdated(refresh) : () => {};
+    const unsub4 = socket ? onNewServerCall(refresh) : () => {};
+    const unsub5 = socket ? onServerCallUpdated(refresh) : () => {};
 
     return () => {
       clearInterval(polling);
       unsub1();
       unsub2();
       unsub3();
+      unsub4();
+      unsub5();
     };
   }, [refresh]);
 
@@ -132,13 +136,14 @@ export default function DashboardPage() {
                   <div key={alert.id || i} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Bell size={14} className="text-yellow-400" />
-                      <span className="text-sm text-white/80">{t('Table')} {alert.table}</span>
+                      <span className="text-xs text-white/40 capitalize">{alert.status}</span>
+                    <span className="text-sm text-white/80">{t('Table')} {alert.table}</span>
                       <span className="text-xs text-white/30">{alert.time}</span>
                     </div>
                     <Button
                       variant="ghost"
                       className="text-xs px-2 py-1"
-                      onClick={() => markAlertHandled(alert.id)}
+                      onClick={() => markAlertHandled(alert.id).then(refresh)}
                     >
                       {t('Mark as handled')}
                     </Button>

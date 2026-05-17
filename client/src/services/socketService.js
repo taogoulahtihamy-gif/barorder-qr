@@ -55,6 +55,18 @@ export function onServerCalled(handler) {
   return () => socket.off('server_called', handler);
 }
 
+export function onNewServerCall(handler) {
+  if (!socket) return () => {};
+  socket.on('new_server_call', handler);
+  return () => socket.off('new_server_call', handler);
+}
+
+export function onServerCallUpdated(handler) {
+  if (!socket) return () => {};
+  socket.on('server_call_updated', handler);
+  return () => socket.off('server_call_updated', handler);
+}
+
 export function emitOrderStatusUpdated(orderId, status) {
   if (socket) {
     socket.emit('order_status_updated', { orderId, status });

@@ -298,7 +298,7 @@ export async function callServer(req, res) {
     console.log("REQUESTED TABLE:", requestedTable);
 
     const table = await queryOne(`
-      SELECT id FROM restaurant_tables
+      SELECT id, table_number FROM restaurant_tables
       WHERE restaurant_id = $1
       AND (id::text = $2 OR table_number::text = $2)
       LIMIT 1
@@ -309,15 +309,16 @@ export async function callServer(req, res) {
     }
 
     const resolvedTableId = table.id;
+    const resolvedTableNumber = table.table_number;
     console.log("RESOLVED TABLE ID:", resolvedTableId);
 
     const call = await queryOne(`
-      INSERT INTO server_calls (table_id, status, message)
-      VALUES ($1, 'new', $2)
+      INSERT INTO server_calls (restaurant_id, table_id, table_number, status, message)
+      VALUES ($1::int, $2::int, $3::text, 'pending', $4::text)
       RETURNING *
-    `, [resolvedTableId, message || '']);
+    `, [rid, resolvedTableId, resolvedTableNumber, message || '']);
     try {
-      req.app.get('io').emit('server_called', call);
+      req.app.get('io').emit('new_server_call', call);
     } catch {}
     res.status(201).json(call);
   } catch (err) {

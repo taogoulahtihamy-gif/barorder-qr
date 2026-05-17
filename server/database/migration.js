@@ -15,6 +15,10 @@ export async function runMigrations() {
     `ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_name VARCHAR(150)`,
     `ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_phone VARCHAR(50)`,
     `ALTER TABLE orders ADD COLUMN IF NOT EXISTS kitchen_note TEXT`,
+    `ALTER TABLE server_calls ADD COLUMN IF NOT EXISTS restaurant_id INTEGER REFERENCES restaurants(id) ON DELETE CASCADE`,
+    `ALTER TABLE server_calls ADD COLUMN IF NOT EXISTS table_number VARCHAR(20)`,
+    `UPDATE server_calls sc SET restaurant_id = rt.restaurant_id FROM restaurant_tables rt WHERE rt.id = sc.table_id AND sc.restaurant_id IS NULL`,
+    `UPDATE server_calls sc SET table_number = rt.table_number FROM restaurant_tables rt WHERE rt.id = sc.table_id AND sc.table_number IS NULL`,
   ];
 
   for (const sql of steps) {

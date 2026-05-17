@@ -1,116 +1,117 @@
-Fix remaining BarOrder QR stabilization points before deployment.
+Build a professional waiter call + realtime notification system in the existing BarOrder QR project.
 
-Scope: only fix points 1 and 2:
-1. Mobile responsive UI
-2. Code cleanup
-Do NOT touch deployment, backend database schema, payment/order logic, or working API routes.
+IMPORTANT:
+- Do not redesign the existing UI.
+- Do not break working orders, payments, kitchen, dashboard, or QR flow.
+- Keep current architecture.
+- Apply changes directly to project files.
 
-Current issue still visible on customer menu mobile:
-On /r/le-palais/menu/1, the category chips row:
-"Tout", "Plats", "Vin", "Grillades", "Boissons", "Desserts", "Cocktails"
-is still overlapping/cut on iPhone.
-It must become a clean horizontal scroll row.
+GOAL
+Customers can press:
+"Appeler un serveur"
+from the table page/menu page.
 
-Required fix for ALL chip/filter rows, client and admin:
-- Create/ensure one reusable CSS class:
-  .filter-scroll or .chip-scroll
-- Apply it to:
-  - client menu categories
-  - admin orders filters
-  - admin payments filters
-  - any other status/category chip row
+Admins/staff instantly receive the call in realtime.
 
-CSS requirements:
-- display: flex;
-- flex-wrap: nowrap;
-- gap: 10px;
-- width: 100%;
-- max-width: 100%;
-- overflow-x: auto;
-- overflow-y: hidden;
-- -webkit-overflow-scrolling: touch;
-- scrollbar-width: none;
-- padding-bottom: 4px;
-- min-width: 0;
+FEATURES
 
-Hide scrollbar:
-- .filter-scroll::-webkit-scrollbar { display: none; }
+1. Customer side
+Routes:
+- /r/:slug/table/:tableId
+- /r/:slug/menu/:tableId
 
-Every chip/button inside must have:
-- flex: 0 0 auto;
-- white-space: nowrap;
-- min-height: 44px;
-- padding: 0 18px;
-- max-width: none;
-- border-radius: 999px;
+Add a working "Appeler un serveur" action.
 
-Important:
-- Only the chip row may scroll horizontally.
-- The whole page/body must NOT scroll horizontally.
-- No chip should overlap another chip.
-- No chip should be cut in half unless user scrolls the chip row.
+When pressed:
+- create a server_call record in PostgreSQL
+- emit realtime socket event:
+  new_server_call
 
-Global mobile responsive cleanup:
-- html, body, #root:
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
-- all flex/grid children that contain text:
-  min-width: 0;
-- cards:
-  width: 100%;
-  max-width: 100%;
-  overflow: hidden;
-- long text/order numbers:
-  overflow-wrap: anywhere or truncate where appropriate.
-- inputs/buttons/selects:
-  font-size: 16px minimum on mobile to prevent iPhone zoom.
-- viewport meta must prevent accidental zoom and respect safe area:
-  width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover
+Payload:
+- restaurant_id
+- table_id
+- table_number
+- message (optional)
+- status = pending
+- created_at
 
-Client menu page specific:
-- Search bar width must be 100%.
-- Product cards must not overflow.
-- Category chips must scroll horizontally inside their own row.
-- Add enough bottom padding so Safari bottom bar does not cover last products/cart button.
+2. Backend
+Create/check API routes:
+POST /api/public/server-call
+GET /api/admin/server-calls
+PATCH /api/admin/server-calls/:id/status
 
-Admin dashboard/order card cleanup:
-- Status badges must stay inside cards.
-- Amounts must always show FCFA.
-- Raw ISO dates must be formatted as dd/mm/yyyy hh:mm.
-- Cards must not overflow.
+Statuses:
+- pending
+- acknowledged
+- resolved
 
-Code cleanup:
-- Remove useless console.log/debug logs.
-- Remove obsolete mock fallback warnings in production.
-- Remove dead comments and unused imports.
-- Keep only necessary error logging.
-- Do not remove working features.
-- Do not change API endpoints that currently work.
-- Do not change database schema.
+3. Database
+Use existing server_calls table if present.
+If missing, create migration safely.
 
-Files likely involved:
-- client/src/styles/responsive.css
-- client/src/main.jsx
-- client/src/pages/MenuPage.jsx or customer menu page equivalent
-- client/src/pages/admin/OrdersPage.jsx
-- client/src/pages/admin/PaymentsPage.jsx
-- client/src/pages/admin/DashboardPage.jsx
-- shared chip/filter components if they exist
+Required fields:
+- id
+- restaurant_id
+- table_id
+- table_number
+- message
+- status
+- created_at
 
-Acceptance tests:
-- iPhone 390px /r/le-palais/menu/1:
-  category chips do not overlap.
-  category row scrolls horizontally.
-  page itself has no horizontal scroll.
-- iPhone 390px /admin/orders:
-  filter chips do not overlap.
-- iPhone 390px /admin/payments:
-  filter chips do not overlap.
-- Dashboard latest orders:
-  badges stay inside cards.
-  amounts show FCFA.
-  dates are readable.
-- npm run build passes.
+4. Realtime notifications
+Emit:
+- new_server_call
+- server_call_updated
 
-Apply changes directly to project files, not only explanations.
+Kitchen/admin pages must listen.
+
+5. Admin notification center
+Create:
+- bell notification icon in admin header
+- realtime badge counter
+- dropdown list of latest waiter calls
+
+6. Admin waiter calls page
+Create:
+/admin/server-calls
+
+Features:
+- pending calls
+- acknowledge
+- resolve
+- filter by status
+- sort newest first
+
+7. Kitchen integration
+On /admin/kitchen:
+- show floating notification/toast for new waiter calls
+- subtle sound notification
+- clickable shortcut to call list
+
+8. Customer feedback
+When customer presses button:
+- show success toast:
+  "Un serveur arrive bientôt"
+- disable spam clicking for 30 seconds
+
+9. Mobile responsive
+Must work perfectly on iPhone/mobile.
+No overflow.
+
+10. Cleanup
+- no mock data
+- no fake calls
+- no console spam
+- remove duplicate listeners
+
+11. Build
+Run npm run build and fix all errors.
+
+ACCEPTANCE TEST
+- customer presses "Appeler un serveur"
+- admin instantly sees notification
+- kitchen sees toast/sound
+- call appears in /admin/server-calls
+- admin can acknowledge and resolve
+- realtime updates everywhere

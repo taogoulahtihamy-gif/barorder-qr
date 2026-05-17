@@ -1,12 +1,13 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { Clock, Maximize, Minimize } from 'lucide-react';
+import { Clock, Maximize, Minimize, Bell } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { useApp } from '../../context/AppContext';
 import { getOrders, updateOrderStatus } from '../../services/adminService';
-import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated } from '../../services/socketService';
+import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated, onNewServerCall } from '../../services/socketService';
 
 const KANBAN_COLUMNS = [
   { key: 'new', label: 'Nouvelle', color: 'from-rose-500/20 to-rose-500/5', border: 'border-rose-500/30' },
@@ -47,7 +48,24 @@ function ElapsedTime({ createdAt }) {
   return <>{elapsed}</>;
 }
 
+function playSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 800;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.3);
+  } catch {}
+}
+
 export default function KitchenPage() {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -80,15 +98,35 @@ export default function KitchenPage() {
     const unsubPay = socket ? onPaymentUpdated(() => {
       refreshOrders();
     }) : () => {};
+    const unsubServerCall = socket ? onNewServerCall((call) => {
+      playSound();
+      toast.custom((tInstance) => (
+        <div
+          onClick={() => { toast.dismiss(tInstance.id); navigate('/admin/server-calls'); }}
+          className="bg-zinc-900 border border-yellow-500/30 rounded-xl p-4 shadow-2xl cursor-pointer hover:bg-zinc-800 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center">
+              <Bell size={20} className="text-yellow-400" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-white">Appel serveur</p>
+              <p className="text-xs text-white/50">Table {call.table_number || call.table_id}</p>
+            </div>
+          </div>
+        </div>
+      ), { duration: 6000, position: 'top-right' });
+    }) : () => {};
 
     return () => {
       clearInterval(polling);
       unsubNew();
       unsubStatus();
       unsubPay();
+      unsubServerCall();
       Object.values(glowTimeouts.current).forEach(clearTimeout);
     };
-  }, [refreshOrders]);
+  }, [refreshOrders, navigate]);
 
   const handleStatusUpdate = useCallback(async (orderId, newStatus) => {
     try {

@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { QrCode, ArrowRight } from 'lucide-react';
+import { QrCode, ArrowRight, Phone } from 'lucide-react';
+import toast from 'react-hot-toast';
 import Button from '../../components/Button';
 import Card from '../../components/Card';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { useApp } from '../../context/AppContext';
+import { callServer } from '../../services/serverCallService';
 import api from '../../services/api';
 
 export default function TablePage() {
@@ -13,6 +15,9 @@ export default function TablePage() {
   const { t, setTableId, setRestaurantId, setRestaurantSlug, setRestaurant } = useApp();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
+  const [calling, setCalling] = useState(false);
+  const [callCooldown, setCallCooldown] = useState(false);
+  const cooldownTimer = useRef(null);
 
   useEffect(() => {
     setTableId(tableId);
@@ -29,11 +34,33 @@ export default function TablePage() {
     });
   }, [tableId, setTableId, setRestaurantId, setRestaurantSlug, setRestaurant]);
 
+  useEffect(() => {
+    return () => {
+      if (cooldownTimer.current) clearTimeout(cooldownTimer.current);
+    };
+  }, []);
+
   if (loading) return <LoadingSpinner size="lg" />;
 
   const restaurantName = data?.restaurant?.name || 'BarOrder';
   const slug = data?.restaurant?.slug || '';
   const menuPath = slug ? `/menu/${slug}/${tableId}` : `/menu/${tableId}`;
+
+  const handleCallServer = async () => {
+    if (callCooldown) return;
+    setCalling(true);
+    try {
+      const rid = data?.restaurant?.id || '1';
+      await callServer(tableId, rid);
+      toast.success('Un serveur arrive bientôt');
+      setCallCooldown(true);
+      cooldownTimer.current = setTimeout(() => setCallCooldown(false), 30000);
+    } catch (e) {
+      toast.error('Erreur lors de l\'appel');
+    } finally {
+      setCalling(false);
+    }
+  };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[80vh] px-4 text-center">
@@ -49,8 +76,17 @@ export default function TablePage() {
         <Card className="text-center" onClick={() => navigate(menuPath)}>
           <p className="text-sm text-white/70">🍕 {t('Browse Menu & Order')}</p>
         </Card>
-        <Card className="text-center" onClick={() => navigate('/server-call')}>
-          <p className="text-sm text-white/70">🔔 {t('Call a Server')}</p>
+        <Card
+          className={`text-center ${callCooldown ? 'opacity-50' : ''}`}
+          onClick={handleCallServer}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter') handleCallServer(); }}
+        >
+          <p className="text-sm text-white/70 flex items-center justify-center gap-2">
+            <Phone size={16} />
+            {calling ? '...' : t('Appeler un serveur')}
+          </p>
         </Card>
       </div>
     </div>
