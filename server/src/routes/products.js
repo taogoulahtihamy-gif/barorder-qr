@@ -5,7 +5,7 @@ import { requireRole, requirePermission } from '../middlewares/roles.js';
 
 const router = Router();
 
-router.get('/', auth, requireRole('admin', 'super_admin', 'manager', 'waiter'), getProducts);
+router.get('/', auth, requireRole('admin', 'super_admin', 'manager'), getProducts);
 router.post('/', auth, requireRole('admin', 'super_admin', 'manager'), createProduct);
 router.put('/:id', auth, requireRole('admin', 'super_admin', 'manager'), updateProduct);
 router.delete('/:id', auth, requireRole('admin', 'super_admin', 'manager'), deleteProduct);

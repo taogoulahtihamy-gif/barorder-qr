@@ -71,6 +71,24 @@ export async function updateUser(req, res) {
   }
 }
 
+export async function updateUserStatus(req, res) {
+  try {
+    const rid = Number(getRestaurantId(req));
+    const userId = Number(req.params.id);
+    const { is_active } = req.body;
+    if (is_active === undefined) return res.status(400).json({ error: 'is_active required' });
+    const user = await queryOne(
+      `UPDATE users SET is_active = $1 WHERE id = $2 AND restaurant_id = $3 RETURNING id, name, email, role, is_active, created_at`,
+      [Boolean(is_active), userId, rid]
+    );
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json(user);
+  } catch (err) {
+    console.error('[updateUserStatus]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+}
+
 export async function deleteUser(req, res) {
   try {
     const rid = Number(getRestaurantId(req));

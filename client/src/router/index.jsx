@@ -49,8 +49,8 @@ export default function AppRouter() {
         <Route path="dashboard" element={<ProtectedRoute roles={['admin','super_admin','manager']}><DashboardPage /></ProtectedRoute>} />
         <Route path="orders" element={<ProtectedRoute roles={['admin','super_admin','manager','waiter','kitchen','cashier']}><OrdersPage /></ProtectedRoute>} />
         <Route path="kitchen" element={<ProtectedRoute roles={['admin','super_admin','manager','kitchen']}><KitchenPage /></ProtectedRoute>} />
-        <Route path="products" element={<ProtectedRoute roles={['admin','super_admin','manager','waiter']}><ProductsPage /></ProtectedRoute>} />
-        <Route path="categories" element={<ProtectedRoute roles={['admin','super_admin','manager','waiter']}><CategoriesPage /></ProtectedRoute>} />
+        <Route path="products" element={<ProtectedRoute roles={['admin','super_admin','manager']}><ProductsPage /></ProtectedRoute>} />
+        <Route path="categories" element={<ProtectedRoute roles={['admin','super_admin','manager']}><CategoriesPage /></ProtectedRoute>} />
         <Route path="tables/printable-qr" element={<ProtectedRoute roles={['admin','super_admin','manager']}><PrintableQRPage /></ProtectedRoute>} />
         <Route path="tables" element={<ProtectedRoute roles={['admin','super_admin','manager','waiter']}><TablesPage /></ProtectedRoute>} />
         <Route path="payments" element={<ProtectedRoute roles={['admin','super_admin','manager','cashier']}><PaymentsPage /></ProtectedRoute>} />

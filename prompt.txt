@@ -1,38 +1,27 @@
-The current deployment is broken because of the multi-role admin system.
+MISSION: Rebuild BarOrder QR multi-role admin system properly and safely.
 
-DO NOT remove the project.
-DO NOT rollback the entire application.
-DO NOT change the UI/design.
+CONTEXT:
+The project is already deployed with:
+- React/Vite frontend
+- Node/Express backend
+- Neon PostgreSQL
+- Render backend
+- Vercel frontend
 
-Fix the authentication and role system properly and make the deployment stable.
+DO NOT break existing working features:
+- public restaurant page
+- QR table flow
+- menu
+- cart
+- checkout
+- orders
+- kitchen
+- payments
+- server calls
+- dashboard
+- mobile responsive fixes
 
-IMPORTANT:
-The Render crash comes from:
-src/routes/users.js importing:
-updateUser
-deleteUser
-from userController.js while those exports do not exist.
-
-Tasks:
-
-1. Fix ALL backend import/export mismatches.
-- Ensure every imported controller function actually exists.
-- If updateUser/deleteUser are unused, remove their imports and routes.
-- If they are needed, create proper exported functions.
-
-2. Keep ONLY this stable auth structure:
-- admin@barorder.sn
-- super@barorder.sn
-- manager@barorder.sn
-- waiter@barorder.sn
-- kitchen@barorder.sn
-- cashier@barorder.sn
-
-password for all:
-admin123
-
-3. Make login work with Neon PostgreSQL users table.
-The table columns are:
+CURRENT DATABASE USERS TABLE COLUMNS:
 id
 restaurant_id
 name
@@ -42,45 +31,254 @@ role
 created_at
 is_active
 
-VERY IMPORTANT:
-Use password_hash instead of password everywhere.
+IMPORTANT:
+Use password_hash everywhere.
+Never use password column.
 
-4. Fix bcrypt comparison correctly:
-bcrypt.compare(password, user.password_hash)
+GOAL:
+Create a stable professional role-based admin system with real backend security and frontend route protection.
 
-5. Make JWT auth stable again.
+ROLES:
+1. super_admin
+2. admin
+3. manager
+4. waiter
+5. kitchen
+6. cashier
 
-6. Make role middleware stable:
-- super_admin => full access
-- admin => admin access
-- manager => dashboard/orders/payments
-- waiter => orders + calls
-- kitchen => kitchen only
-- cashier => payments only
+DEMO ACCOUNTS:
+All must work with password: admin123
 
-7. NEVER crash the server if a role route is missing.
-Gracefully disable unavailable routes.
+- super@barorder.sn / super_admin
+- admin@barorder.sn / admin
+- manager@barorder.sn / manager
+- waiter@barorder.sn / waiter
+- kitchen@barorder.sn / kitchen
+- cashier@barorder.sn / cashier
 
-8. Ensure:
-npm install
-npm run build
-npm start
-all pass without errors.
+DATABASE:
+1. Ensure all users exist in Neon.
+2. If user exists, update role, name, restaurant_id, is_active.
+3. If user does not exist, insert it.
+4. Hash admin123 correctly with bcrypt.
+5. Never store plaintext passwords.
 
-9. Remove every broken import in:
-routes/users.js
-routes/auth.js
-controllers/userController.js
+BACKEND AUTH:
+1. Fix login endpoint.
+2. Login must:
+   - find user by email
+   - check is_active = true
+   - compare bcrypt password with user.password_hash
+   - return JWT
+   - return user object:
+     id, restaurant_id, name, email, role, is_active
 
-10. Verify deployment readiness:
-- no syntax errors
-- no missing exports
-- no undefined middleware
-- no crashing routes
+3. JWT payload must include:
+   id
+   restaurant_id
+   email
+   role
 
-11. Commit all fixes directly to the project files.
-12. Push to GitHub.
-13. Ensure Render can deploy successfully after the fix.
+4. Add or fix middleware:
+   - requireAuth
+   - requireRole(...allowedRoles)
+   - requireAnyRole(...allowedRoles)
 
-DO NOT explain.
-DIRECTLY MODIFY FILES.
+5. Backend must never crash if a role is missing.
+6. Invalid token => 401.
+7. Forbidden role => 403.
+8. Valid role => allow.
+
+ROLE PERMISSIONS:
+
+super_admin:
+- full access to everything.
+
+admin:
+- full access to restaurant operations.
+- dashboard
+- orders
+- kitchen
+- payments
+- server calls
+- products
+- categories
+- tables
+- users
+- settings
+- stats
+
+manager:
+- dashboard
+- orders
+- kitchen
+- payments
+- server calls
+- products
+- categories
+- tables
+- stats
+- no delete user
+- no create super_admin
+
+waiter:
+- orders
+- server calls
+- tables
+- customer service
+- no payments dashboard
+- no settings
+- no users
+- no product delete
+
+kitchen:
+- kitchen only
+- can update kitchen/order preparation statuses
+- cannot access payments/users/settings/stats
+
+cashier:
+- payments
+- orders
+- mark payment as paid
+- cannot access users/settings/products/categories
+
+BACKEND ROUTE PROTECTION:
+Protect routes by role without breaking existing public routes.
+
+Public routes must remain public:
+- /api/public/*
+- public menu
+- public order creation
+- server call creation from customer
+
+Admin routes:
+- /api/admin/dashboard -> super_admin, admin, manager
+- /api/admin/orders -> super_admin, admin, manager, waiter, cashier
+- /api/admin/kitchen -> super_admin, admin, manager, kitchen
+- /api/admin/payments -> super_admin, admin, manager, cashier
+- /api/admin/server-calls -> super_admin, admin, manager, waiter
+- /api/admin/products -> super_admin, admin, manager
+- /api/admin/categories -> super_admin, admin, manager
+- /api/admin/tables -> super_admin, admin, manager, waiter
+- /api/admin/users -> super_admin, admin, manager
+- /api/admin/stats -> super_admin, admin, manager
+- /api/admin/settings -> super_admin, admin
+
+IMPORTANT CRASH FIX:
+Search the whole repository for:
+updateUser
+deleteUser
+userController
+
+Then:
+- if src/routes/users.js imports updateUser/deleteUser, make sure userController exports them properly
+OR remove those routes safely.
+- Do not leave broken imports.
+- Every imported function must exist.
+- No missing export errors allowed.
+- No undefined middleware allowed.
+- Backend must start successfully.
+
+USER MANAGEMENT:
+Create or fix:
+GET /api/admin/users
+POST /api/admin/users
+PATCH /api/admin/users/:id
+PATCH /api/admin/users/:id/status
+
+Rules:
+- super_admin can create all roles.
+- admin can create manager, waiter, kitchen, cashier.
+- manager can create waiter, kitchen, cashier only.
+- no one except super_admin can create super_admin.
+- password must be hashed.
+- never return password_hash.
+
+FRONTEND AUTH:
+1. Login page must work with all demo accounts.
+2. Store token and user in localStorage.
+3. On refresh, session persists.
+4. Logout clears token/user.
+
+FRONTEND ROUTE PROTECTION:
+Protect these pages:
+- /admin/dashboard
+- /admin/orders
+- /admin/kitchen
+- /admin/payments
+- /admin/server-calls
+- /admin/products
+- /admin/categories
+- /admin/tables
+- /admin/users
+- /admin/stats
+- /admin/settings
+
+If not logged in:
+- redirect to login.
+
+If logged in but forbidden:
+- show clean "Accès non autorisé" page.
+- do not crash.
+
+SIDEBAR:
+Show menu items based on role only.
+
+Expected:
+super_admin/admin:
+- everything
+
+manager:
+- dashboard
+- orders
+- kitchen
+- payments
+- server calls
+- products
+- categories
+- tables
+- stats
+
+waiter:
+- orders
+- server calls
+- tables
+
+kitchen:
+- kitchen only
+
+cashier:
+- orders
+- payments
+
+MOBILE:
+Keep admin mobile responsive.
+No horizontal overflow.
+No broken sidebar.
+No overlapping buttons.
+
+TESTS TO RUN:
+1. npm install if needed.
+2. npm run build.
+3. npm start.
+4. Verify backend starts.
+5. Verify no missing export error.
+6. Verify no updateUser/deleteUser crash.
+7. Verify login works for each demo account.
+8. Verify each role sees only allowed pages.
+9. Verify forbidden direct URLs show Accès non autorisé.
+10. Verify public menu/order flow still works.
+
+DEPLOYMENT:
+1. Commit all real file changes.
+2. Push to main.
+3. Ensure git status is clean after commit.
+4. Do not claim complete unless files were actually modified and pushed.
+
+FINAL OUTPUT REQUIRED:
+Show:
+- list of modified files
+- confirmation npm build passed
+- confirmation backend starts
+- demo accounts list
+- exact role access matrix
