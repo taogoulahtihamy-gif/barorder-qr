@@ -5,7 +5,9 @@ let socket = null;
 export function connectSocket() {
   if (socket?.connected) return socket;
   try {
-    socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000', {
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    const baseUrl = import.meta.env.VITE_SOCKET_URL || apiUrl.replace(/\/api$/, '') || window.location.origin;
+    socket = io(baseUrl, {
       autoConnect: true,
       reconnection: true,
     });

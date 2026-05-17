@@ -1,6 +1,8 @@
 import { io } from 'socket.io-client';
 
-const socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000', {
+const apiUrl = import.meta.env.VITE_API_URL || '';
+const socketBase = import.meta.env.VITE_SOCKET_URL || apiUrl.replace(/\/api$/, '') || window.location.origin;
+const socket = io(socketBase, {
   autoConnect: false,
 });
 

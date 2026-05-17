@@ -72,7 +72,7 @@ export default function LoginPage() {
             {loading ? <span className="animate-pulse">{t('Sign In')}...</span> : <><LogIn size={18} /> {t('Sign In')}</>}
           </Button>
 
-          <div className="text-xs text-white/20 text-center mt-4 space-y-0.5">
+          <div className="text-xs text-white/50 text-center mt-4 space-y-0.5">
             <p>super@barorder.sn / admin123</p>
             <p>manager@barorder.sn / admin123</p>
             <p>waiter@barorder.sn / admin123</p>
