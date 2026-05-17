@@ -1,68 +1,86 @@
-EMERGENCY PRODUCTION FIX — FIND AND FIX THE REAL DEPLOYED FILE.
+The current deployment is broken because of the multi-role admin system.
 
-Problem:
-Render still crashes with:
+DO NOT remove the project.
+DO NOT rollback the entire application.
+DO NOT change the UI/design.
 
-src/routes/users.js imports updateUser/deleteUser
-but ../controllers/userController.js does not export updateUser/deleteUser.
+Fix the authentication and role system properly and make the deployment stable.
 
-This means the real deployed file still contains broken imports.
-
-DO NOT explain.
-DO NOT give code examples.
-DIRECTLY edit the real project files.
+IMPORTANT:
+The Render crash comes from:
+src/routes/users.js importing:
+updateUser
+deleteUser
+from userController.js while those exports do not exist.
 
 Tasks:
 
-1. Search the entire repository for:
-updateUser
-deleteUser
-userController
+1. Fix ALL backend import/export mismatches.
+- Ensure every imported controller function actually exists.
+- If updateUser/deleteUser are unused, remove their imports and routes.
+- If they are needed, create proper exported functions.
 
-2. Find every file importing updateUser/deleteUser from userController.
+2. Keep ONLY this stable auth structure:
+- admin@barorder.sn
+- super@barorder.sn
+- manager@barorder.sn
+- waiter@barorder.sn
+- kitchen@barorder.sn
+- cashier@barorder.sn
 
-3. Fix src/routes/users.js and any duplicate users route file.
+password for all:
+admin123
 
-Replace broken imports with only existing exports:
-getUsers
-createUser
-
-4. Remove/comment every route using:
-updateUser
-deleteUser
-
-5. If user management is incomplete, disable the /api/admin/users edit/delete routes temporarily.
-
-6. Keep only safe routes:
-GET /api/admin/users
-POST /api/admin/users
-
-7. Do not touch working modules:
-- public restaurants
-- menu
-- orders
-- payments
-- kitchen
-- server calls
-- admin dashboard
-
-8. Ensure login uses:
+3. Make login work with Neon PostgreSQL users table.
+The table columns are:
+id
+restaurant_id
+name
+email
 password_hash
-not password
+role
+created_at
+is_active
 
-9. Ensure admin@barorder.sn / admin123 works.
+VERY IMPORTANT:
+Use password_hash instead of password everywhere.
 
-10. Run backend locally:
+4. Fix bcrypt comparison correctly:
+bcrypt.compare(password, user.password_hash)
+
+5. Make JWT auth stable again.
+
+6. Make role middleware stable:
+- super_admin => full access
+- admin => admin access
+- manager => dashboard/orders/payments
+- waiter => orders + calls
+- kitchen => kitchen only
+- cashier => payments only
+
+7. NEVER crash the server if a role route is missing.
+Gracefully disable unavailable routes.
+
+8. Ensure:
+npm install
+npm run build
 npm start
+all pass without errors.
 
-11. Run build if needed.
+9. Remove every broken import in:
+routes/users.js
+routes/auth.js
+controllers/userController.js
 
-12. Commit and push to main.
+10. Verify deployment readiness:
+- no syntax errors
+- no missing exports
+- no undefined middleware
+- no crashing routes
 
-Acceptance test:
-- Search result shows no import of updateUser/deleteUser.
-- Backend starts without crash.
-- Render deploy succeeds.
-- /api/public/restaurants returns 200.
-- /api/public/r/le-palais/menu returns 200.
-- Admin login works with admin@barorder.sn / admin123.
+11. Commit all fixes directly to the project files.
+12. Push to GitHub.
+13. Ensure Render can deploy successfully after the fix.
+
+DO NOT explain.
+DIRECTLY MODIFY FILES.

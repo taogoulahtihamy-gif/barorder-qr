@@ -1,23 +1,33 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, ShoppingBag, Package, Tags, Grid3X3,
-  Wallet, BarChart3, Settings, LogOut, Globe, Menu, X, ChefHat, Bell,
+  Wallet, BarChart3, Settings, LogOut, Globe, Menu, X, ChefHat, Bell, Users,
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { connectSocket, onNewServerCall, onServerCallUpdated } from '../services/socketService';
 
-const navItems = [
-  { path: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/admin/orders', label: 'Orders', icon: ShoppingBag },
-  { path: '/admin/kitchen', label: 'Cuisine', icon: ChefHat },
-  { path: '/admin/server-calls', label: 'Appels serveur', icon: Bell },
-  { path: '/admin/products', label: 'Products', icon: Package },
-  { path: '/admin/categories', label: 'Categories', icon: Tags },
-  { path: '/admin/tables', label: 'Tables', icon: Grid3X3 },
-  { path: '/admin/payments', label: 'Payments', icon: Wallet },
-  { path: '/admin/stats', label: 'Statistics', icon: BarChart3 },
-  { path: '/admin/settings', label: 'Settings', icon: Settings },
+const ROLE_PAGES = {
+  admin: ['dashboard','orders','kitchen','server-calls','products','categories','tables','payments','stats','users','settings'],
+  super_admin: ['dashboard','orders','kitchen','server-calls','products','categories','tables','payments','stats','users','settings'],
+  manager: ['dashboard','orders','kitchen','server-calls','products','categories','tables','payments','stats','settings'],
+  waiter: ['orders','server-calls','tables'],
+  kitchen: ['orders','kitchen'],
+  cashier: ['orders','payments'],
+};
+
+const NAV_ITEMS = [
+  { path: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, page: 'dashboard' },
+  { path: '/admin/orders', label: 'Orders', icon: ShoppingBag, page: 'orders' },
+  { path: '/admin/kitchen', label: 'Cuisine', icon: ChefHat, page: 'kitchen' },
+  { path: '/admin/server-calls', label: 'Appels serveur', icon: Bell, page: 'server-calls' },
+  { path: '/admin/products', label: 'Products', icon: Package, page: 'products' },
+  { path: '/admin/categories', label: 'Categories', icon: Tags, page: 'categories' },
+  { path: '/admin/tables', label: 'Tables', icon: Grid3X3, page: 'tables' },
+  { path: '/admin/payments', label: 'Payments', icon: Wallet, page: 'payments' },
+  { path: '/admin/stats', label: 'Statistics', icon: BarChart3, page: 'stats' },
+  { path: '/admin/users', label: 'Users', icon: Users, page: 'users' },
+  { path: '/admin/settings', label: 'Settings', icon: Settings, page: 'settings' },
 ];
 
 export default function AdminLayout() {
@@ -25,7 +35,7 @@ export default function AdminLayout() {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { locale, toggleLanguage, t } = useApp();
+  const { locale, toggleLanguage, t, user } = useApp();
   const [pendingCalls, setPendingCalls] = useState([]);
   const [bellOpen, setBellOpen] = useState(false);
   const bellRef = useRef(null);
@@ -70,6 +80,9 @@ export default function AdminLayout() {
   if (location.pathname === '/admin/login') {
     return <Outlet />;
   }
+
+  const allowedPages = ROLE_PAGES[user?.role] || [];
+  const navItems = NAV_ITEMS.filter((item) => allowedPages.includes(item.page));
 
   const sidebarContent = (
     <div className={`${collapsed ? 'w-16' : 'w-56'} transition-all duration-300 bg-zinc-950 border-r border-white/10 flex flex-col h-full`}>
