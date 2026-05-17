@@ -1,95 +1,59 @@
-Do not explain the steps anymore.
+Fix the mobile dashboard order cards layout in BarOrder QR.
 
-Directly edit and apply the responsive fixes to the actual project files now.
+Problem seen on /admin/dashboard mobile:
+- In "Dernières commandes", status badges like "Nouvelle", "Acceptée", "en attente", "en préparation" overflow outside their card/row.
+- Amounts on the right show only numbers like "1250", "1825", "13" without currency.
+- Dates are too long and push layout.
+- Card content is cramped on iPhone/Safari.
 
-Modify the existing files in the workspace instead of showing code examples.
+Required fixes:
+1. On mobile, each latest-order card must use a clean vertical layout:
+   - top row: order number + status badge
+   - second row: table + products
+   - third row: date/time
+   - bottom row: total amount aligned right
 
-Fix the remaining mobile responsive and QR routing issues in BarOrder QR.
+2. Status badges:
+   - must never overflow outside card
+   - use max-width: 100%
+   - white-space: nowrap
+   - flex: 0 0 auto
+   - font-size: clamp(12px, 3.2vw, 14px)
+   - padding: 6px 12px
+   - border-radius: 999px
 
-Problems:
-1. On mobile admin pages (/admin/orders and /admin/payments), the filter chips overlap each other:
-   - "Tout", "Wave", "Cash", "Orange Money", "Payé", "En attente"
-   - "Tout", "En attente", "Acceptée", "En préparation", etc.
-   They must NOT overlap.
+3. Amounts:
+   - always display with currency:
+     "1 250 FCFA", "1 825 FCFA", "13 FCFA"
+   - use existing formatCurrency helper if available
+   - if not, create a safe formatter:
+     new Intl.NumberFormat("fr-FR").format(amount) + " FCFA"
 
-Required fix for filters:
-- Create a reusable horizontal scroll container for filter chips.
-- The container must use:
-  overflow-x: auto;
-  overflow-y: hidden;
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 10px;
-  width: 100%;
-  max-width: 100%;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-- Each chip/button must use:
-  flex: 0 0 auto;
-  white-space: nowrap;
-  min-height: 44px;
-  padding: 0 18px;
-- Hide scrollbar visually.
-- The page/body must still have no horizontal scroll. Only the chip row can scroll inside itself.
-- Apply this to OrdersPage, PaymentsPage, KitchenPage if it has status filters, and any admin page with filter chips.
+4. Dates:
+   - format readable date instead of ISO:
+     "16/05/2026 22:06"
+   - never display raw ISO string in dashboard cards.
 
-2. QR/table entry route issue:
-When scanning or opening:
-  /r/le-palais/table/1
-the app must show the table welcome page like:
-  Le Palais
-  Bienvenue à la Table 1
-  Reprendre ma commande
-  Voir le menu
-  Parcourir le menu
-  Appeler un serveur
+5. Card layout:
+   - use flex-wrap: wrap
+   - min-width: 0 on all flex children
+   - long order numbers can wrap or truncate with ellipsis
+   - products line must wrap naturally
+   - no horizontal overflow
+   - card padding must fit mobile.
 
-It must NOT redirect directly to:
-  /r/le-palais/menu/1
+6. Apply this specifically to:
+   - DashboardPage latest orders section
+   - any reusable OrderCard used there
 
-Required fix:
-- Find the QR generation code.
-- Ensure generated QR URL is:
-  `${PUBLIC_APP_URL}/r/${restaurantSlug}/table/${tableNumberOrId}`
-NOT:
-  `${PUBLIC_APP_URL}/r/${restaurantSlug}/menu/${tableNumberOrId}`
+7. Keep current dark premium UI.
+8. Do not change backend/API.
+9. Run npm run build and fix all errors.
 
-- Find React routes.
-- Ensure /r/:slug/table/:tableId renders the TableWelcomePage / TableLandingPage.
-- Ensure the “Voir le menu” button is the only action that navigates to /r/:slug/menu/:tableId.
-- Do not auto-redirect from table page to menu page.
-- Remove any useEffect or navigate() that sends /table/:tableId directly to /menu/:tableId.
-
-3. Preserve current working backend/API.
-4. Do not change database logic.
-5. Do not change payment/order creation logic.
-6. Keep premium dark UI.
-7. Run npm run build and fix errors.
-
-Acceptance tests:
-- On iPhone 390px, /admin/orders filter chips do not overlap.
-- On iPhone 390px, /admin/payments filter chips do not overlap.
-- Body has no horizontal scroll.
-- Filter row scrolls horizontally inside its own container.
-- /r/le-palais/table/1 opens welcome page.
-- Clicking “Voir le menu” opens /r/le-palais/menu/1.
-
-
-Disable unwanted browser zoom and make all pages fully adaptive/dynamic on mobile.
-
-Requirements:
-- Add proper viewport meta tag:
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-
-- Prevent accidental zoom on iPhone/Safari.
-- Inputs/selects/buttons must use minimum font-size: 16px to avoid iOS auto zoom.
-- The UI must adapt fluidly to all mobile sizes without needing pinch zoom.
-- No content should require zooming to read.
-- Use responsive typography with clamp() where necessary.
-- Images/cards/buttons/text must scale dynamically.
-- Respect safe areas on iPhone (notch + bottom bar).
-- No horizontal overflow anywhere.
-- The app must feel like a native mobile app.
-
-Keep the premium dark design and existing functionality unchanged.
-
+Acceptance test:
+On iPhone width 390px:
+- no status badge exits card
+- every amount has FCFA
+- date is readable, not raw ISO
+- no horizontal scroll
+- cards remain clean and aligned.

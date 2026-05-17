@@ -75,23 +75,31 @@ export default function DashboardPage() {
         <div className="lg:col-span-2">
           <h2 className="text-lg font-semibold text-white mb-3">{t('Last orders')}</h2>
           <div className="space-y-2">
-            {data.recentOrders.map((order) => (
-              <Card key={order.id} className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-white">{order.id}</span>
-                    <Badge variant={order.status === 'pending' || order.status === 'new' ? 'pending' : order.status === 'preparing' ? 'preparing' : order.status === 'ready' ? 'ready' : 'delivered'}>
+            {data.recentOrders.map((order) => {
+              const badgeVariant = {
+                new: 'pending',
+                pending: 'pending',
+                accepted: 'preparing',
+                preparing: 'preparing',
+                ready: 'ready',
+                served: 'delivered',
+                paid: 'delivered',
+                cancelled: 'cancelled',
+              };
+              return (
+                <Card key={order.id} className="flex flex-col gap-1.5 flex-wrap min-w-0">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-sm font-medium text-white truncate min-w-0">{order.id}</span>
+                    <Badge variant={badgeVariant[order.status] || 'default'}>
                       {t(order.status)}
                     </Badge>
                   </div>
-                  <p className="text-xs text-white/40 mt-0.5">{t('Table')} {order.table} &middot; {(order.items || []).slice(0, 3).join(', ')}{order.items?.length > 3 ? '...' : ''}</p>
-                </div>
-                <div className="text-right flex-shrink-0 ml-3">
-                  <p className="text-sm font-semibold text-gold-500">{order.total}</p>
-                  <p className="text-xs text-white/40">{order.time}</p>
-                </div>
-              </Card>
-            ))}
+                  <p className="text-xs text-white/40 min-w-0">{t('Table')} {order.table} &middot; {(order.items || []).slice(0, 3).join(', ')}{order.items?.length > 3 ? '...' : ''}</p>
+                  <p className="text-xs text-white/40 min-w-0">{order.time}</p>
+                  <p className="text-sm font-semibold text-gold-500 text-right min-w-0">{order.total}</p>
+                </Card>
+              );
+            })}
           </div>
         </div>
 

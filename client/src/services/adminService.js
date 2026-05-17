@@ -87,6 +87,18 @@ const MOCK_STATS = {
   totalRevenueFormatted: formatCurrency(1245000),
 };
 
+function formatReadableDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mi = String(d.getMinutes()).padStart(2, '0');
+  return `${dd}/${mm}/${yyyy} ${hh}:${mi}`;
+}
+
 export async function getDashboard() {
   const { data } = await api.get('/api/admin/dashboard');
   if (!data || typeof data.revenueFormatted === 'undefined') {
@@ -103,6 +115,8 @@ export async function getDashboard() {
     recentOrders: (data.recentOrders || []).map(o => ({
       ...o,
       items: Array.isArray(o.items) ? o.items : [],
+      total: o.total != null ? formatCurrency(o.total) : o.total,
+      time: o.time ? formatReadableDate(o.time) : o.time,
     })),
     topProducts: (data.topProducts || []).map(p => ({
       name: p.name,

@@ -1,4 +1,4 @@
-export default function Badge({ children, variant = 'default' }) {
+export default function Badge({ children, variant = 'default', className = '' }) {
   const colors = {
     default: 'bg-white/10 text-white/70',
     pending: 'bg-yellow-500/20 text-yellow-400',
@@ -8,7 +8,10 @@ export default function Badge({ children, variant = 'default' }) {
     cancelled: 'bg-red-500/20 text-red-400',
   };
   return (
-    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${colors[variant] || colors.default}`}>
+    <span
+      className={`px-3 py-1.5 rounded-full font-medium whitespace-nowrap flex-shrink-0 max-w-full ${colors[variant] || colors.default} ${className}`}
+      style={{ fontSize: 'clamp(12px, 3.2vw, 14px)' }}
+    >
       {children}
     </span>
   );
