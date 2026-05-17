@@ -8,6 +8,7 @@ import { useApp } from '../context/AppContext';
 import { connectSocket, onNewServerCall, onServerCallUpdated } from '../services/socketService';
 
 const PERMISSIONS = {
+  admin: ['restaurants','users','settings','payments','analytics','products','categories','tables','orders','kitchen','server_calls','dashboard','stats'],
   super_admin: ['restaurants','users','settings','payments','analytics','products','categories','tables','orders','kitchen','server_calls','dashboard','stats'],
   manager: ['dashboard','orders','kitchen','server_calls','products','categories','tables','payments','stats','settings'],
   waiter: ['orders','server_calls','tables'],
@@ -82,7 +83,7 @@ export default function AdminLayout() {
   }
 
   const navItems = ALL_NAV_ITEMS.filter((item) => {
-    if (item.permission === 'users') return user?.role === 'super_admin';
+    if (item.permission === 'users') return user?.role === 'super_admin' || user?.role === 'admin';
     return user?.role ? PERMISSIONS[user.role]?.includes(item.permission) : false;
   });
 

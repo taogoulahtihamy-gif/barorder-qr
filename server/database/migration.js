@@ -1,9 +1,19 @@
 import 'dotenv/config';
 import pkg from 'pg';
+import bcrypt from 'bcrypt';
 import config from '../src/config/index.js';
 
 const { Pool } = pkg;
 const pool = new Pool({ connectionString: config.databaseUrl });
+
+const DEMO_USERS = [
+  { name: 'Admin', email: 'admin@barorder.sn', role: 'admin' },
+  { name: 'Super Admin', email: 'super@barorder.sn', role: 'super_admin' },
+  { name: 'Manager', email: 'manager@barorder.sn', role: 'manager' },
+  { name: 'Waiter', email: 'waiter@barorder.sn', role: 'waiter' },
+  { name: 'Kitchen', email: 'kitchen@barorder.sn', role: 'kitchen' },
+  { name: 'Cashier', email: 'cashier@barorder.sn', role: 'cashier' },
+];
 
 export async function runMigrations() {
   console.log('[migration] Running schema migrations...');
@@ -68,6 +78,35 @@ export async function runMigrations() {
     console.log('[migration] Accent fixes applied');
   } catch (err) {
     console.warn(`[migration] Accent fix skip (${err.message})`);
+  }
+
+  // Auto-seed demo users
+  try {
+    const rc = await pool.query('SELECT id FROM restaurants LIMIT 1');
+    let restaurantId;
+    if (rc.rows.length === 0) {
+      const r = await pool.query(`
+        INSERT INTO restaurants (name, slug, logo_url, address, phone, currency, primary_color)
+        VALUES ('BarOrder', 'barorder', '', '123 Rue Principale, Dakar', '+221 77 123 45 67', 'FCFA', '#D4AF37')
+        RETURNING id
+      `);
+      restaurantId = r.rows[0].id;
+      console.log('[migration] Created default restaurant');
+    } else {
+      restaurantId = rc.rows[0].id;
+    }
+    const passwordHash = await bcrypt.hash('admin123', 10);
+    for (const u of DEMO_USERS) {
+      await pool.query(`
+        INSERT INTO users (restaurant_id, name, email, password_hash, role, is_active)
+        VALUES ($1, $2, $3, $4, $5, true)
+        ON CONFLICT (email) DO UPDATE SET role = $5, is_active = true, password_hash = $4;
+      `, [restaurantId, u.name, u.email, passwordHash, u.role]);
+      console.log(`[migration] Seeded user: ${u.email} (${u.role})`);
+    }
+    console.log('[migration] Auto-seed complete');
+  } catch (err) {
+    console.warn(`[migration] Auto-seed skip: ${err.message}`);
   }
 
   console.log('[migration] Done.');

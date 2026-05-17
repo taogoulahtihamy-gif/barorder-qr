@@ -1,4 +1,9 @@
 const PERMISSIONS = {
+  admin: [
+    'restaurants', 'users', 'settings', 'payments', 'analytics',
+    'products', 'categories', 'tables', 'orders', 'kitchen', 'server_calls',
+    'dashboard', 'stats',
+  ],
   super_admin: [
     'restaurants', 'users', 'settings', 'payments', 'analytics',
     'products', 'categories', 'tables', 'orders', 'kitchen', 'server_calls',

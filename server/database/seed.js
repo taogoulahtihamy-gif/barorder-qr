@@ -22,6 +22,7 @@ async function seed() {
   const restaurantId = rc.rows[0].id;
 
   const demoUsers = [
+    { name: 'Admin', email: 'admin@barorder.sn', role: 'admin' },
     { name: 'Super Admin', email: 'super@barorder.sn', role: 'super_admin' },
     { name: 'Manager', email: 'manager@barorder.sn', role: 'manager' },
     { name: 'Waiter', email: 'waiter@barorder.sn', role: 'waiter' },

@@ -9,9 +9,10 @@ import LoadingSpinner from '../../components/LoadingSpinner';
 import api from '../../services/api';
 import { useApp } from '../../context/AppContext';
 
-const VALID_ROLES = ['super_admin', 'manager', 'waiter', 'kitchen', 'cashier'];
+const VALID_ROLES = ['admin', 'super_admin', 'manager', 'waiter', 'kitchen', 'cashier'];
 
 const ROLE_COLORS = {
+  admin: 'text-rose-400 bg-rose-500/10',
   super_admin: 'text-red-400 bg-red-500/10',
   manager: 'text-amber-400 bg-amber-500/10',
   waiter: 'text-blue-400 bg-blue-500/10',

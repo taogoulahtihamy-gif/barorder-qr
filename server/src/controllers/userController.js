@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import { query, queryOne } from '../config/database.js';
 import { getRestaurantId } from '../utils/restaurantId.js';
 
-const VALID_ROLES = ['super_admin', 'manager', 'waiter', 'kitchen', 'cashier'];
+const VALID_ROLES = ['admin', 'super_admin', 'manager', 'waiter', 'kitchen', 'cashier'];
 
 export async function getUsers(req, res) {
   try {
@@ -30,39 +30,10 @@ export async function createUser(req, res) {
     if (!VALID_ROLES.includes(role)) {
       return res.status(400).json({ error: 'Rôle invalide' });
     }
-    if (role === 'super_admin' && req.user.role !== 'super_admin') {
+    if (role === 'super_admin' && req.user.role !== 'super_admin' && req.user.role !== 'admin') {
       return res.status(403).json({ error: 'Seul un super_admin peut créer un super_admin' });
     }
-    const existing = await queryOne('SELECT id FROM users WHERE email = $1', [email]);
-    if (existing) {
-      return res.status(400).json({ error: 'Cet email est déjà utilisé' });
-    }
-    const passwordHash = await bcrypt.hash(password, 10);
-    const user = await queryOne(`
-      INSERT INTO users (restaurant_id, name, email, password_hash, role, is_active)
-      VALUES ($1, $2, $3, $4, $5, true)
-      RETURNING id, name, email, role, is_active, created_at
-    `, [rid, name, email, passwordHash, role]);
-    res.status(201).json(user);
-  } catch (err) {
-    console.error('[createUser] error:', err.message);
-    res.status(500).json({ error: err.message });
-  }
-}
-
-export async function updateUser(req, res) {
-  try {
-    const rid = Number(getRestaurantId(req));
-    const userId = Number(req.params.id);
-    const { name, email, password, role, is_active } = req.body;
-    const existing = await queryOne('SELECT * FROM users WHERE id = $1 AND restaurant_id = $2', [userId, rid]);
-    if (!existing) {
-      return res.status(404).json({ error: 'Utilisateur non trouvé' });
-    }
-    if (role && !VALID_ROLES.includes(role)) {
-      return res.status(400).json({ error: 'Rôle invalide' });
-    }
-    if (role === 'super_admin' && req.user.role !== 'super_admin') {
+    if (role === 'super_admin' && req.user.role !== 'super_admin' && req.user.role !== 'admin') {
       return res.status(403).json({ error: 'Seul un super_admin peut attribuer le rôle super_admin' });
     }
     const updateFields = [];

@@ -1,165 +1,68 @@
-Build professional role-based admin access for BarOrder QR.
+The admin authentication system is failing with HTTP 401.
 
 IMPORTANT:
-- Do not rewrite the project.
-- Do not redesign the UI.
-- Do not break working orders, kitchen, payments, QR, menu, server calls, or dashboard.
-- Apply changes directly to project files.
+- Directly modify the real project files.
+- Do not explain.
+- Fix the backend authentication completely.
+- Ensure demo accounts actually exist in database/backend.
+- Ensure login works on deployed environment.
 
-GOAL:
-Create a professional admin/user role system for restaurant operations.
+CURRENT ISSUE:
+All demo accounts return:
+"Request failed with status code 401"
 
-ROLES:
-1. super_admin
-2. manager
-3. waiter
-4. kitchen
-5. cashier
+Accounts displayed:
+- super@barorder.sn
+- admin@barorder.sn
+- manager@barorder.sn
+- waiter@barorder.sn
+- kitchen@barorder.sn
+- cashier@barorder.sn
 
-PERMISSIONS:
-
-super_admin:
-- full access to everything
-- restaurants
-- users
-- settings
-- payments
-- analytics
-- products
-- categories
-- tables
-- orders
-- kitchen
-- server calls
-
-manager:
-- dashboard
-- orders
-- kitchen
-- server calls
-- products
-- categories
-- tables
-- payments
-- stats
-- settings
-
-waiter:
-- orders
-- server calls
-- tables
-- customer service actions
-- cannot delete products/categories
-- cannot access settings
-
-kitchen:
-- kitchen page only
-- orders preparation statuses only
-- cannot see payments/settings/stats
-
-cashier:
-- orders
-- payments
-- mark as paid
-- cannot edit products/categories/settings
+Password:
+admin123
 
 TASKS:
 
-1. Backend auth
-- Extend users table if needed with:
-  role
-  restaurant_id
-  is_active
-- Ensure login returns:
-  id, name, email, role, restaurant_id
+1. Create real users in backend/database
+- Insert demo accounts automatically if missing
+- Hash passwords correctly
+- Store proper roles
 
-2. JWT
-- Include role and restaurant_id in JWT payload.
+2. Fix login API
+- Verify email/password correctly
+- Return JWT/token/session
+- Return user role
+- Prevent 401 for valid credentials
 
-3. Backend middleware
-Create:
-- requireAuth
-- requireRole(...)
-- requirePermission(...)
+3. Verify auth flow
+- frontend login -> backend API -> success -> dashboard redirect
 
-4. Protect API routes
-Apply permissions to:
-- products CRUD
-- categories CRUD
-- tables CRUD
-- orders status
-- payments
-- stats
-- settings
-- kitchen
-- server calls
+4. Persist session
+- localStorage/sessionStorage token
+- auto login after refresh
 
-5. Frontend auth context
-- Store user role.
-- Expose:
-  hasRole()
-  canAccess()
+5. Role-based access
+- admin/super_admin -> full access
+- manager -> limited admin
+- waiter -> waiter pages only
+- kitchen -> kitchen only
+- cashier -> payments only
 
-6. Route protection
-Protect admin routes by role:
-- /admin/dashboard
-- /admin/orders
-- /admin/kitchen
-- /admin/server-calls
-- /admin/products
-- /admin/categories
-- /admin/tables
-- /admin/payments
-- /admin/stats
-- /admin/settings
+6. Protect routes
+Unauthorized users cannot access:
+- /admin
+- /kitchen
+- /payments
+- /users
 
-7. Sidebar
-- Show only pages allowed for current role.
+7. Verify deployed environment
+- ensure Vercel frontend points to correct backend API
+- ensure CORS works
+- ensure production env variables are correct
 
-8. Users management page
-Create:
-/admin/users
+8. Build and verify
+Run full build and ensure login works locally and production-ready.
 
-Manager/super_admin can:
-- create user
-- edit user
-- deactivate user
-- assign role
-
-Fields:
-- name
-- email
-- password
-- role
-- is_active
-
-9. Demo users seed
-Create or update demo users:
-- super@barorder.sn / admin123 / super_admin
-- manager@barorder.sn / admin123 / manager
-- waiter@barorder.sn / admin123 / waiter
-- kitchen@barorder.sn / admin123 / kitchen
-- cashier@barorder.sn / admin123 / cashier
-
-10. UX
-- If user accesses forbidden page:
-  show "Accès non autorisé"
-- Do not crash.
-- Redirect unauthenticated users to login.
-
-11. Security
-- Never return password_hash.
-- Hash passwords with bcrypt.
-- Validate role values.
-- Do not allow normal users to create super_admin unless current user is super_admin.
-
-12. Build
-Run npm run build and fix errors.
-
-ACCEPTANCE TEST:
-- kitchen user sees only Kitchen.
-- waiter sees Orders + Server Calls + Tables.
-- cashier sees Orders + Payments.
-- manager sees operational pages.
-- super_admin sees everything including Users.
-- forbidden routes show access denied.
+After fixes:
+Show working login credentials only.
