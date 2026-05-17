@@ -34,7 +34,7 @@ async function seed() {
     await pool.query(`
       INSERT INTO users (restaurant_id, name, email, password_hash, role, is_active)
       VALUES ($1, $2, $3, $4, $5, true)
-      ON CONFLICT (email) DO UPDATE SET role = $5, is_active = true;
+      ON CONFLICT (email) DO UPDATE SET role = $5, is_active = true, password_hash = $4;
     `, [restaurantId, u.name, u.email, passwordHash, u.role]);
   }
 
