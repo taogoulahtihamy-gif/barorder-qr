@@ -33,14 +33,12 @@ export default function ProductsPage() {
   }, []);
 
   const openAdd = () => {
-    console.log('ADD PRODUCT CLICKED');
     setEditing(null);
     setForm({ name: '', description: '', price: '', category: '', category_id: '', image_url: '', available: true, featured: false });
     setModalOpen(true);
   };
 
   const openEdit = (product) => {
-    console.log('EDIT PRODUCT CLICKED', product.id);
     setEditing(product);
     setForm({ ...product, category_id: product.category_id || '', price: String(product.price) });
     setModalOpen(true);
@@ -54,10 +52,8 @@ export default function ProductsPage() {
     try {
       const payload = { ...form, price: parseFloat(form.price) };
       if (editing) {
-        console.log('SAVE PRODUCT (edit)', editing.id, payload);
         await updateProduct(editing.id, payload);
       } else {
-        console.log('SAVE PRODUCT (create)', payload);
         await createProduct(payload);
       }
       setModalOpen(false);
@@ -69,7 +65,6 @@ export default function ProductsPage() {
   };
 
   const handleDelete = async (id) => {
-    console.log('DELETE PRODUCT CLICKED', id);
     if (!window.confirm('Supprimer ce produit ?')) return;
     try {
       await deleteProduct(id);
@@ -81,7 +76,6 @@ export default function ProductsPage() {
   };
 
   const handleToggleAvailability = async (id) => {
-    console.log('TOGGLE AVAILABILITY CLICKED', id);
     try {
       await toggleProductAvailability(id);
       refreshList();

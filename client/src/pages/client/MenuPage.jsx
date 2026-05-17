@@ -156,7 +156,7 @@ export default function MenuPage() {
         />
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-3 mb-4 scrollbar-none">
+      <div className="filter-scroll mb-4">
         {categories.map((cat) => (
           <button
             key={cat}

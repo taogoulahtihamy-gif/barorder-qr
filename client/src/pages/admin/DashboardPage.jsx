@@ -87,8 +87,8 @@ export default function DashboardPage() {
                 cancelled: 'cancelled',
               };
               return (
-                <Card key={order.id} className="flex flex-col gap-1.5 flex-wrap min-w-0">
-                  <div className="flex items-center gap-2 min-w-0">
+                <Card key={order.id} className="flex flex-col gap-1.5 min-w-0">
+                  <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-white truncate min-w-0">{order.id}</span>
                     <Badge variant={badgeVariant[order.status] || 'default'}>
                       {t(order.status)}

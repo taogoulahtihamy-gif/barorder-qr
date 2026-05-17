@@ -25,14 +25,12 @@ export default function CategoriesPage() {
   }, []);
 
   const openAdd = () => {
-    console.log('ADD CATEGORY CLICKED');
     setEditing(null);
     setForm({ name: '', description: '', sort_order: 0, active: true });
     setModalOpen(true);
   };
 
   const openEdit = (cat) => {
-    console.log('EDIT CATEGORY CLICKED', cat.id);
     setEditing(cat);
     setForm({ ...cat, sort_order: cat.sort_order || 0 });
     setModalOpen(true);
@@ -46,10 +44,8 @@ export default function CategoriesPage() {
     try {
       const payload = { ...form, sort_order: parseInt(form.sort_order) || 0 };
       if (editing) {
-        console.log('SAVE CATEGORY (edit)', editing.id, payload);
         await updateCategory(editing.id, payload);
       } else {
-        console.log('SAVE CATEGORY (create)', payload);
         await createCategory(payload);
       }
       setModalOpen(false);
@@ -61,7 +57,6 @@ export default function CategoriesPage() {
   };
 
   const handleDelete = async (id) => {
-    console.log('DELETE CATEGORY CLICKED', id);
     if (!window.confirm('Supprimer cette catégorie ?')) return;
     try {
       await deleteCategory(id);

@@ -191,6 +191,8 @@ img, video, canvas, svg {
   max-width: 100%;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  padding-bottom: 4px;
+  min-width: 0;
 }
 .filter-scroll::-webkit-scrollbar {
   display: none;
@@ -200,6 +202,14 @@ img, video, canvas, svg {
   white-space: nowrap;
   min-height: 44px;
   padding: 0 18px;
+  max-width: none;
+  border-radius: 999px;
+}
+
+.card {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 input, select, textarea, button {

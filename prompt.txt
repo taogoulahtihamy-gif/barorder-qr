@@ -1,59 +1,116 @@
-Fix the mobile dashboard order cards layout in BarOrder QR.
+Fix remaining BarOrder QR stabilization points before deployment.
 
-Problem seen on /admin/dashboard mobile:
-- In "Dernières commandes", status badges like "Nouvelle", "Acceptée", "en attente", "en préparation" overflow outside their card/row.
-- Amounts on the right show only numbers like "1250", "1825", "13" without currency.
-- Dates are too long and push layout.
-- Card content is cramped on iPhone/Safari.
+Scope: only fix points 1 and 2:
+1. Mobile responsive UI
+2. Code cleanup
+Do NOT touch deployment, backend database schema, payment/order logic, or working API routes.
 
-Required fixes:
-1. On mobile, each latest-order card must use a clean vertical layout:
-   - top row: order number + status badge
-   - second row: table + products
-   - third row: date/time
-   - bottom row: total amount aligned right
+Current issue still visible on customer menu mobile:
+On /r/le-palais/menu/1, the category chips row:
+"Tout", "Plats", "Vin", "Grillades", "Boissons", "Desserts", "Cocktails"
+is still overlapping/cut on iPhone.
+It must become a clean horizontal scroll row.
 
-2. Status badges:
-   - must never overflow outside card
-   - use max-width: 100%
-   - white-space: nowrap
-   - flex: 0 0 auto
-   - font-size: clamp(12px, 3.2vw, 14px)
-   - padding: 6px 12px
-   - border-radius: 999px
+Required fix for ALL chip/filter rows, client and admin:
+- Create/ensure one reusable CSS class:
+  .filter-scroll or .chip-scroll
+- Apply it to:
+  - client menu categories
+  - admin orders filters
+  - admin payments filters
+  - any other status/category chip row
 
-3. Amounts:
-   - always display with currency:
-     "1 250 FCFA", "1 825 FCFA", "13 FCFA"
-   - use existing formatCurrency helper if available
-   - if not, create a safe formatter:
-     new Intl.NumberFormat("fr-FR").format(amount) + " FCFA"
+CSS requirements:
+- display: flex;
+- flex-wrap: nowrap;
+- gap: 10px;
+- width: 100%;
+- max-width: 100%;
+- overflow-x: auto;
+- overflow-y: hidden;
+- -webkit-overflow-scrolling: touch;
+- scrollbar-width: none;
+- padding-bottom: 4px;
+- min-width: 0;
 
-4. Dates:
-   - format readable date instead of ISO:
-     "16/05/2026 22:06"
-   - never display raw ISO string in dashboard cards.
+Hide scrollbar:
+- .filter-scroll::-webkit-scrollbar { display: none; }
 
-5. Card layout:
-   - use flex-wrap: wrap
-   - min-width: 0 on all flex children
-   - long order numbers can wrap or truncate with ellipsis
-   - products line must wrap naturally
-   - no horizontal overflow
-   - card padding must fit mobile.
+Every chip/button inside must have:
+- flex: 0 0 auto;
+- white-space: nowrap;
+- min-height: 44px;
+- padding: 0 18px;
+- max-width: none;
+- border-radius: 999px;
 
-6. Apply this specifically to:
-   - DashboardPage latest orders section
-   - any reusable OrderCard used there
+Important:
+- Only the chip row may scroll horizontally.
+- The whole page/body must NOT scroll horizontally.
+- No chip should overlap another chip.
+- No chip should be cut in half unless user scrolls the chip row.
 
-7. Keep current dark premium UI.
-8. Do not change backend/API.
-9. Run npm run build and fix all errors.
+Global mobile responsive cleanup:
+- html, body, #root:
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+- all flex/grid children that contain text:
+  min-width: 0;
+- cards:
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+- long text/order numbers:
+  overflow-wrap: anywhere or truncate where appropriate.
+- inputs/buttons/selects:
+  font-size: 16px minimum on mobile to prevent iPhone zoom.
+- viewport meta must prevent accidental zoom and respect safe area:
+  width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover
 
-Acceptance test:
-On iPhone width 390px:
-- no status badge exits card
-- every amount has FCFA
-- date is readable, not raw ISO
-- no horizontal scroll
-- cards remain clean and aligned.
+Client menu page specific:
+- Search bar width must be 100%.
+- Product cards must not overflow.
+- Category chips must scroll horizontally inside their own row.
+- Add enough bottom padding so Safari bottom bar does not cover last products/cart button.
+
+Admin dashboard/order card cleanup:
+- Status badges must stay inside cards.
+- Amounts must always show FCFA.
+- Raw ISO dates must be formatted as dd/mm/yyyy hh:mm.
+- Cards must not overflow.
+
+Code cleanup:
+- Remove useless console.log/debug logs.
+- Remove obsolete mock fallback warnings in production.
+- Remove dead comments and unused imports.
+- Keep only necessary error logging.
+- Do not remove working features.
+- Do not change API endpoints that currently work.
+- Do not change database schema.
+
+Files likely involved:
+- client/src/styles/responsive.css
+- client/src/main.jsx
+- client/src/pages/MenuPage.jsx or customer menu page equivalent
+- client/src/pages/admin/OrdersPage.jsx
+- client/src/pages/admin/PaymentsPage.jsx
+- client/src/pages/admin/DashboardPage.jsx
+- shared chip/filter components if they exist
+
+Acceptance tests:
+- iPhone 390px /r/le-palais/menu/1:
+  category chips do not overlap.
+  category row scrolls horizontally.
+  page itself has no horizontal scroll.
+- iPhone 390px /admin/orders:
+  filter chips do not overlap.
+- iPhone 390px /admin/payments:
+  filter chips do not overlap.
+- Dashboard latest orders:
+  badges stay inside cards.
+  amounts show FCFA.
+  dates are readable.
+- npm run build passes.
+
+Apply changes directly to project files, not only explanations.

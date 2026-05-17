@@ -9,9 +9,7 @@ export function connectSocket() {
       autoConnect: true,
       reconnection: true,
     });
-    socket.on('connect', () => {
-      console.log('SOCKET CONNECTED');
-    });
+
     socket.on('connect_error', (err) => {
       console.warn('SOCKET ERROR', err.message);
     });
@@ -35,32 +33,20 @@ export function disconnectSocket() {
 
 export function onNewOrder(handler) {
   if (!socket) return () => {};
-  const wrapped = (data) => {
-    console.log('NEW ORDER RECEIVED', data?.order_number || data?.id);
-    handler(data);
-  };
-  socket.on('new_order', wrapped);
-  return () => socket.off('new_order', wrapped);
+  socket.on('new_order', handler);
+  return () => socket.off('new_order', handler);
 }
 
 export function onOrderStatusUpdated(handler) {
   if (!socket) return () => {};
-  const wrapped = (data) => {
-    console.log('ORDER STATUS UPDATED RECEIVED', data?.order_number || data?.id, data?.order_status || data?.status);
-    handler(data);
-  };
-  socket.on('order_status_updated', wrapped);
-  return () => socket.off('order_status_updated', wrapped);
+  socket.on('order_status_updated', handler);
+  return () => socket.off('order_status_updated', handler);
 }
 
 export function onPaymentUpdated(handler) {
   if (!socket) return () => {};
-  const wrapped = (data) => {
-    console.log('PAYMENT UPDATED RECEIVED', data?.orderId || data?.order_id);
-    handler(data);
-  };
-  socket.on('payment_updated', wrapped);
-  return () => socket.off('payment_updated', wrapped);
+  socket.on('payment_updated', handler);
+  return () => socket.off('payment_updated', handler);
 }
 
 export function onServerCalled(handler) {
