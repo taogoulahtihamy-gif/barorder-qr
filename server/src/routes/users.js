@@ -1,13 +1,9 @@
-import { Router } from 'express';
-import { getUsers, createUser, updateUser, deleteUser } from '../controllers/userController.js';
-import auth from '../middlewares/authMiddleware.js';
-import { requireRole } from '../middlewares/roles.js';
+import express from 'express';
+import { getUsers, createUser } from '../controllers/userController.js';
 
-const router = Router();
+const router = express.Router();
 
-router.get('/', auth, requireRole('admin', 'super_admin'), getUsers);
-router.post('/', auth, requireRole('admin', 'super_admin'), createUser);
-router.put('/:id', auth, requireRole('admin', 'super_admin'), updateUser);
-router.delete('/:id', auth, requireRole('admin', 'super_admin'), deleteUser);
+router.get('/', getUsers);
+router.post('/', createUser);
 
 export default router;
