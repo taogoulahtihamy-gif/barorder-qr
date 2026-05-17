@@ -1,1 +1,23 @@
-Create a real seed script that inserts the demo users into the Neon users table with bcrypt-hashed password admin123, and make sure the deployed backend uses this Neon DATABASE_URL.
+Fix the authentication backend now.
+
+The Neon users table uses the column:
+
+password_hash
+
+NOT password.
+
+Directly edit the backend auth/login code and replace every usage of:
+
+user.password
+
+or SQL selecting password
+
+with:
+
+password_hash
+
+The login endpoint must compare bcrypt against user.password_hash.
+
+Do not explain.
+
+Directly modify the backend files and rebuild successfully.
