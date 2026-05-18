@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { Clock, Maximize, Minimize, Bell } from 'lucide-react';
+import { Clock, Maximize, Minimize, Bell, Printer } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
@@ -8,6 +8,7 @@ import LoadingSpinner from '../../components/LoadingSpinner';
 import { useApp } from '../../context/AppContext';
 import { getOrders, updateOrderStatus } from '../../services/adminService';
 import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated, onNewServerCall } from '../../services/socketService';
+import { printKitchenTicket } from '../../utils/printService';
 
 const KANBAN_COLUMNS = [
   { key: 'new', label: 'Nouvelle', color: 'from-rose-500/20 to-rose-500/5', border: 'border-rose-500/30' },
@@ -65,8 +66,13 @@ export default function KitchenPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [autoPrint, setAutoPrint] = useState(() => localStorage.getItem('autoPrintKitchen') === 'true');
   const { t } = useApp();
   const glowTimeouts = useRef({});
+
+  useEffect(() => {
+    localStorage.setItem('autoPrintKitchen', autoPrint);
+  }, [autoPrint]);
 
   const refreshOrders = useCallback(async () => {
     try {
@@ -84,10 +90,20 @@ export default function KitchenPage() {
     const polling = setInterval(refreshOrders, 5000);
 
     const socket = connectSocket();
-    const unsubNew = socket ? onNewOrder(() => {
+    const unsubNew = socket ? onNewOrder((data) => {
       refreshOrders();
       playSound();
       toast.success('Nouvelle commande !');
+      if (autoPrint) {
+        const order = {
+          orderNumber: data?.order_number || data?.orderNumber || '',
+          table: data?.table_number || data?.table_id || '',
+          items: (data?.items || []).map(i => ({ name: i.product_name || i.name, qty: i.quantity })),
+          kitchenNote: data?.kitchen_note || data?.kitchenNote || '',
+          createdAt: data?.created_at || data?.createdAt,
+        };
+        printKitchenTicket(order);
+      }
     }) : () => {};
     const unsubStatus = socket ? onOrderStatusUpdated(() => {
       refreshOrders();
@@ -160,20 +176,31 @@ export default function KitchenPage() {
 
   return (
     <div className={isFullscreen ? 'h-screen overflow-hidden bg-black' : ''}>
-      <div className={`flex items-center justify-between mb-6 ${isFullscreen ? 'px-4 pt-4' : ''}`}>
+      <div className={`flex items-center justify-between mb-6 flex-wrap gap-2 ${isFullscreen ? 'px-4 pt-4' : ''}`}>
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold text-white">Cuisine</h1>
           <span className="text-sm text-white/30">
             {orders.length} commande{orders.length !== 1 ? 's' : ''}
           </span>
         </div>
-        <button
-          onClick={toggleFullscreen}
-          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white/70 hover:text-white transition-colors text-sm"
-        >
-          {isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
-          {isFullscreen ? 'Quitter' : 'Plein écran'}
-        </button>
+        <div className="flex items-center gap-3">
+          <label className="flex items-center gap-2 text-xs text-white/40 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={autoPrint}
+              onChange={(e) => setAutoPrint(e.target.checked)}
+              className="w-3.5 h-3.5 rounded border-white/20 bg-zinc-800 text-gold-500 focus:ring-gold-500/30"
+            />
+            Auto-print
+          </label>
+          <button
+            onClick={toggleFullscreen}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white/70 hover:text-white transition-colors text-sm"
+          >
+            {isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
+            {isFullscreen ? 'Quitter' : 'Plein écran'}
+          </button>
+        </div>
       </div>
 
       <div className={`flex flex-col md:flex-row gap-4 md:overflow-x-auto pb-4 ${isFullscreen ? 'md:h-[calc(100vh-64px)] px-4' : ''}`}
@@ -237,9 +264,16 @@ export default function KitchenPage() {
                         </div>
                       )}
 
-                      <div className="flex items-center justify-between pt-1 border-t border-white/5">
-                        <span className="text-sm font-bold text-gold-500">{order.total}</span>
-                        <div className="flex gap-1.5">
+                      <div className="flex items-center gap-2 pt-1 border-t border-white/5">
+                        <button
+                          onClick={() => printKitchenTicket(order)}
+                          className="text-white/30 hover:text-wave-400 transition-colors"
+                          title="Imprimer ticket"
+                        >
+                          <Printer size={14} />
+                        </button>
+                        <span className="text-sm font-bold text-gold-500 ml-auto">{order.total}</span>
+                        <div className="flex gap-1">
                           {(columnActions[column.key] || []).map((action) => (
                             <Button
                               key={action.status}

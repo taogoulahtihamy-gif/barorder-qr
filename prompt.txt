@@ -1,55 +1,68 @@
-Add real sound notifications for BarOrder admin.
+Upgrade BarOrder with professional restaurant receipts and kitchen tickets.
 
-Goal:
-When a new order or server call arrives, the correct admin role receives a visible notification + sound.
+Goals:
+- printable kitchen ticket
+- printable customer receipt
+- cashier invoice
+- thermal printer friendly layout
 
-Do not break existing features.
+1. Kitchen ticket
+Create compact kitchen ticket view:
+- order number
+- table number
+- time
+- items
+- quantities
+- kitchen note
+- highlight urgent/hot items
+- no prices
 
-1. Notification targets
-- kitchen: sound when new order is created
-- waiter: sound when server call is created or order becomes ready
-- cashier: sound when order becomes served or payment is pending
-- admin/super_admin/manager: sound for all important events
+Add:
+- Print kitchen ticket button
+- Auto-print option toggle
 
-2. Frontend
-Create a notification service:
-- request browser notification permission
-- play a short notification sound
-- show toast notification
-- update bell badge count
+2. Customer receipt
+Create premium receipt:
+- BarOrder logo
+- restaurant name
+- table
+- order id
+- date/time
+- ordered items
+- subtotal
+- taxes if configured
+- total
+- payment method
+- QR code
+- thank you message
 
-3. Sound
-Use Web Audio API or a small local sound file.
-Must work on desktop and mobile after first user interaction.
-If autoplay is blocked, show button:
-“Activer les notifications”
-Once clicked, sounds are enabled.
+3. Cashier invoice
+Add:
+- paid stamp
+- cashier name
+- payment timestamp
 
-4. Socket/realtime
-Use existing socket if available.
-If socket fails, fallback to polling every 5 seconds.
+4. Printing
+Use browser print styles:
+- thermal width 58mm and 80mm
+- dark UI should print white background
+- hide admin sidebar during print
 
-Listen for:
-- new_order
-- order_status_updated
-- server_call_created
-- payment_updated
+5. PDF export
+Add:
+- download PDF receipt
 
-5. UI
-Add notification bell dropdown in admin header:
-- unread count
-- latest 10 notifications
-- mark all as read
-
-6. Role filtering
-Do not notify roles for events they should not see.
+6. Order details modal
+Add:
+- View details
+- Print
+- Download PDF
 
 7. Build and push.
 
 Acceptance:
-- creating order from QR triggers sound on kitchen/admin
-- calling server triggers sound on waiter/admin
-- marking order ready triggers sound on waiter
-- bell badge increases
-- toast appears
-- no console crash
+- kitchen can print kitchen ticket
+- cashier can print invoice
+- customer receipt looks professional
+- print layout clean
+- mobile print works

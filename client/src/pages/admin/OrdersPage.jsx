@@ -1,14 +1,17 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
+import { Eye, Printer, ChefHat } from 'lucide-react';
 import Card from '../../components/Card';
 import Badge from '../../components/Badge';
 import Button from '../../components/Button';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import OrderTimeline from '../../components/OrderTimeline';
+import OrderDetailsModal from '../../components/OrderDetailsModal';
 import { useApp } from '../../context/AppContext';
 import { getOrders, updateOrderStatus, mapOrder } from '../../services/adminService';
 import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated } from '../../services/socketService';
 import { formatCurrency } from '../../utils/formatters';
+import { printKitchenTicket, printCustomerReceipt, printCashierInvoice } from '../../utils/printService';
 
 const statusActions = {
   new: ['accepted', 'cancelled'],
@@ -56,30 +59,34 @@ function ElapsedTime({ createdAt }) {
   return <>{elapsed}</>;
 }
 
-function printTicket(order) {
-  const ticket = `
-================================
-        BARORDER - TICKET
-================================
-Commande: ${order.orderNumber}
-Table: ${order.table}
-${order.customerName ? `Client: ${order.customerName}` : ''}
-${order.customerPhone ? `Tél: ${order.customerPhone}` : ''}
---------------------------------
-${(order.items || []).map(i => `  x${i.qty || 1}  ${i.name}`).join('\n')}
---------------------------------
-${order.kitchenNote ? `Note: ${order.kitchenNote}\n` : ''}
-${order.note && !order.kitchenNote ? `Note: ${order.note}\n` : ''}
-Total: ${order.total}
---------------------------------
-${new Date().toLocaleString('fr-FR')}
-================================
-  `.trim();
-  const win = window.open('', '_blank');
-  if (win) {
-    win.document.write(`<pre style="font-family:monospace;font-size:14px;padding:16px">${ticket}</pre><script>window.print();window.close();</script>`);
-    win.document.close();
-  }
+function PrintButtons({ order }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <button
+        onClick={(e) => { e.stopPropagation(); printKitchenTicket(order); }}
+        className="text-wave-400 hover:text-wave-300 transition-colors"
+        title="Ticket cuisine"
+      >
+        <ChefHat size={14} />
+      </button>
+      <button
+        onClick={(e) => { e.stopPropagation(); printCustomerReceipt(order); }}
+        className="text-gold-500 hover:text-gold-400 transition-colors"
+        title="Facture client"
+      >
+        <Printer size={14} />
+      </button>
+      {(order.paymentStatus === 'paid' || order.status === 'paid') && (
+        <button
+          onClick={(e) => { e.stopPropagation(); printCashierInvoice(order); }}
+          className="text-emerald-400 hover:text-emerald-300 transition-colors"
+          title="Facture acquittée"
+        >
+          <Printer size={14} className="opacity-70" />
+        </button>
+      )}
+    </div>
+  );
 }
 
 const filterLabels = {
@@ -140,10 +147,16 @@ function playOrderSound() {
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState(null);
   const { t, user } = useApp();
   const roleDefault = ROLE_DEFAULT_FILTER[user?.role] || 'all';
   const [filter, setFilter] = useState(roleDefault);
+  const [autoPrint, setAutoPrint] = useState(() => localStorage.getItem('autoPrintKitchen') === 'true');
   const prevOrdersRef = useRef([]);
+
+  useEffect(() => {
+    localStorage.setItem('autoPrintKitchen', autoPrint);
+  }, [autoPrint]);
 
   const refreshOrders = useCallback(async () => {
     try {
@@ -154,13 +167,17 @@ export default function OrdersPage() {
         if (newCount > prevCount) {
           playOrderSound();
           toast.success('Nouvelle commande !');
+          if (autoPrint && Array.isArray(result) && result.length > 0) {
+            const newOrders = result.slice(0, newCount - prevCount);
+            newOrders.forEach((o) => printKitchenTicket(o));
+          }
         }
         return Array.isArray(result) ? result : [];
       });
     } catch (err) {
       console.error('[OrdersPage] refresh failed:', err);
     }
-  }, []);
+  }, [autoPrint]);
 
   useEffect(() => {
     setLoading(true);
@@ -213,18 +230,29 @@ export default function OrdersPage() {
     <div>
       <h1 className="text-2xl font-bold text-white mb-6">{t('Commandes')}</h1>
 
-      <div className="filter-scroll mb-6">
-        {statusFilters.map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`rounded-full text-sm transition-colors ${
-              filter === f ? 'bg-gold-500 text-black' : 'bg-zinc-900 text-white/60 hover:text-white'
-            }`}
-          >
-            {t(filterLabels[f])}
-          </button>
-        ))}
+      <div className="flex items-center gap-3 mb-6 flex-wrap">
+        <div className="filter-scroll flex-1">
+          {statusFilters.map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`rounded-full text-sm transition-colors ${
+                filter === f ? 'bg-gold-500 text-black' : 'bg-zinc-900 text-white/60 hover:text-white'
+              }`}
+            >
+              {t(filterLabels[f])}
+            </button>
+          ))}
+        </div>
+        <label className="flex items-center gap-2 text-xs text-white/40 cursor-pointer select-none flex-shrink-0">
+          <input
+            type="checkbox"
+            checked={autoPrint}
+            onChange={(e) => setAutoPrint(e.target.checked)}
+            className="w-3.5 h-3.5 rounded border-white/20 bg-zinc-800 text-gold-500 focus:ring-gold-500/30"
+          />
+          Auto-print cuisine
+        </label>
       </div>
 
       <div className="space-y-3">
@@ -273,11 +301,12 @@ export default function OrdersPage() {
                     </div>
                     <div className="flex items-center gap-3 mt-2 text-xs text-white/40">
                       {order.paymentStatus && <span>Paiement: {t(order.paymentStatus)}</span>}
+                      <PrintButtons order={order} />
                       <button
-                        onClick={() => printTicket(order)}
-                        className="text-wave-400 hover:text-wave-300 transition-colors"
+                        onClick={() => setSelectedOrder(order)}
+                        className="text-wave-400 hover:text-wave-300 transition-colors flex items-center gap-1"
                       >
-                        🖨️ Imprimer
+                        <Eye size={14} /> Détails
                       </button>
                     </div>
                   </div>
@@ -310,6 +339,16 @@ export default function OrdersPage() {
           <p className="text-center text-white/30 py-8">Aucune commande</p>
         )}
       </div>
+
+      {selectedOrder && (
+        <OrderDetailsModal
+          order={selectedOrder}
+          restaurant={{}}
+          userRole={user?.role}
+          cashierName={user?.name || ''}
+          onClose={() => setSelectedOrder(null)}
+        />
+      )}
     </div>
   );
 }
