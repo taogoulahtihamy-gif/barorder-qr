@@ -1,21 +1,40 @@
 import { io } from 'socket.io-client';
 
 let socket = null;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 20;
+
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'https://barorder-qr.onrender.com';
 
 export function connectSocket() {
   if (socket?.connected) return socket;
   try {
-    socket = io(import.meta.env.VITE_SOCKET_URL || 'https://barorder-qr.onrender.com', {
+    socket = io(SOCKET_URL, {
       autoConnect: true,
       reconnection: true,
+      reconnectionAttempts: MAX_RECONNECT_ATTEMPTS,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 10000,
+      timeout: 10000,
+    });
+
+    socket.on('connect', () => {
+      reconnectAttempts = 0;
     });
 
     socket.on('connect_error', (err) => {
-      console.warn('SOCKET ERROR', err.message);
+      reconnectAttempts++;
+      console.warn('[Socket] connect_error:', err.message, `(attempt ${reconnectAttempts})`);
+    });
+
+    socket.on('disconnect', (reason) => {
+      if (reason === 'io server disconnect') {
+        socket.connect();
+      }
     });
     return socket;
   } catch {
-    console.warn('Socket unavailable');
+    console.warn('[Socket] unavailable');
     return null;
   }
 }
@@ -26,8 +45,10 @@ export function getSocket() {
 
 export function disconnectSocket() {
   if (socket) {
+    socket.removeAllListeners();
     socket.disconnect();
     socket = null;
+    reconnectAttempts = 0;
   }
 }
 

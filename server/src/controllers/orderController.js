@@ -31,6 +31,7 @@ const ROLE_TRANSITIONS = {
 export async function updateOrderStatus(req, res) {
   try {
     const orderId = Number(req.params.id);
+    if (isNaN(orderId)) return res.status(400).json({ error: 'ID de commande invalide' });
     const restaurantId = Number(getRestaurantId(req));
     const { status } = req.body;
     const validStatuses = ['new', 'accepted', 'preparing', 'ready', 'served', 'paid', 'cancelled'];

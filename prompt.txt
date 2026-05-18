@@ -1,56 +1,140 @@
-Build professional QR code management for BarOrder.
+Tu vas améliorer BarOrder QR en priorité sur le workflow cuisine + stabilité production + mobile responsive.
 
-Goals:
-- generate QR codes per table
-- printable table cards
-- downloadable QR images/PDF
-- premium restaurant display
+OBJECTIF :
+Rendre le système de commandes ultra professionnel comme un vrai logiciel de restaurant.
 
-1. Admin tables page
-Improve /admin/tables:
-- each table has:
-  - table number
-  - capacity
-  - status
-  - QR link
-  - QR preview
-  - download QR PNG
-  - print table card
-  - regenerate QR
+==================================================
+1. FIX MOBILE AUTO-PRINT
+==================================================
 
-2. QR URL format
-Use:
-https://barorder-qr.vercel.app/r/:restaurantSlug/table/:tableId
+Le bloc “Auto-print cuisine” est mal placé sur mobile.
 
-3. Printable table card
-Create premium print design:
-- restaurant name
-- “Scannez pour commander”
-- QR code large
-- table number
-- short instructions
-- BarOrder branding
+Corrige complètement le responsive.
 
-4. Bulk print
-Add button:
-“Imprimer tous les QR”
-Generate printable page with all table cards.
+EXIGENCES :
+- sur mobile :
+  - les filtres deviennent scrollables horizontalement
+  - Auto-print passe en dessous proprement
+  - aucun overflow
+  - spacing propre
+  - boutons toujours visibles
 
-5. Safety
-- QR must always open the welcome page, not directly the menu.
-- tableId must never be NaN.
-- QR link must work on phone.
+UTILISER :
+- flex-wrap
+- gap responsive
+- overflow-x-auto
+- scrollbar-hide
 
-6. Design
-- dark/gold premium in UI
-- white clean print version
-- mobile responsive
+Le rendu doit être premium iPhone/Android.
 
-7. Build and push.
+==================================================
+2. PAGE CUISINE PROFESSIONNELLE
+==================================================
 
-Acceptance:
-- admin can generate QR per table
-- QR opens correct table welcome page
-- printable QR card looks professional
-- bulk print works
-- no broken table links
+Créer ou améliorer :
+/admin/kitchen
+
+DESIGN :
+- ultra lisible
+- grosses cartes
+- contraste élevé
+- optimisé tablette cuisine
+
+AFFICHER :
+- numéro commande
+- table
+- client
+- produits
+- notes cuisine
+- temps écoulé
+- statut
+- badge urgence
+
+AJOUTER :
+- bouton “Commencer”
+- bouton “Prête”
+- bouton “Imprimer”
+- timer live (minutes depuis création)
+
+COULEURS :
+- nouvelle = jaune
+- préparation = bleu
+- prête = vert
+- urgent > 20 min = rouge
+
+==================================================
+3. SON NOTIFICATION CUISINE
+==================================================
+
+Quand nouvelle commande arrive :
+- jouer son notification
+- seulement si page admin ouverte
+- pas de spam
+- debounce propre
+
+Créer :
+client/src/assets/sounds/new-order.mp3
+
+Créer service notification propre :
+client/src/services/notificationService.js
+
+Fonctions :
+- playNewOrderSound()
+- vibrateIfSupported()
+
+==================================================
+4. STABILISATION COMMANDES
+==================================================
+
+Éliminer erreurs restantes.
+
+Vérifier :
+- accepted_at
+- prepared_at
+- served_at
+- paid_at
+
+NE JAMAIS casser si colonne absente.
+
+Backend doit :
+- fallback sécurisé
+- try/catch partout
+- jamais crash UI
+
+==================================================
+5. UX COMMANDES
+==================================================
+
+Améliorer cards commandes :
+- animations smooth
+- hover premium desktop
+- meilleur spacing mobile
+- sticky actions mobile
+- meilleure timeline statuts
+
+==================================================
+6. SOCKETS
+==================================================
+
+Vérifier :
+- aucune URL localhost en production
+- reconnexion automatique
+- socket cleanup
+- pas de memory leak
+
+==================================================
+7. BUILD FINAL
+==================================================
+
+À la fin :
+- npm build frontend
+- vérifier erreurs
+- git add .
+- commit clair
+- push github
+
+Puis afficher :
+- fichiers modifiés
+- erreurs corrigées
+- nouvelles fonctionnalités
+- résultat build

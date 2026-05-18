@@ -12,6 +12,7 @@ import { getOrders, updateOrderStatus, mapOrder } from '../../services/adminServ
 import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated } from '../../services/socketService';
 import { formatCurrency } from '../../utils/formatters';
 import { printKitchenTicket, printCustomerReceipt, printCashierInvoice } from '../../utils/printService';
+import { playNewOrderSound, vibrateIfSupported } from '../../services/notificationService';
 
 const statusActions = {
   new: ['accepted', 'cancelled'],
@@ -117,31 +118,8 @@ function normalizeStatus(s) {
 }
 
 function playOrderSound() {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.frequency.value = 660;
-    osc.type = 'sine';
-    gain.gain.setValueAtTime(0.25, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.15);
-    setTimeout(() => {
-      const osc2 = ctx.createOscillator();
-      const gain2 = ctx.createGain();
-      osc2.connect(gain2);
-      gain2.connect(ctx.destination);
-      osc2.frequency.value = 880;
-      osc2.type = 'sine';
-      gain2.gain.setValueAtTime(0.25, ctx.currentTime + 0.2);
-      gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
-      osc2.start(ctx.currentTime + 0.2);
-      osc2.stop(ctx.currentTime + 0.35);
-    }, 150);
-  } catch {}
+  playNewOrderSound();
+  vibrateIfSupported();
 }
 
 export default function OrdersPage() {
@@ -258,10 +236,10 @@ export default function OrdersPage() {
       </div>
 
       <div className="space-y-3">
-        {filtered.map((order) => {
+        {filtered.map((order, idx) => {
           const actions = statusActions[normalizeStatus(order.status)] || [];
           return (
-            <Card key={order.id}>
+            <Card key={order.id} className="transition-all duration-200 hover:border-gold-500/20 hover:shadow-lg hover:shadow-gold-500/5 animate-fade-in" style={{ animationDelay: `${idx * 30}ms` }}>
               <div className="flex flex-col lg:flex-row lg:items-center gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
