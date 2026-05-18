@@ -230,29 +230,31 @@ export default function OrdersPage() {
     <div>
       <h1 className="text-2xl font-bold text-white mb-6">{t('Commandes')}</h1>
 
-      <div className="flex items-center gap-3 mb-6 flex-wrap">
-        <div className="filter-scroll flex-1">
-          {statusFilters.map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`rounded-full text-sm transition-colors ${
-                filter === f ? 'bg-gold-500 text-black' : 'bg-zinc-900 text-white/60 hover:text-white'
-              }`}
-            >
-              {t(filterLabels[f])}
-            </button>
-          ))}
+      <div className="mb-6">
+        <div className="flex flex-col md:flex-row md:items-center gap-3">
+          <div className="filter-scroll flex-1 min-w-0">
+            {statusFilters.map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`rounded-full text-sm transition-colors ${
+                  filter === f ? 'bg-gold-500 text-black' : 'bg-zinc-900 text-white/60 hover:text-white'
+                }`}
+              >
+                {t(filterLabels[f])}
+              </button>
+            ))}
+          </div>
+          <label className="flex items-center gap-2 text-[11px] md:text-xs text-white/40 cursor-pointer select-none flex-shrink-0">
+            <input
+              type="checkbox"
+              checked={autoPrint}
+              onChange={(e) => setAutoPrint(e.target.checked)}
+              className="w-3.5 h-3.5 rounded border-white/20 bg-zinc-800 text-gold-500 focus:ring-gold-500/30"
+            />
+            Auto-print cuisine
+          </label>
         </div>
-        <label className="flex items-center gap-2 text-xs text-white/40 cursor-pointer select-none flex-shrink-0">
-          <input
-            type="checkbox"
-            checked={autoPrint}
-            onChange={(e) => setAutoPrint(e.target.checked)}
-            className="w-3.5 h-3.5 rounded border-white/20 bg-zinc-800 text-gold-500 focus:ring-gold-500/30"
-          />
-          Auto-print cuisine
-        </label>
       </div>
 
       <div className="space-y-3">
