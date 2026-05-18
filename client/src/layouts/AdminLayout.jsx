@@ -1,11 +1,13 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, ShoppingBag, Package, Tags, Grid3X3,
-  Wallet, BarChart3, Settings, LogOut, Globe, Menu, X, ChefHat, Bell, Users, ClipboardCheck, Percent,
+  Wallet, BarChart3, Settings, LogOut, Globe, Menu, X, ChefHat, Bell, Users, ClipboardCheck, Percent, Volume2, Bell as BellIcon,
 } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import { useApp } from '../context/AppContext';
-import { connectSocket, onNewServerCall, onServerCallUpdated } from '../services/socketService';
+import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated, onNewServerCall, onServerCallUpdated } from '../services/socketService';
+import { playNotificationSound, playServerCallSound, sendBrowserNotification, isSoundEnabled, requestSoundPermission } from '../utils/notificationService';
 
 const ROLE_PAGES = {
   admin: ['dashboard','orders','kitchen','server-calls','products','categories','tables','payments','stats','users','settings','role-test','promotions'],
@@ -32,30 +34,94 @@ const NAV_ITEMS = [
   { path: '/admin/settings', label: 'Settings', icon: Settings, page: 'settings' },
 ];
 
+const EVENT_ROLES = {
+  new_order: ['kitchen', 'admin', 'super_admin', 'manager'],
+  order_ready: ['waiter', 'admin', 'super_admin', 'manager'],
+  order_served: ['cashier', 'admin', 'super_admin', 'manager'],
+  payment_pending: ['cashier', 'admin', 'super_admin', 'manager'],
+  server_call: ['waiter', 'admin', 'super_admin', 'manager'],
+};
+
+let notifIdCounter = 0;
+
 export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { locale, toggleLanguage, t, user } = useApp();
-  const [pendingCalls, setPendingCalls] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const [bellOpen, setBellOpen] = useState(false);
+  const [soundBanner, setSoundBanner] = useState(false);
   const bellRef = useRef(null);
+  const pollingRef = useRef(null);
+
+  const userRole = user?.role || '';
+
+  const addNotification = useCallback((notif) => {
+    setNotifications((prev) => {
+      const next = [{ ...notif, id: ++notifIdCounter, read: false, createdAt: Date.now() }, ...prev];
+      return next.slice(0, 50);
+    });
+  }, []);
+
+  const notifyRole = useCallback((eventType, title, body, soundFn) => {
+    const allowedRoles = EVENT_ROLES[eventType] || [];
+    if (!allowedRoles.includes(userRole) && !['admin', 'super_admin', 'manager'].includes(userRole)) return;
+    addNotification({ type: eventType, title, body });
+    if (!isSoundEnabled()) { setSoundBanner(true); return; }
+    if (soundFn) soundFn();
+    sendBrowserNotification(title, body);
+  }, [userRole, addNotification]);
 
   useEffect(() => {
     const socket = connectSocket();
-    if (!socket) return;
-    const unsubNew = onNewServerCall((call) => {
-      setPendingCalls((prev) => [call, ...prev].slice(0, 10));
-    });
-    const unsubUpd = onServerCallUpdated((call) => {
-      setPendingCalls((prev) => prev.filter((c) => c.id !== call.id));
-    });
+
+    const unsubOrder = socket ? onNewOrder((data) => {
+      const orderNum = data?.order_number || data?.orderNumber || '';
+      notifyRole('new_order', 'Nouvelle commande', `Commande ${orderNum}`, playNotificationSound);
+    }) : () => {};
+
+    const unsubStatus = socket ? onOrderStatusUpdated((data) => {
+      const status = data?.order_status || data?.status || '';
+      const orderNum = data?.order_number || data?.orderNumber || '';
+      if (status === 'ready') {
+        notifyRole('order_ready', 'Commande prête', `Commande ${orderNum}`, playNotificationSound);
+      } else if (status === 'served') {
+        notifyRole('order_served', 'Commande servie', `Commande ${orderNum}`, playNotificationSound);
+      }
+    }) : () => {};
+
+    const unsubPay = socket ? onPaymentUpdated(() => {
+      notifyRole('payment_pending', 'Paiement en attente', 'Un paiement nécessite votre attention', playNotificationSound);
+    }) : () => {};
+
+    const unsubServerNew = socket ? onNewServerCall((call) => {
+      const tableStr = call?.table_number || call?.table_id || '';
+      notifyRole('server_call', 'Appel serveur', `Table ${tableStr}`, playServerCallSound);
+    }) : () => {};
+
+    const unsubServerUpd = socket ? onServerCallUpdated((call) => {
+      addNotification({ type: 'server_call_resolved', title: 'Appel résolu', body: `Table ${call?.table_number || call?.table_id || ''}` });
+    }) : () => {};
+
+    const polling = setInterval(() => {
+      if (!socket?.connected) {
+        if (!pollingRef.current) {
+          pollingRef.current = true;
+        }
+      }
+    }, 5000);
+
     return () => {
-      unsubNew();
-      unsubUpd();
+      unsubOrder();
+      unsubStatus();
+      unsubPay();
+      unsubServerNew();
+      unsubServerUpd();
+      clearInterval(polling);
     };
-  }, []);
+  }, [notifyRole, addNotification]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -67,6 +133,16 @@ export default function AdminLayout() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (!isSoundEnabled()) setSoundBanner(true);
+  }, []);
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const markAllRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -77,6 +153,12 @@ export default function AdminLayout() {
     navigate(path);
     setMobileOpen(false);
     setBellOpen(false);
+  };
+
+  const handleEnableSound = () => {
+    requestSoundPermission();
+    setSoundBanner(false);
+    playNotificationSound();
   };
 
   if (location.pathname === '/admin/login') {
@@ -149,6 +231,28 @@ export default function AdminLayout() {
       )}
 
       <main className="flex-1 flex flex-col min-h-screen">
+        {soundBanner && (
+          <div className="sticky top-0 z-50 bg-gold-500/10 border-b border-gold-500/20 px-4 py-2.5 flex items-center justify-between">
+            <p className="text-xs text-gold-400 font-medium flex items-center gap-2">
+              <Volume2 size={14} /> Activer les notifications sonores
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleEnableSound}
+                className="text-xs px-3 py-1 rounded-lg bg-gold-500 text-black font-semibold hover:bg-gold-600 transition-colors"
+              >
+                Activer
+              </button>
+              <button
+                onClick={() => setSoundBanner(false)}
+                className="text-xs text-white/40 hover:text-white transition-colors"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          </div>
+        )}
+
         <header className="sticky top-0 z-40 bg-black/90 backdrop-blur border-b border-white/10 px-4 py-3 flex items-center gap-3 lg:hidden">
           <button onClick={() => setMobileOpen(true)} className="p-1 text-white/60 hover:text-white">
             <Menu size={24} />
@@ -161,41 +265,51 @@ export default function AdminLayout() {
                 className="p-1.5 text-white/60 hover:text-gold-500 relative"
               >
                 <Bell size={18} />
-                {pendingCalls.length > 0 && (
+                {unreadCount > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                    {pendingCalls.length > 9 ? '9+' : pendingCalls.length}
+                    {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
               </button>
               {bellOpen && (
                 <div className="absolute right-0 top-full mt-2 w-72 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
                   <div className="p-3 border-b border-white/10 flex items-center justify-between">
-                    <span className="text-sm font-semibold text-white">Appels serveur</span>
-                    <span className="text-xs text-white/40">{pendingCalls.length} en attente</span>
+                    <span className="text-sm font-semibold text-white">Notifications</span>
+                    {unreadCount > 0 && (
+                      <button onClick={markAllRead} className="text-xs text-gold-500 hover:text-gold-400 transition-colors">
+                        Tout lu
+                      </button>
+                    )}
                   </div>
                   <div className="max-h-64 overflow-y-auto">
-                    {pendingCalls.length === 0 ? (
-                      <p className="text-sm text-white/30 text-center py-4">Aucun appel</p>
+                    {notifications.length === 0 ? (
+                      <p className="text-sm text-white/30 text-center py-4">Aucune notification</p>
                     ) : (
-                      pendingCalls.map((call) => (
-                        <div key={call.id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 border-b border-white/5 last:border-0">
-                          <div className="w-2 h-2 rounded-full bg-red-400 flex-shrink-0" />
+                      notifications.map((n) => (
+                        <div key={n.id} className={`flex items-start gap-3 px-3 py-2.5 hover:bg-white/5 border-b border-white/5 last:border-0 ${n.read ? 'opacity-50' : ''}`}>
+                          <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
+                            n.type === 'new_order' ? 'bg-wave-500' :
+                            n.type === 'server_call' ? 'bg-yellow-400' :
+                            n.type === 'order_ready' ? 'bg-emerald-400' :
+                            'bg-blue-400'
+                          }`} />
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm text-white font-medium">Table {call.table_number || call.table_id}</p>
-                            <p className="text-xs text-white/40 truncate">
-                              {new Date(call.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                            <p className="text-sm text-white font-medium">{n.title}</p>
+                            <p className="text-xs text-white/40 truncate">{n.body}</p>
+                            <p className="text-[10px] text-white/20 mt-0.5">
+                              {new Date(n.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                             </p>
                           </div>
                         </div>
                       ))
                     )}
                   </div>
-                  {pendingCalls.length > 0 && (
+                  {notifications.length > 0 && unreadCount > 0 && (
                     <button
-                      onClick={() => handleNav('/admin/server-calls')}
+                      onClick={markAllRead}
                       className="w-full p-2.5 text-xs font-medium text-gold-500 hover:bg-gold-500/10 transition-colors border-t border-white/10"
                     >
-                      Voir tous les appels
+                      Tout marquer comme lu
                     </button>
                   )}
                 </div>
@@ -214,42 +328,52 @@ export default function AdminLayout() {
               onClick={() => setBellOpen(!bellOpen)}
               className="p-2 text-white/60 hover:text-gold-500 relative transition-colors"
             >
-              <Bell size={20} />
-              {pendingCalls.length > 0 && (
+              <BellIcon size={20} />
+              {unreadCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] font-bold w-4.5 h-4.5 rounded-full flex items-center justify-center min-w-[18px] min-h-[18px] px-1">
-                  {pendingCalls.length > 99 ? '99+' : pendingCalls.length}
+                  {unreadCount > 99 ? '99+' : unreadCount}
                 </span>
               )}
             </button>
             {bellOpen && (
               <div className="absolute right-0 top-full mt-2 w-80 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
                 <div className="p-3 border-b border-white/10 flex items-center justify-between">
-                  <span className="text-sm font-semibold text-white">Appels serveur</span>
-                  <span className="text-xs text-white/40">{pendingCalls.length} en attente</span>
+                  <span className="text-sm font-semibold text-white">Notifications</span>
+                  {unreadCount > 0 && (
+                    <button onClick={markAllRead} className="text-xs text-gold-500 hover:text-gold-400 transition-colors">
+                      Tout lu
+                    </button>
+                  )}
                 </div>
                 <div className="max-h-72 overflow-y-auto">
-                  {pendingCalls.length === 0 ? (
-                    <p className="text-sm text-white/30 text-center py-4">Aucun appel</p>
+                  {notifications.length === 0 ? (
+                    <p className="text-sm text-white/30 text-center py-4">Aucune notification</p>
                   ) : (
-                    pendingCalls.map((call) => (
-                      <div key={call.id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 border-b border-white/5 last:border-0">
-                        <div className="w-2 h-2 rounded-full bg-red-400 flex-shrink-0" />
+                    notifications.map((n) => (
+                      <div key={n.id} className={`flex items-start gap-3 px-3 py-2.5 hover:bg-white/5 border-b border-white/5 last:border-0 ${n.read ? 'opacity-50' : ''}`}>
+                        <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
+                          n.type === 'new_order' ? 'bg-wave-500' :
+                          n.type === 'server_call' ? 'bg-yellow-400' :
+                          n.type === 'order_ready' ? 'bg-emerald-400' :
+                          'bg-blue-400'
+                        }`} />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-white font-medium">Table {call.table_number || call.table_id}</p>
-                          <p className="text-xs text-white/40 truncate">
-                            {new Date(call.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                          <p className="text-sm text-white font-medium">{n.title}</p>
+                          <p className="text-xs text-white/40 truncate">{n.body}</p>
+                          <p className="text-[10px] text-white/20 mt-0.5">
+                            {new Date(n.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                           </p>
                         </div>
                       </div>
                     ))
                   )}
                 </div>
-                {pendingCalls.length > 0 && (
+                {notifications.length > 0 && unreadCount > 0 && (
                   <button
-                    onClick={() => handleNav('/admin/server-calls')}
+                    onClick={markAllRead}
                     className="w-full p-2.5 text-xs font-medium text-gold-500 hover:bg-gold-500/10 transition-colors border-t border-white/10"
                   >
-                    Voir tous les appels
+                    Tout marquer comme lu
                   </button>
                 )}
               </div>

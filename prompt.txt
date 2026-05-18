@@ -1,51 +1,55 @@
-Fix production order status error.
+Add real sound notifications for BarOrder admin.
 
-Real error:
-column "accepted_at" of relation "orders" does not exist
+Goal:
+When a new order or server call arrives, the correct admin role receives a visible notification + sound.
 
-Cause:
-The order workflow code uses timestamp columns that are missing in the Neon orders table.
+Do not break existing features.
 
-Directly modify backend migrations/startup schema.
+1. Notification targets
+- kitchen: sound when new order is created
+- waiter: sound when server call is created or order becomes ready
+- cashier: sound when order becomes served or payment is pending
+- admin/super_admin/manager: sound for all important events
 
-Tasks:
+2. Frontend
+Create a notification service:
+- request browser notification permission
+- play a short notification sound
+- show toast notification
+- update bell badge count
 
-1. Ensure the orders table has these columns:
-accepted_at TIMESTAMP NULL
-preparing_at TIMESTAMP NULL
-ready_at TIMESTAMP NULL
-served_at TIMESTAMP NULL
-paid_at TIMESTAMP NULL
-cancelled_at TIMESTAMP NULL
+3. Sound
+Use Web Audio API or a small local sound file.
+Must work on desktop and mobile after first user interaction.
+If autoplay is blocked, show button:
+“Activer les notifications”
+Once clicked, sounds are enabled.
 
-2. Add safe migration using:
-ALTER TABLE orders ADD COLUMN IF NOT EXISTS ...
+4. Socket/realtime
+Use existing socket if available.
+If socket fails, fallback to polling every 5 seconds.
 
-3. Do not drop data.
-4. Do not recreate the orders table.
-5. Do not break existing orders.
+Listen for:
+- new_order
+- order_status_updated
+- server_call_created
+- payment_updated
 
-6. Check every status update:
-- pending/new/nouvelle => no timestamp required
-- accepted => accepted_at = NOW()
-- preparing => preparing_at = NOW()
-- ready => ready_at = NOW()
-- served => served_at = NOW()
-- paid => paid_at = NOW()
-- cancelled => cancelled_at = NOW()
+5. UI
+Add notification bell dropdown in admin header:
+- unread count
+- latest 10 notifications
+- mark all as read
 
-7. If the app uses French statuses, map them safely to backend statuses.
+6. Role filtering
+Do not notify roles for events they should not see.
 
-8. Backend must not crash if old orders have null timestamps.
-
-9. Run:
-npm run build
-node --check src/server.js
-
-10. Commit and push.
+7. Build and push.
 
 Acceptance:
-- Clicking “Accepter” no longer causes accepted_at error.
-- Order status changes from Nouvelle to Acceptée.
-- Kitchen workflow still works.
-- No data lost.
+- creating order from QR triggers sound on kitchen/admin
+- calling server triggers sound on waiter/admin
+- marking order ready triggers sound on waiter
+- bell badge increases
+- toast appears
+- no console crash
