@@ -1,51 +1,51 @@
-Fix checkout order creation error: invalid input syntax for type integer: "NaN".
+Fix production order status error.
 
-Problem:
-When customer confirms order from /checkout, backend returns:
-invalid input syntax for type integer: "NaN"
+Real error:
+column "accepted_at" of relation "orders" does not exist
 
-Context:
-Cart contains:
-- a promotion item
-- a normal product item
-Checkout shows Table 3.
-The order creation must never send NaN to PostgreSQL.
+Cause:
+The order workflow code uses timestamp columns that are missing in the Neon orders table.
+
+Directly modify backend migrations/startup schema.
 
 Tasks:
-1. Inspect checkout page, cart store, orderService, public order API payload.
-2. Find every Number(...), parseInt(...), table_id, restaurant_id, product_id, promotion_id, quantity conversion.
-3. Prevent NaN before sending request.
-4. Ensure table_id is correctly stored from QR route:
-   /r/:slug/table/:tableId
-5. Ensure checkout can recover table_id from:
-   - route params
-   - localStorage/cart context
-   - selected table
-6. Promotions added to cart must use a safe item type:
-   type: "promotion"
-   promotion_id nullable
-   product_id nullable
-   quantity integer >= 1
-   price number
-   name string
-7. Normal products must use:
-   type: "product"
-   product_id integer
-   quantity integer >= 1
-8. Backend must validate payload:
-   - reject missing table_id with clear 400 message
-   - never insert NaN into integer columns
-   - convert safely using Number.isInteger()
-9. If item is promotion, do not force product_id if none exists.
-10. If item is product, product_id is required.
-11. Keep existing order flow working.
-12. Run npm run build.
-13. Commit and push.
+
+1. Ensure the orders table has these columns:
+accepted_at TIMESTAMP NULL
+preparing_at TIMESTAMP NULL
+ready_at TIMESTAMP NULL
+served_at TIMESTAMP NULL
+paid_at TIMESTAMP NULL
+cancelled_at TIMESTAMP NULL
+
+2. Add safe migration using:
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS ...
+
+3. Do not drop data.
+4. Do not recreate the orders table.
+5. Do not break existing orders.
+
+6. Check every status update:
+- pending/new/nouvelle => no timestamp required
+- accepted => accepted_at = NOW()
+- preparing => preparing_at = NOW()
+- ready => ready_at = NOW()
+- served => served_at = NOW()
+- paid => paid_at = NOW()
+- cancelled => cancelled_at = NOW()
+
+7. If the app uses French statuses, map them safely to backend statuses.
+
+8. Backend must not crash if old orders have null timestamps.
+
+9. Run:
+npm run build
+node --check src/server.js
+
+10. Commit and push.
 
 Acceptance:
-- Confirm order works with only products.
-- Confirm order works with only promotion.
-- Confirm order works with product + promotion.
-- No PostgreSQL NaN error.
-- Order appears in admin orders.
-- Kitchen receives order.
+- Clicking “Accepter” no longer causes accepted_at error.
+- Order status changes from Nouvelle to Acceptée.
+- Kitchen workflow still works.
+- No data lost.
