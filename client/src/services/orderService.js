@@ -30,16 +30,34 @@ function mapOrder(o) {
 }
 
 export async function createOrder(orderData) {
-  const items = (orderData.items || []).map((i) => ({
-    id: i.id,
-    name: i.name,
-    price: Number(i.price) || 0,
-    quantity: Number(i.quantity) || 1,
-  }));
+  const items = (orderData.items || []).map((i) => {
+    const qty = Number(i.quantity) || 1;
+    const price = Number(i.price) || 0;
+    if (i.type === 'promotion') {
+      return {
+        type: 'promotion',
+        id: i.id,
+        name: i.name,
+        price,
+        quantity: qty,
+        product_id: null,
+        promotion_id: Number(i.promotion_id) || null,
+      };
+    }
+    return {
+      type: 'product',
+      id: i.id,
+      name: i.name,
+      price,
+      quantity: qty,
+      product_id: Number(i.product_id || i.id) || null,
+    };
+  });
   const totalAmount = Math.round(Number(orderData.totalAmount)) || 0;
+  const tableId = orderData.tableId ? Number(orderData.tableId) : null;
   const payload = {
     restaurantId: parseInt(orderData.restaurantId, 10) || 1,
-    tableId: orderData.tableId || null,
+    tableId,
     items,
     customerName: orderData.customerName || '',
     customerPhone: orderData.customerPhone || '',

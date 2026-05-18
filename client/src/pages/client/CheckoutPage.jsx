@@ -56,14 +56,35 @@ export default function CheckoutPage() {
         setLoading(false);
         return;
       }
-      const safeTableId = tableId || null;
+      const safeTableId = Number(tableId) || null;
+      if (!safeTableId) {
+        toast.error('Table non identifiée. Veuillez scanner le QR code.');
+        setLoading(false);
+        return;
+      }
       const safeRestaurantId = restaurantId || '1';
-      const items = cart.map((i) => ({
-        id: i.id,
-        name: i.name,
-        price: Number(i.price) || 0,
-        quantity: Number(i.quantity) || 1,
-      }));
+      const items = cart.map((i) => {
+        const isPromotion = i.is_promotion || (typeof i.id === 'string' && i.id.startsWith('promo-'));
+        if (isPromotion) {
+          return {
+            type: 'promotion',
+            id: i.id,
+            name: i.name,
+            price: Number(i.price) || 0,
+            quantity: Number(i.quantity) || 1,
+            product_id: null,
+            promotion_id: Number(String(i.id).replace('promo-', '')) || null,
+          };
+        }
+        return {
+          type: 'product',
+          id: i.id,
+          name: i.name,
+          price: Number(i.price) || 0,
+          quantity: Number(i.quantity) || 1,
+          product_id: Number(i.id) || null,
+        };
+      });
       const orderData = {
         restaurantId: safeRestaurantId,
         tableId: safeTableId,

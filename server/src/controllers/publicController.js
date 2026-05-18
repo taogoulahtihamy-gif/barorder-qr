@@ -160,8 +160,12 @@ export async function createOrder(req, res) {
     }
 
     const rid = Number(restaurantId);
-    if (isNaN(rid) || !rid) {
+    if (isNaN(rid) || !Number.isInteger(rid) || rid < 1) {
       return res.status(400).json({ error: 'ID restaurant invalide' });
+    }
+
+    if (!tableId) {
+      return res.status(400).json({ error: 'Table non spécifiée' });
     }
 
     const roundedTotal = Math.round(Number(totalAmount));
@@ -172,11 +176,17 @@ export async function createOrder(req, res) {
     for (const item of items) {
       const qty = Number(item.quantity);
       const price = Math.round(Number(item.price));
-      if (isNaN(qty) || qty < 1) {
+      if (isNaN(qty) || !Number.isInteger(qty) || qty < 1) {
         return res.status(400).json({ error: `Quantité invalide pour ${item.name || 'un article'}` });
       }
       if (isNaN(price) || price < 0) {
         return res.status(400).json({ error: `Prix invalide pour ${item.name || 'un article'}` });
+      }
+      if (item.type === 'product') {
+        const pid = Number(item.product_id);
+        if (!item.product_id || isNaN(pid) || !Number.isInteger(pid) || pid < 1) {
+          return res.status(400).json({ error: `ID produit invalide pour ${item.name || 'un article'}` });
+        }
       }
     }
 
@@ -213,10 +223,17 @@ export async function createOrder(req, res) {
     for (const item of items) {
       const qty = Number(item.quantity);
       const price = Math.round(Number(item.price));
+      let productId;
+      if (item.type === 'promotion') {
+        productId = null;
+      } else {
+        productId = Number(item.product_id || item.id);
+        if (isNaN(productId)) productId = null;
+      }
       await query(`
         INSERT INTO order_items (order_id, product_id, product_name, quantity, unit_price, total_price)
         VALUES ($1, $2, $3, $4, $5, $6)
-      `, [order.id, item.id ? Number(item.id) : null, item.name, qty, price, qty * price]);
+      `, [order.id, productId, item.name, qty, price, qty * price]);
     }
 
     const paidMethods = ['wave', 'orange_money'];

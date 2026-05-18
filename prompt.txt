@@ -1,46 +1,51 @@
-Fix order creation NaN integer error.
+Fix checkout order creation error: invalid input syntax for type integer: "NaN".
 
-Current backend error:
+Problem:
+When customer confirms order from /checkout, backend returns:
 invalid input syntax for type integer: "NaN"
 
-The checkout page crashes when confirming an order.
+Context:
+Cart contains:
+- a promotion item
+- a normal product item
+Checkout shows Table 3.
+The order creation must never send NaN to PostgreSQL.
 
 Tasks:
-
-1. Inspect frontend order payload before POST /api/orders
-Add temporary console.log(payload)
-
-2. Validate all integer fields:
-- table_id
-- restaurant_id
-- quantity
-- product_id
-
-3. Convert safely:
-Number(value)
-
-4. Never send NaN values.
-If invalid:
-- show toast error
-- stop submit
-
-5. Backend validation:
-Before SQL insert:
-- reject NaN
-- reject undefined
-- reject null integers
-
-6. Fix QR/table extraction logic.
-Likely issue:
-tableId parsed from URL incorrectly.
-
-7. Add safe fallback:
-const tableId = Number(params.tableId || 1)
-
-8. Build, verify order creation works, commit, push.
+1. Inspect checkout page, cart store, orderService, public order API payload.
+2. Find every Number(...), parseInt(...), table_id, restaurant_id, product_id, promotion_id, quantity conversion.
+3. Prevent NaN before sending request.
+4. Ensure table_id is correctly stored from QR route:
+   /r/:slug/table/:tableId
+5. Ensure checkout can recover table_id from:
+   - route params
+   - localStorage/cart context
+   - selected table
+6. Promotions added to cart must use a safe item type:
+   type: "promotion"
+   promotion_id nullable
+   product_id nullable
+   quantity integer >= 1
+   price number
+   name string
+7. Normal products must use:
+   type: "product"
+   product_id integer
+   quantity integer >= 1
+8. Backend must validate payload:
+   - reject missing table_id with clear 400 message
+   - never insert NaN into integer columns
+   - convert safely using Number.isInteger()
+9. If item is promotion, do not force product_id if none exists.
+10. If item is product, product_id is required.
+11. Keep existing order flow working.
+12. Run npm run build.
+13. Commit and push.
 
 Acceptance:
-- Order confirms successfully
-- No PostgreSQL NaN error
-- Orders appear in admin
-- Mobile checkout works
+- Confirm order works with only products.
+- Confirm order works with only promotion.
+- Confirm order works with product + promotion.
+- No PostgreSQL NaN error.
+- Order appears in admin orders.
+- Kitchen receives order.
