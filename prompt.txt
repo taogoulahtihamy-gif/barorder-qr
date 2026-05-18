@@ -1,121 +1,33 @@
-Build the dynamic promotions system for BarOrder QR.
+Fix customer menu black screen.
 
-Goal:
-Admin can create temporary promotions/formules, and customers see them on the QR menu.
+The browser console does not show a clear red error, but the customer menu page turns black after about 1 second.
 
-Do not break existing features:
-- login
-- roles
-- orders
-- kitchen
-- payments
-- server calls
-- users
-- responsive layout
+Focus on recent promotions/client menu changes.
 
-1. DATABASE
-Create/ensure table promotions:
+Directly inspect:
+- MenuPage
+- TableWelcome
+- promotion components
+- cart add logic
+- public promotions API call
 
-id
-restaurant_id
-title
-description
-price
-old_price
-start_date
-end_date
-is_active
-created_at
+Fix all possible runtime crashes:
+- null restaurant
+- null categories
+- null products
+- null promotions
+- undefined price/old_price
+- failed promotions fetch
+- invalid image_url
+- undefined cart item fields
 
-2. BACKEND ROUTES
-Create protected admin routes:
+If promotions fail, do not crash the page.
+Hide promotions and continue rendering menu.
 
-GET /api/admin/promotions
-POST /api/admin/promotions
-PATCH /api/admin/promotions/:id
-PATCH /api/admin/promotions/:id/status
-DELETE /api/admin/promotions/:id
+Run build, commit, push.
 
-Roles allowed:
-- super_admin
-- admin
-- manager
-
-Create public route:
-
-GET /api/public/r/:slug/promotions
-
-Return only active promotions valid today.
-
-3. FRONTEND ADMIN PAGE
-Create page:
-
-/admin/promotions
-
-Features:
-- list promotions
-- create promotion
-- edit promotion
-- activate/deactivate
-- delete
-- fields:
-  - title
-  - description
-  - price
-  - old_price
-  - start_date
-  - end_date
-  - active
-
-Add sidebar item:
-“Promotions”
-
-Visible only to:
-- super_admin
-- admin
-- manager
-
-4. CLIENT QR SIDE
-On customer restaurant/table page and menu page:
-show active promotions in a premium card section:
-
-“Offres du moment”
-
-Example:
-FORMULE 3 À 2500 FCFA
-Gazelle • Flag • Racine • Koperwiek
-
-Add button:
-“Commander cette offre”
-
-For now, clicking can add a promo item to cart as a special item.
-
-5. DESIGN
-Keep dark premium BarOrder style:
-- black background
-- gold accents
-- rounded cards
-- mobile responsive
-- no horizontal overflow
-
-6. TESTS
-Run:
-npm run build
-
-Verify:
-- admin can create promotion
-- manager can create promotion
-- kitchen/waiter/cashier cannot access /admin/promotions
-- customer QR page shows active promotion
-- expired/inactive promotions do not show
-
-7. COMMIT
-git add .
-git commit -m "Add dynamic promotions system"
-git push origin main
-
-Final output:
-- modified files
-- build result
-- routes created
-- test summary
+Acceptance:
+- client menu remains visible after loading
+- products display
+- cart works
+- no black screen

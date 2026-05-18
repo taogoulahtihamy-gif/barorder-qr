@@ -1,5 +1,6 @@
 export function formatPrice(price) {
-  const rounded = Math.round(price);
+  if (price == null || Number.isNaN(Number(price))) return '— FCFA';
+  const rounded = Math.round(Number(price));
   return `${rounded.toLocaleString('fr-FR')} FCFA`;
 }
 

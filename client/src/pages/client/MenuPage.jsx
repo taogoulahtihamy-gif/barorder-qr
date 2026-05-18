@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Plus, Search, ShoppingCart, Minus, RefreshCw, AlertTriangle, Phone, CheckCircle } from 'lucide-react';
+import { Plus, Search, ShoppingCart, Minus, RefreshCw, AlertTriangle, Phone, CheckCircle, Percent } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
@@ -196,14 +196,14 @@ export default function MenuPage() {
             <Percent size={14} /> Offres du moment
           </h2>
           {promotions.map((promo) => (
-            <div key={promo.id} className="bg-gradient-to-r from-gold-500/10 to-transparent border border-gold-500/20 rounded-xl p-4">
+            <div key={promo.id ?? Math.random()} className="bg-gradient-to-r from-gold-500/10 to-transparent border border-gold-500/20 rounded-xl p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-white font-semibold text-sm">{promo.title}</h3>
+                  <h3 className="text-white font-semibold text-sm">{promo.title || 'Promotion'}</h3>
                   {promo.description && <p className="text-white/50 text-xs mt-0.5">{promo.description}</p>}
                   <div className="flex items-center gap-2 mt-1.5">
-                    <span className="text-gold-500 font-bold text-sm">{Number(promo.price).toLocaleString('fr-FR')} FCFA</span>
-                    {promo.old_price && (
+                    <span className="text-gold-500 font-bold text-sm">{promo.price != null ? Number(promo.price).toLocaleString('fr-FR') : '—'} FCFA</span>
+                    {promo.old_price != null && Number(promo.old_price) > 0 && (
                       <span className="text-white/30 line-through text-xs">{Number(promo.old_price).toLocaleString('fr-FR')} FCFA</span>
                     )}
                   </div>
@@ -211,9 +211,9 @@ export default function MenuPage() {
                 <button
                   onClick={() => {
                     addToCart({
-                      id: `promo-${promo.id}`,
-                      name: promo.title,
-                      price: Number(promo.price),
+                      id: `promo-${promo.id ?? Date.now()}`,
+                      name: promo.title || 'Promotion',
+                      price: Number(promo.price) || 0,
                       description: promo.description || '',
                       is_promotion: true,
                     });
