@@ -1,42 +1,56 @@
-Fix mobile layout for OrdersPage filter/header section.
+Build professional QR code management for BarOrder.
 
-Problem:
-On mobile, the “Auto-print cuisine” checkbox overlaps the status filters and breaks the layout.
+Goals:
+- generate QR codes per table
+- printable table cards
+- downloadable QR images/PDF
+- premium restaurant display
 
-Required fixes:
+1. Admin tables page
+Improve /admin/tables:
+- each table has:
+  - table number
+  - capacity
+  - status
+  - QR link
+  - QR preview
+  - download QR PNG
+  - print table card
+  - regenerate QR
 
-1. Mobile responsive header
-On screens < 768px:
-- place filters on first row
-- place “Auto-print cuisine” on second row
-- full width
-- aligned left
-- no overlap
-- allow horizontal scroll for filter pills if needed
-
-2. Desktop behavior
-On desktop:
-- keep current inline layout
-- filters + auto-print aligned correctly
-
-3. Styling
-- cleaner spacing
-- reduce checkbox text size slightly on mobile
-- add margin-top between rows
-- preserve dark premium design
-
-4. Technical
+2. QR URL format
 Use:
-- flex-wrap
-- gap
-- overflow-x-auto
-- min-width for filter pills
-- responsive Tailwind classes
+https://barorder-qr.vercel.app/r/:restaurantSlug/table/:tableId
 
-5. Acceptance
-- no overlap on iPhone/mobile
-- filters remain clickable
-- checkbox visible and aligned
-- no horizontal broken UI
-- build passes
-- commit and push
+3. Printable table card
+Create premium print design:
+- restaurant name
+- “Scannez pour commander”
+- QR code large
+- table number
+- short instructions
+- BarOrder branding
+
+4. Bulk print
+Add button:
+“Imprimer tous les QR”
+Generate printable page with all table cards.
+
+5. Safety
+- QR must always open the welcome page, not directly the menu.
+- tableId must never be NaN.
+- QR link must work on phone.
+
+6. Design
+- dark/gold premium in UI
+- white clean print version
+- mobile responsive
+
+7. Build and push.
+
+Acceptance:
+- admin can generate QR per table
+- QR opens correct table welcome page
+- printable QR card looks professional
+- bulk print works
+- no broken table links

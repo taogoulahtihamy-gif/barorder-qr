@@ -99,6 +99,44 @@ export default function TablesPage() {
     document.body.removeChild(link);
   };
 
+  const printTableCard = (table) => {
+    const src = qrImageSrc(table);
+    if (!src) {
+      toast.error('Générez d\'abord le QR code');
+      return;
+    }
+    const restaurantName = table.restaurant_name || 'BarOrder';
+    const win = window.open('', '_blank');
+    win.document.write(`
+      <html>
+      <head><title>${table.name} - QR Card</title>
+      <style>
+        @page { margin: 0; size: 80mm 80mm; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 16px; text-align: center; background: #fff; }
+        .restaurant-name { font-size: 14px; font-weight: 700; color: #c5952e; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; }
+        .scan-text { font-size: 11px; color: #666; margin-bottom: 12px; }
+        .qr-img { width: 200px; height: 200px; display: block; margin-bottom: 12px; }
+        .table-number { font-size: 28px; font-weight: 800; color: #111; margin-bottom: 6px; }
+        .instructions { font-size: 9px; color: #999; max-width: 220px; line-height: 1.5; }
+        .branding { font-size: 8px; color: #ccc; margin-top: 12px; letter-spacing: 0.5px; }
+      </style>
+      </head>
+      <body>
+        <div class="restaurant-name">${restaurantName}</div>
+        <div class="scan-text">Scannez pour commander</div>
+        <img class="qr-img" src="${src}" />
+        <div class="table-number">${table.name}</div>
+        <div class="instructions">Ouvrez l'appareil photo de votre téléphone et scannez ce QR pour voir le menu et commander</div>
+        <div class="branding">BarOrder — Commande par QR</div>
+      </body>
+      </html>
+    `);
+    win.document.close();
+    win.focus();
+    setTimeout(() => win.print(), 600);
+  };
+
   if (loading) return <LoadingSpinner size="lg" />;
 
   return (
@@ -118,30 +156,73 @@ export default function TablesPage() {
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
         {tables.map((table) => (
           <Card key={table.id}>
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="font-medium text-white">{table.name}</h3>
-              <Badge variant={table.status === 'free' ? 'delivered' : 'pending'}>{t(table.status)}</Badge>
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                {qrImageSrc(table) ? (
+                  <img
+                    src={qrImageSrc(table)}
+                    alt={`QR ${table.name}`}
+                    className="w-16 h-16 rounded-lg cursor-pointer hover:ring-2 hover:ring-gold-500/50 transition-all"
+                    onClick={() => setQrModal(table)}
+                  />
+                ) : (
+                  <div
+                    className="w-16 h-16 rounded-lg bg-zinc-800 flex items-center justify-center cursor-pointer hover:bg-zinc-700 transition-colors"
+                    onClick={() => setQrModal(table)}
+                  >
+                    <QrCode size={24} className="text-white/20" />
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="font-medium text-white truncate">{table.name}</h3>
+                  <Badge variant={table.status === 'free' ? 'delivered' : 'pending'}>{t(table.status)}</Badge>
+                </div>
+                <p className="text-xs text-white/40 mt-0.5">{t('Capacity')}: {table.capacity} {t('people')}</p>
+                {table.qrUrl && (
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(absoluteUrl(table)); toast.success('Lien copié'); }}
+                    className="text-[11px] text-gold-500/50 hover:text-gold-500 truncate max-w-full block mt-1 transition-colors text-left"
+                  >
+                    {absoluteUrl(table)}
+                  </button>
+                )}
+              </div>
             </div>
-            <p className="text-xs text-white/40 mb-3">{t('Capacity')}: {table.capacity} {t('people')}</p>
-            <div className="flex gap-2">
+            <div className="flex gap-1.5 flex-wrap mt-3 pt-3 border-t border-white/5">
               <button
                 onClick={() => setQrModal(table)}
-                className="flex-1 flex items-center justify-center gap-1 py-1.5 text-xs bg-white/5 rounded-lg text-white/60 hover:text-gold-500 transition-colors"
+                className="flex items-center gap-1 px-2 py-1 text-[11px] bg-white/5 rounded-lg text-white/50 hover:text-gold-500 transition-colors"
               >
-                <QrCode size={14} /> {t('QR')}
+                <QrCode size={12} /> QR
+              </button>
+              <button
+                onClick={() => downloadQR(table)}
+                disabled={!qrImageSrc(table)}
+                className="flex items-center gap-1 px-2 py-1 text-[11px] bg-white/5 rounded-lg text-white/50 hover:text-blue-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <Download size={12} /> PNG
+              </button>
+              <button
+                onClick={() => printTableCard(table)}
+                disabled={!qrImageSrc(table)}
+                className="flex items-center gap-1 px-2 py-1 text-[11px] bg-white/5 rounded-lg text-white/50 hover:text-gold-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <Printer size={12} /> Imprimer
               </button>
               <button
                 onClick={() => handleGenerateQR(table)}
                 disabled={generatingId === table.id}
-                className="flex-1 flex items-center justify-center gap-1 py-1.5 text-xs bg-white/5 rounded-lg text-white/60 hover:text-blue-400 transition-colors disabled:opacity-40"
+                className="flex items-center gap-1 px-2 py-1 text-[11px] bg-white/5 rounded-lg text-white/50 hover:text-blue-400 transition-colors disabled:opacity-40"
               >
-                <RefreshCw size={14} className={generatingId === table.id ? 'animate-spin' : ''} /> {t('Générer QR')}
+                <RefreshCw size={12} className={generatingId === table.id ? 'animate-spin' : ''} /> QR
               </button>
               <button
                 onClick={() => handleDelete(table.id, table.name)}
-                className="flex items-center justify-center px-2 py-1.5 text-xs bg-white/5 rounded-lg text-white/40 hover:text-red-400 transition-colors"
+                className="flex items-center justify-center px-2 py-1 text-[11px] bg-white/5 rounded-lg text-white/40 hover:text-red-400 transition-colors"
               >
-                <Trash2 size={14} />
+                <Trash2 size={12} />
               </button>
             </div>
           </Card>

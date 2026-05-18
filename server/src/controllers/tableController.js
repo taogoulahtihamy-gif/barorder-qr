@@ -73,6 +73,7 @@ export async function generateTableQR(req, res) {
   try {
     const rid = Number(getRestaurantId(req));
     const tableId = Number(req.params.id);
+    if (isNaN(tableId)) return res.status(400).json({ error: 'ID de table invalide' });
 
     const table = await queryOne(`
       SELECT rt.*, r.name as restaurant_name, r.slug
@@ -146,6 +147,7 @@ export async function deleteTable(req, res) {
   try {
     const rid = Number(getRestaurantId(req));
     const tableId = Number(req.params.id);
+    if (isNaN(tableId)) return res.status(400).json({ error: 'ID de table invalide' });
     console.log('[deleteTable]', { tableId, rid });
     await query('DELETE FROM restaurant_tables WHERE id = $1 AND (restaurant_id = $2 OR restaurant_id IS NULL)', [tableId, rid]);
     res.json({ message: 'Table supprimée' });

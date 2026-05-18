@@ -51,46 +51,64 @@ export default function PrintableQRPage() {
           <h1 className="text-2xl font-bold text-white">{data.restaurant.name} - QR Codes</h1>
         </div>
         <Button onClick={handlePrint} className="flex items-center gap-2">
-          <Printer size={16} /> Imprimer
+          <Printer size={16} /> Imprimer tous les QR
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 print-cards-grid">
         {data.tables.map((table) => (
           <div
             key={table.id}
-            className="bg-zinc-900 border border-white/10 rounded-2xl p-4 flex flex-col items-center gap-3"
+            className="qr-card bg-zinc-900 border border-white/10 rounded-2xl p-5 flex flex-col items-center gap-3"
           >
             <div className="text-center">
-              <p className="text-gold-500 text-xs font-medium uppercase tracking-wider">{data.restaurant.name}</p>
-              <h3 className="text-white font-bold text-lg mt-1">{table.name}</h3>
-              <p className="text-white/40 text-xs">N° {table.table_number}</p>
+              <p className="text-gold-500 text-xs font-bold uppercase tracking-widest">{data.restaurant.name}</p>
+              <p className="text-white/50 text-[10px] mt-0.5 uppercase tracking-wide">Scannez pour commander</p>
             </div>
-            <div className="bg-white rounded-xl p-2">
+            <div className="bg-white rounded-xl p-2 shadow-lg">
               {table.qr_code_url ? (
                 <img
                   src={table.qr_code_url}
                   alt={`QR ${table.name}`}
-                  className="w-32 h-32 md:w-40 md:h-40"
+                  className="w-36 h-36 md:w-44 md:h-44"
                 />
               ) : (
-                <div className="w-32 h-32 md:w-40 md:h-40 flex items-center justify-center text-zinc-400 text-xs">
+                <div className="w-36 h-36 md:w-44 md:h-44 flex items-center justify-center text-zinc-400 text-xs">
                   QR non généré
                 </div>
               )}
             </div>
-            <p className="text-white/20 text-[10px] text-center break-all font-mono max-w-full">
-              {table.qrUrl}
-            </p>
+            <div className="text-center">
+              <h3 className="text-white font-bold text-2xl">{table.name}</h3>
+              <p className="text-white/30 text-[10px] mt-1 max-w-[180px] leading-relaxed">
+                Ouvrez l'appareil photo de votre téléphone et scannez ce QR pour voir le menu et commander
+              </p>
+            </div>
+            <p className="text-white/10 text-[8px] tracking-wider uppercase">BarOrder — Commande par QR</p>
           </div>
         ))}
       </div>
 
       <style>{`
         @media print {
-          @page { margin: 1cm; }
-          body { background: #09090b !important; }
+          @page { margin: 0.5cm; }
+          body { background: #ffffff !important; }
           .print\\:hidden { display: none !important; }
+          .print-cards-grid { gap: 0.5cm !important; }
+          .qr-card {
+            background: #ffffff !important;
+            border: 1px solid #e5e7eb !important;
+            box-shadow: none !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          .qr-card img { max-width: 160px !important; max-height: 160px !important; }
+          .qr-card .text-gold-500 { color: #c5952e !important; }
+          .qr-card .text-white { color: #111111 !important; }
+          .qr-card .text-white\\/50 { color: #888888 !important; }
+          .qr-card .text-white\\/30 { color: #aaaaaa !important; }
+          .qr-card .text-white\\/10 { color: #cccccc !important; }
+          .qr-card .bg-zinc-900 { background: #ffffff !important; }
         }
       `}</style>
     </div>
