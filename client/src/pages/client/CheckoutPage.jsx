@@ -36,17 +36,46 @@ export default function CheckoutPage() {
     }
     setLoading(true);
     try {
+      for (const item of cart) {
+        const qty = Number(item.quantity);
+        const price = Number(item.price);
+        if (!item.quantity || isNaN(qty) || qty < 1) {
+          toast.error(`Quantité invalide pour ${item.name || 'un article'}`);
+          setLoading(false);
+          return;
+        }
+        if (item.price == null || isNaN(price) || price < 0) {
+          toast.error(`Prix invalide pour ${item.name || 'un article'}`);
+          setLoading(false);
+          return;
+        }
+      }
+      const total = Number(cartTotal);
+      if (isNaN(total) || total < 0) {
+        toast.error('Erreur de calcul du total');
+        setLoading(false);
+        return;
+      }
+      const safeTableId = tableId || null;
+      const safeRestaurantId = restaurantId || '1';
+      const items = cart.map((i) => ({
+        id: i.id,
+        name: i.name,
+        price: Number(i.price) || 0,
+        quantity: Number(i.quantity) || 1,
+      }));
       const orderData = {
-        restaurantId: restaurantId || '1',
-        tableId: tableId || null,
-        items: cart.map((i) => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity })),
+        restaurantId: safeRestaurantId,
+        tableId: safeTableId,
+        items,
         customerName: customerName.trim(),
         customerPhone: customerPhone.trim(),
         kitchenNote,
-        totalAmount: cartTotal,
+        totalAmount: total,
         paymentMethod,
         paymentStatus: paymentMethod === 'wave' || paymentMethod === 'orange_money' ? 'paid' : 'pending',
       };
+      console.log('[CheckoutPage] order payload:', JSON.stringify(orderData));
       const order = await createOrder(orderData);
       clearCart();
       toast.success('Commande confirmée !');

@@ -158,9 +158,29 @@ export async function createOrder(req, res) {
     if (!items || !items.length) {
       return res.status(400).json({ error: 'La commande doit contenir au moins un article' });
     }
-    const orderNumber = `ORD-${Date.now()}`;
+
+    const rid = Number(restaurantId);
+    if (isNaN(rid) || !rid) {
+      return res.status(400).json({ error: 'ID restaurant invalide' });
+    }
+
     const roundedTotal = Math.round(Number(totalAmount));
-    const rid = Number(restaurantId) || DEFAULT_RESTAURANT_ID;
+    if (isNaN(roundedTotal) || roundedTotal < 0) {
+      return res.status(400).json({ error: 'Montant total invalide' });
+    }
+
+    for (const item of items) {
+      const qty = Number(item.quantity);
+      const price = Math.round(Number(item.price));
+      if (isNaN(qty) || qty < 1) {
+        return res.status(400).json({ error: `Quantité invalide pour ${item.name || 'un article'}` });
+      }
+      if (isNaN(price) || price < 0) {
+        return res.status(400).json({ error: `Prix invalide pour ${item.name || 'un article'}` });
+      }
+    }
+
+    const orderNumber = `ORD-${Date.now()}`;
     const requestedTable = String(tableId || '');
 
     console.log("REQUESTED TABLE:", requestedTable);
@@ -191,10 +211,12 @@ export async function createOrder(req, res) {
     console.log('[createOrder] order created:', order.id, orderNumber);
 
     for (const item of items) {
+      const qty = Number(item.quantity);
+      const price = Math.round(Number(item.price));
       await query(`
         INSERT INTO order_items (order_id, product_id, product_name, quantity, unit_price, total_price)
         VALUES ($1, $2, $3, $4, $5, $6)
-      `, [order.id, item.id ? Number(item.id) : null, item.name, Number(item.quantity), Math.round(Number(item.price)), Math.round(Number(item.price) * Number(item.quantity))]);
+      `, [order.id, item.id ? Number(item.id) : null, item.name, qty, price, qty * price]);
     }
 
     const paidMethods = ['wave', 'orange_money'];

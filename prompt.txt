@@ -1,61 +1,46 @@
-Upgrade BarOrder order workflow to a real restaurant realtime system.
+Fix order creation NaN integer error.
 
-Implement full order lifecycle.
+Current backend error:
+invalid input syntax for type integer: "NaN"
 
-Statuses:
-- pending
-- preparing
-- ready
-- served
-- paid
-- cancelled
+The checkout page crashes when confirming an order.
 
 Tasks:
 
-1. Backend
-- Add status validation
-- Add timestamps:
-  created_at
-  preparing_at
-  ready_at
-  served_at
-  paid_at
-- Add PATCH /api/orders/:id/status
+1. Inspect frontend order payload before POST /api/orders
+Add temporary console.log(payload)
 
-2. Role permissions
-- waiter:
-  create orders
-  mark served
-- kitchen:
-  mark preparing
-  mark ready
-- cashier:
-  mark paid
-- admin/super_admin:
-  full access
+2. Validate all integer fields:
+- table_id
+- restaurant_id
+- quantity
+- product_id
 
-3. Frontend realtime
-- Orders page auto-refresh every 5 seconds
-OR websocket realtime if already configured
+3. Convert safely:
+Number(value)
 
-4. UI
-- Color badges per status
-- Sound notification for new orders
-- Kitchen page only shows:
-  pending + preparing
-- Waiter page shows:
-  ready + served
-- Cashier page shows:
-  served + paid
+4. Never send NaN values.
+If invalid:
+- show toast error
+- stop submit
 
-5. Add order timeline UI
-Example:
-Pending -> Preparing -> Ready -> Served -> Paid
+5. Backend validation:
+Before SQL insert:
+- reject NaN
+- reject undefined
+- reject null integers
 
-6. Build and push.
+6. Fix QR/table extraction logic.
+Likely issue:
+tableId parsed from URL incorrectly.
+
+7. Add safe fallback:
+const tableId = Number(params.tableId || 1)
+
+8. Build, verify order creation works, commit, push.
 
 Acceptance:
-- Full restaurant workflow works
-- Roles only see allowed actions
-- Orders update live
-- UI remains premium dark gold
+- Order confirms successfully
+- No PostgreSQL NaN error
+- Orders appear in admin
+- Mobile checkout works

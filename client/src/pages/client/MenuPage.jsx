@@ -41,7 +41,8 @@ export default function MenuPage() {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    setTableId(tableId);
+    const safeTableId = Number(tableId) || 1;
+    setTableId(safeTableId);
     setRestaurantSlug(effectiveSlug);
 
     async function load() {

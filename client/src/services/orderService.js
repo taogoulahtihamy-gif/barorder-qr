@@ -30,17 +30,26 @@ function mapOrder(o) {
 }
 
 export async function createOrder(orderData) {
-  const { data } = await api.post('/api/public/orders', {
-    restaurantId: parseInt(orderData.restaurantId) || 1,
+  const items = (orderData.items || []).map((i) => ({
+    id: i.id,
+    name: i.name,
+    price: Number(i.price) || 0,
+    quantity: Number(i.quantity) || 1,
+  }));
+  const totalAmount = Math.round(Number(orderData.totalAmount)) || 0;
+  const payload = {
+    restaurantId: parseInt(orderData.restaurantId, 10) || 1,
     tableId: orderData.tableId || null,
-    items: orderData.items,
+    items,
     customerName: orderData.customerName || '',
     customerPhone: orderData.customerPhone || '',
     kitchenNote: orderData.kitchenNote || '',
-    totalAmount: Math.round(orderData.totalAmount),
+    totalAmount,
     paymentMethod: orderData.paymentMethod,
     paymentStatus: orderData.paymentStatus || 'pending',
-  });
+  };
+  console.log('[orderService] createOrder payload:', JSON.stringify(payload));
+  const { data } = await api.post('/api/public/orders', payload);
   return mapOrder(data);
 }
 
