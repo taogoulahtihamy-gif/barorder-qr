@@ -6,7 +6,7 @@ import Button from '../../components/Button';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { useApp } from '../../context/AppContext';
 import { getDashboard, markAlertHandled } from '../../services/adminService';
-import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated, onNewServerCall, onServerCallUpdated } from '../../services/socketService';
+import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated, onNewServerCall, onServerCallUpdated, onOrdersUpdated, onKitchenUpdated } from '../../services/socketService';
 
 function MiniBar({ values, height = 60, color = 'from-gold-500 to-amber-500' }) {
   const max = Math.max(...values, 1);
@@ -68,10 +68,12 @@ export default function DashboardPage() {
     const unsub3 = socket ? onPaymentUpdated(refresh) : () => {};
     const unsub4 = socket ? onNewServerCall(refresh) : () => {};
     const unsub5 = socket ? onServerCallUpdated(refresh) : () => {};
+    const unsub6 = socket ? onOrdersUpdated(refresh) : () => {};
+    const unsub7 = socket ? onKitchenUpdated(refresh) : () => {};
 
     return () => {
       clearInterval(polling);
-      unsub1(); unsub2(); unsub3(); unsub4(); unsub5();
+      unsub1(); unsub2(); unsub3(); unsub4(); unsub5(); unsub6(); unsub7();
     };
   }, [refresh]);
 

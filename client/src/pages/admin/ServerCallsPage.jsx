@@ -36,10 +36,12 @@ export default function ServerCallsPage() {
   }, [refresh]);
 
   useEffect(() => {
+    const polling = setInterval(refresh, 5000);
     const socket = connectSocket();
     const unsub1 = socket ? onNewServerCall(refresh) : () => {};
     const unsub2 = socket ? onServerCallUpdated(refresh) : () => {};
     return () => {
+      clearInterval(polling);
       unsub1();
       unsub2();
     };

@@ -28,11 +28,24 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+function shouldSkip(url) {
+  if (url.includes('/api/')) return true;
+  if (url.includes('socket.io')) return true;
+  if (url.includes('onrender.com')) return true;
+  return false;
+}
+
 self.addEventListener('fetch', (event) => {
+  const url = event.request.url;
+  if (shouldSkip(url)) return;
+
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request).catch(() => {
-        return caches.match(OFFLINE_URL);
+        return caches.match(OFFLINE_URL).then((res) => {
+          if (res) return res;
+          return new Response('', { status: 200, statusText: 'OK' });
+        });
       })
     );
     return;

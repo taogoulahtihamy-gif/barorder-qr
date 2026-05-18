@@ -104,11 +104,16 @@ CREATE TABLE IF NOT EXISTS payments (
 
 CREATE TABLE IF NOT EXISTS server_calls (
   id SERIAL PRIMARY KEY,
+  restaurant_id INTEGER REFERENCES restaurants(id) ON DELETE CASCADE,
   table_id INTEGER REFERENCES restaurant_tables(id) ON DELETE CASCADE,
+  table_number VARCHAR(20),
   status VARCHAR(30) DEFAULT 'new',
   message TEXT,
   created_at TIMESTAMP DEFAULT NOW()
 );
+
+ALTER TABLE server_calls ADD COLUMN IF NOT EXISTS restaurant_id INTEGER REFERENCES restaurants(id) ON DELETE CASCADE;
+ALTER TABLE server_calls ADD COLUMN IF NOT EXISTS table_number VARCHAR(20);
 
 CREATE TABLE IF NOT EXISTS promotions (
   id SERIAL PRIMARY KEY,
