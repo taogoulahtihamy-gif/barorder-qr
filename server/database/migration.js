@@ -38,6 +38,14 @@ export async function runMigrations() {
     `UPDATE server_calls sc SET restaurant_id = rt.restaurant_id FROM restaurant_tables rt WHERE rt.id = sc.table_id AND sc.restaurant_id IS NULL`,
     `UPDATE server_calls sc SET table_number = rt.table_number FROM restaurant_tables rt WHERE rt.id = sc.table_id AND sc.table_number IS NULL`,
     `CREATE TABLE IF NOT EXISTS promotions (id SERIAL PRIMARY KEY, restaurant_id INTEGER REFERENCES restaurants(id) ON DELETE CASCADE, title VARCHAR(200) NOT NULL, description TEXT, price INTEGER NOT NULL, old_price INTEGER, start_date DATE, end_date DATE, is_active BOOLEAN DEFAULT true, created_at TIMESTAMP DEFAULT NOW())`,
+    `ALTER TABLE payments ADD COLUMN IF NOT EXISTS provider VARCHAR(50)`,
+    `ALTER TABLE payments ADD COLUMN IF NOT EXISTS provider_payment_id VARCHAR(150)`,
+    `ALTER TABLE payments ADD COLUMN IF NOT EXISTS currency VARCHAR(10) DEFAULT 'XOF'`,
+    `ALTER TABLE payments ADD COLUMN IF NOT EXISTS paid_at TIMESTAMP`,
+    `ALTER TABLE payments ADD COLUMN IF NOT EXISTS metadata JSONB`,
+    `ALTER TABLE payments ADD COLUMN IF NOT EXISTS restaurant_id INTEGER REFERENCES restaurants(id) ON DELETE CASCADE`,
+    `ALTER TABLE orders ADD COLUMN IF NOT EXISTS provider VARCHAR(50)`,
+    `ALTER TABLE orders ADD COLUMN IF NOT EXISTS provider_payment_id VARCHAR(150)`,
   ];
 
   for (const sql of steps) {

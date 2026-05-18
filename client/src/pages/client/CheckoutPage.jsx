@@ -1,12 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Smartphone, Banknote, ArrowLeft, Smartphone as OrangeIcon } from 'lucide-react';
+import { Smartphone, Banknote, ArrowLeft, Smartphone as OrangeIcon, Loader, CheckCircle, XCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useApp } from '../../context/AppContext';
 import Button from '../../components/Button';
 import Card from '../../components/Card';
 import { formatPrice } from '../../utils/formatters';
 import { createOrder } from '../../services/orderService';
+import { playNewOrderSound } from '../../services/notificationService';
+
+const PAYMENT_EXPIRY = 5 * 60 * 1000;
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
@@ -16,6 +19,20 @@ export default function CheckoutPage() {
   const [customerPhone, setCustomerPhone] = useState('');
   const [kitchenNote, setKitchenNote] = useState('');
   const [loading, setLoading] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState(null);
+  const [paymentStarted, setPaymentStarted] = useState(null);
+
+  useEffect(() => {
+    let timer;
+    if (paymentStarted && paymentStatus === 'pending') {
+      timer = setTimeout(() => {
+        setPaymentStatus('expired');
+        setLoading(false);
+        toast.error('Paiement expiré. Veuillez réessayer.');
+      }, PAYMENT_EXPIRY);
+    }
+    return () => clearTimeout(timer);
+  }, [paymentStarted, paymentStatus]);
 
   const handlePlaceOrder = async () => {
     if (!paymentMethod) {
@@ -35,31 +52,34 @@ export default function CheckoutPage() {
       return;
     }
     setLoading(true);
+    setPaymentStatus('pending');
+    setPaymentStarted(Date.now());
+
     try {
       for (const item of cart) {
         const qty = Number(item.quantity);
         const price = Number(item.price);
         if (!item.quantity || isNaN(qty) || qty < 1) {
           toast.error(`Quantité invalide pour ${item.name || 'un article'}`);
-          setLoading(false);
+          setLoading(false); setPaymentStatus(null); setPaymentStarted(null);
           return;
         }
         if (item.price == null || isNaN(price) || price < 0) {
           toast.error(`Prix invalide pour ${item.name || 'un article'}`);
-          setLoading(false);
+          setLoading(false); setPaymentStatus(null); setPaymentStarted(null);
           return;
         }
       }
       const total = Number(cartTotal);
       if (isNaN(total) || total < 0) {
         toast.error('Erreur de calcul du total');
-        setLoading(false);
+        setLoading(false); setPaymentStatus(null); setPaymentStarted(null);
         return;
       }
       const safeTableId = Number(tableId) || null;
       if (!safeTableId) {
         toast.error('Table non identifiée. Veuillez scanner le QR code.');
-        setLoading(false);
+        setLoading(false); setPaymentStatus(null); setPaymentStarted(null);
         return;
       }
       const safeRestaurantId = restaurantId || '1';
@@ -96,24 +116,27 @@ export default function CheckoutPage() {
         paymentMethod,
         paymentStatus: paymentMethod === 'wave' || paymentMethod === 'orange_money' ? 'paid' : 'pending',
       };
-      console.log('[CheckoutPage] order payload:', JSON.stringify(orderData));
+
       const order = await createOrder(orderData);
+      playNewOrderSound();
+      setPaymentStatus('success');
       clearCart();
-      toast.success('Commande confirmée !');
-      const slug = order.restaurantSlug || restaurantSlug;
-      localStorage.setItem('lastOrder', JSON.stringify({
-        orderNumber: order.orderNumber || order.id,
-        slug: slug || '',
-      }));
-      if (slug) {
-        navigate(`/r/${slug}/order/${order.orderNumber || order.id}`);
-      } else {
-        navigate(`/order/${order.orderNumber || order.id}`);
-      }
+
+      setTimeout(() => {
+        const slug = order.restaurantSlug || restaurantSlug;
+        localStorage.setItem('lastOrder', JSON.stringify({
+          orderNumber: order.orderNumber || order.id,
+          slug: slug || '',
+        }));
+        if (slug) {
+          navigate(`/r/${slug}/order/${order.orderNumber || order.id}`);
+        } else {
+          navigate(`/order/${order.orderNumber || order.id}`);
+        }
+      }, 1500);
     } catch (e) {
+      setPaymentStatus('error');
       toast.error(e?.response?.data?.error || 'Erreur lors de la création de la commande');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -123,6 +146,33 @@ export default function CheckoutPage() {
     { method: 'cash', label: t('Cash à la livraison'), desc: t('Pay at the counter'), icon: Banknote, color: 'text-gold-500', bgColor: 'border-wave-500 bg-wave-500/5' },
   ];
 
+  if (paymentStatus === 'success') {
+    return (
+      <div className="p-4 flex flex-col items-center justify-center min-h-[80vh] text-center">
+        <div className="w-20 h-20 rounded-full bg-emerald-500/10 flex items-center justify-center mb-6 animate-bounce">
+          <CheckCircle size={48} className="text-emerald-500" />
+        </div>
+        <h2 className="text-2xl font-bold text-white mb-2">Commande confirmée !</h2>
+        <p className="text-white/50">Redirection vers votre commande...</p>
+      </div>
+    );
+  }
+
+  if (paymentStatus === 'error') {
+    return (
+      <div className="p-4 flex flex-col items-center justify-center min-h-[80vh] text-center">
+        <div className="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center mb-6">
+          <XCircle size={48} className="text-red-400" />
+        </div>
+        <h2 className="text-xl font-bold text-white mb-2">Erreur de paiement</h2>
+        <p className="text-white/50 mb-6">Un problème est survenu. Veuillez réessayer.</p>
+        <Button onClick={() => { setPaymentStatus(null); setPaymentStarted(null); setLoading(false); }} className="w-full max-w-xs">
+          Réessayer
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 pb-28">
       <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-white/50 hover:text-white mb-4 transition-colors">
@@ -130,6 +180,26 @@ export default function CheckoutPage() {
       </button>
 
       <h1 className="text-xl font-bold text-white mb-6">{t('Checkout')}</h1>
+
+      {loading && paymentStatus === 'pending' && (
+        <div className="mb-4 p-4 rounded-xl bg-gold-500/10 border border-gold-500/20 flex items-center gap-3">
+          <Loader size={20} className="text-gold-500 animate-spin" />
+          <div>
+            <p className="text-sm font-medium text-gold-500">Paiement en cours...</p>
+            <p className="text-xs text-white/40">Veuillez patienter</p>
+          </div>
+        </div>
+      )}
+
+      {paymentStatus === 'expired' && (
+        <div className="mb-4 p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center gap-3">
+          <XCircle size={20} className="text-red-400" />
+          <div>
+            <p className="text-sm font-medium text-red-400">Paiement expiré</p>
+            <p className="text-xs text-white/40">Le délai de paiement a été dépassé</p>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-4 mb-6">
         <Card>
@@ -193,10 +263,10 @@ export default function CheckoutPage() {
             {paymentOptions.map(({ method, label, desc, icon: Icon, color, bgColor }) => (
               <div
                 key={method}
-                onClick={() => setPaymentMethod(method)}
+                onClick={() => { if (!loading) setPaymentMethod(method); }}
                 className={`flex items-center gap-4 p-3 rounded-xl border cursor-pointer transition-colors ${
                   paymentMethod === method ? bgColor : 'border-white/10 hover:border-white/20'
-                }`}
+                } ${loading ? 'opacity-50 pointer-events-none' : ''}`}
               >
                 <Icon size={24} className={color} />
                 <div>
@@ -212,11 +282,15 @@ export default function CheckoutPage() {
 
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-black/90 backdrop-blur border-t border-white/10 space-y-2">
         <Button
-          onClick={handlePlaceOrder}
-          disabled={!paymentMethod || loading}
+          onClick={paymentStatus === 'expired' || paymentStatus === 'error' ? () => { setPaymentStatus(null); setPaymentStarted(null); setLoading(false); handlePlaceOrder(); } : handlePlaceOrder}
+          disabled={!paymentMethod || (loading && paymentStatus !== 'expired')}
           className="w-full"
         >
-          {loading ? 'En cours...' : 'Confirmer la commande'}
+          {loading && paymentStatus !== 'expired' ? (
+            <span className="flex items-center gap-2 justify-center">
+              <Loader size={16} className="animate-spin" /> En cours...
+            </span>
+          ) : paymentStatus === 'expired' || paymentStatus === 'error' ? 'Réessayer' : 'Confirmer la commande'}
         </Button>
       </div>
     </div>

@@ -8,4 +8,10 @@ export default {
   clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
   publicAppUrl: process.env.PUBLIC_APP_URL || 'http://localhost:5173',
   databaseUrl: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/barorder_qr',
+  waveApiKey: process.env.WAVE_API_KEY || 'test',
+  waveBaseUrl: process.env.WAVE_BASE_URL || 'https://api.wave.com',
+  waveWebhookSecret: process.env.WAVE_WEBHOOK_SECRET || 'test',
+  omApiKey: process.env.OM_API_KEY || 'test',
+  omMerchantKey: process.env.OM_MERCHANT_KEY || 'test',
+  omBaseUrl: process.env.OM_BASE_URL || 'https://api.orange.com',
 };

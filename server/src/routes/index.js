@@ -12,6 +12,8 @@ import settingsRoutes from './settings.js';
 import statsRoutes from './stats.js';
 import userRoutes from './users.js';
 import promotionRoutes from './promotions.js';
+import waveRoutes from './wave.js';
+import orangeMoneyRoutes from './orangeMoney.js';
 import { query } from '../config/database.js';
 
 const router = Router();
@@ -23,6 +25,8 @@ router.use('/admin/products', productRoutes);
 router.use('/admin/categories', categoryRoutes);
 router.use('/admin/tables', tableRoutes);
 router.use('/admin/payments', paymentRoutes);
+router.use('/payments/wave', waveRoutes);
+router.use('/payments/orange', orangeMoneyRoutes);
 router.use('/admin/dashboard', dashboardRoutes);
 router.use('/admin/server-calls', serverCallRoutes);
 router.use('/admin/server-alerts', serverCallRoutes);
