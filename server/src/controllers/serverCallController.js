@@ -39,7 +39,11 @@ export async function updateServerCallStatus(req, res) {
     if (!call) return res.status(404).json({ error: 'Appel non trouvé' });
     try {
       req.app.get('io').emit('server_call_updated', call);
-    } catch {}
+      req.app.get('io').emit('server_calls_updated', { serverCallId: call.id });
+      console.log('[SOCKET EMIT] server_call_updated + server_calls_updated', call.id, newStatus);
+    } catch (e) {
+      console.warn('[updateServerCallStatus] socket emit failed:', e.message);
+    }
     res.json(call);
   } catch (err) {
     console.error('[updateServerCallStatus] error:', err.message, { id: req.params.id });

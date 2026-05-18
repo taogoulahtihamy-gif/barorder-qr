@@ -6,7 +6,7 @@ import Button from '../../components/Button';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { useApp } from '../../context/AppContext';
 import { getDashboard, markAlertHandled } from '../../services/adminService';
-import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated, onNewServerCall, onServerCallUpdated, onOrdersUpdated, onKitchenUpdated } from '../../services/socketService';
+import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated, onNewServerCall, onServerCallUpdated, onOrdersUpdated, onKitchenUpdated, onServerCallsUpdated } from '../../services/socketService';
 
 function MiniBar({ values, height = 60, color = 'from-gold-500 to-amber-500' }) {
   const max = Math.max(...values, 1);
@@ -49,6 +49,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
+    console.log('[REFETCH TRIGGERED] dashboard');
     try {
       const result = await getDashboard();
       if (result) setData(result);
@@ -61,8 +62,10 @@ export default function DashboardPage() {
     setLoading(true);
     refresh().finally(() => setLoading(false));
 
-    const polling = setInterval(refresh, 10000);
     const socket = connectSocket();
+    const polling = setInterval(() => {
+      if (!socket?.connected) refresh();
+    }, 5000);
     const unsub1 = socket ? onNewOrder(refresh) : () => {};
     const unsub2 = socket ? onOrderStatusUpdated(refresh) : () => {};
     const unsub3 = socket ? onPaymentUpdated(refresh) : () => {};
@@ -70,10 +73,11 @@ export default function DashboardPage() {
     const unsub5 = socket ? onServerCallUpdated(refresh) : () => {};
     const unsub6 = socket ? onOrdersUpdated(refresh) : () => {};
     const unsub7 = socket ? onKitchenUpdated(refresh) : () => {};
+    const unsub8 = socket ? onServerCallsUpdated(refresh) : () => {};
 
     return () => {
       clearInterval(polling);
-      unsub1(); unsub2(); unsub3(); unsub4(); unsub5(); unsub6(); unsub7();
+      unsub1(); unsub2(); unsub3(); unsub4(); unsub5(); unsub6(); unsub7(); unsub8();
     };
   }, [refresh]);
 

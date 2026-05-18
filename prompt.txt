@@ -1,93 +1,61 @@
-URGENT FIX: BarOrder realtime synchronization is broken after last big update.
+Optimize BarOrder realtime synchronization speed.
 
-Problems:
-1. Customer orders no longer appear in admin orders/kitchen.
-2. Server calls accept/resolve no longer sync.
-3. Kitchen status changes are not reliable.
-4. Browser shows:
-TypeError: Response constructor: Response body is given with a null body status
+Current situation:
+Synchronization works again, but it takes 10–20 seconds.
+We need near-instant updates under 1–2 seconds.
 
-Priority:
-Restore synchronization and working order/server-call flow.
-Do not add new features.
-
-A. Fix PWA/service worker/fetch error
-Search for:
-new Response(
-status: 204
-status: 205
-null
-service-worker
-sw.js
-offline fallback
+Goal:
+Use socket.io realtime first, polling only as fallback.
 
 Fix:
-- Never create Response(null, { status: 204/205 }) if browser rejects it.
-- For 204/205, use new Response("", { status: 200 }) or return original response.
-- If service worker causes issues, disable/unregister it temporarily.
-- PWA must not intercept API calls:
-  /api/*
-  socket.io/*
-  onrender.com/*
-  vercel.app/api/*
 
-B. Restore API synchronization
-Check all frontend services:
-- orderService
-- serverCallService
-- socketService
-- notificationService
+1. Backend socket emit
+After each action, emit immediately:
+- order created => new_order + orders_updated + kitchen_updated
+- order status updated => order_status_updated + orders_updated + kitchen_updated
+- server call created => server_call_created + server_calls_updated
+- server call accepted/resolved => server_call_updated + server_calls_updated
+- payment updated => payment_updated + orders_updated
 
-Ensure production API base is:
+2. Frontend listeners
+Ensure admin pages listen to these events:
+- /admin/orders
+- /admin/kitchen
+- /admin/server-calls
+- /admin/payments
+- dashboard
+
+On socket event:
+- refetch immediately
+- do not wait for polling interval
+
+3. Socket connection
+Fix production socket URL:
 https://barorder-qr.onrender.com
 
 No localhost.
-No broken Vercel /api proxy.
+No duplicate socket connections.
+No memory leaks.
 
-C. Restore order creation flow
-POST /api/public/orders must:
-- create order
-- create order_items
-- return created order
-- emit new_order, orders_updated, kitchen_updated
+4. Polling fallback
+Keep polling, but reduce to:
+- 5 seconds maximum
+Only fallback if socket disconnected.
 
-Admin pages must:
-- listen to socket events
-- refetch every 5 seconds fallback
+5. Add logs:
+Frontend:
+[SOCKET CONNECTED]
+[SOCKET EVENT RECEIVED] eventName
+[REFETCH TRIGGERED]
 
-D. Restore server calls
-When client clicks “Appeler un serveur”:
-- create server call
-- show in /admin/server-calls
-- waiter/admin receive update
-- accept/resolve must update status immediately
-- emit server_call_created/server_call_updated
+Backend:
+[SOCKET EMIT] eventName
 
-E. Restore kitchen workflow
-- Commencer => preparing
-- Prête => ready
-- local state updates immediately
-- refetch fallback
-- no print unless clicking Imprimer
+6. Acceptance:
+- New client order appears in admin orders in under 2 seconds.
+- New order appears in kitchen in under 2 seconds.
+- Server call appears in waiter/admin in under 2 seconds.
+- Status change updates all open tabs in under 2 seconds.
+- If socket fails, polling still updates within 5 seconds.
 
-F. Remove dangerous auto print
-Disable all automatic print triggers by default.
-Print only when clicking explicit Imprimer button.
-
-G. Build and push
-Run:
-npm run build
-git status
-git add .
-git commit -m "Restore realtime sync and fix PWA response error"
-git push origin main
-
-Acceptance tests:
-1. Client creates order -> appears in /admin/orders within 5 seconds.
-2. Same order appears in /admin/kitchen within 5 seconds.
-3. Kitchen Commencer moves to En préparation.
-4. Kitchen Prête moves to Prête.
-5. Appeler serveur appears in admin/server calls.
-6. Accept/resolve server call works.
-7. No TypeError Response constructor error.
-8. No automatic print window.
+Build, commit, push.

@@ -4,7 +4,7 @@ import Card from '../../components/Card';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { useApp } from '../../context/AppContext';
 import { getStats } from '../../services/adminService';
-import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated } from '../../services/socketService';
+import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated, onOrdersUpdated } from '../../services/socketService';
 
 function MiniBar({ value, max, label, color = 'bg-wave-500' }) {
   return (
@@ -24,6 +24,7 @@ export default function StatsPage() {
   const { t } = useApp();
 
   const refresh = useCallback(async () => {
+    console.log('[REFETCH TRIGGERED] stats');
     try {
       const result = await getStats();
       if (result) setStats(result);
@@ -36,18 +37,22 @@ export default function StatsPage() {
     setLoading(true);
     refresh().finally(() => setLoading(false));
 
-    const polling = setInterval(refresh, 10000);
-
     const socket = connectSocket();
+    const polling = setInterval(() => {
+      if (!socket?.connected) refresh();
+    }, 5000);
+
     const unsub1 = socket ? onNewOrder(refresh) : () => {};
     const unsub2 = socket ? onOrderStatusUpdated(refresh) : () => {};
     const unsub3 = socket ? onPaymentUpdated(refresh) : () => {};
+    const unsub4 = socket ? onOrdersUpdated(refresh) : () => {};
 
     return () => {
       clearInterval(polling);
       unsub1();
       unsub2();
       unsub3();
+      unsub4();
     };
   }, [refresh]);
 

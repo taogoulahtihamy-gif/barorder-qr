@@ -20,6 +20,7 @@ export function connectSocket() {
 
     socket.on('connect', () => {
       reconnectAttempts = 0;
+      console.log('[SOCKET CONNECTED]');
     });
 
     socket.on('connect_error', (err) => {
@@ -52,52 +53,74 @@ export function disconnectSocket() {
   }
 }
 
+function wrapHandler(eventName, handler) {
+  return (...args) => {
+    console.log('[SOCKET EVENT RECEIVED]', eventName);
+    handler(...args);
+  };
+}
+
 export function onNewOrder(handler) {
   if (!socket) return () => {};
-  socket.on('new_order', handler);
-  return () => socket.off('new_order', handler);
+  const wrapped = wrapHandler('new_order', handler);
+  socket.on('new_order', wrapped);
+  return () => socket.off('new_order', wrapped);
 }
 
 export function onOrderStatusUpdated(handler) {
   if (!socket) return () => {};
-  socket.on('order_status_updated', handler);
-  return () => socket.off('order_status_updated', handler);
+  const wrapped = wrapHandler('order_status_updated', handler);
+  socket.on('order_status_updated', wrapped);
+  return () => socket.off('order_status_updated', wrapped);
 }
 
 export function onPaymentUpdated(handler) {
   if (!socket) return () => {};
-  socket.on('payment_updated', handler);
-  return () => socket.off('payment_updated', handler);
+  const wrapped = wrapHandler('payment_updated', handler);
+  socket.on('payment_updated', wrapped);
+  return () => socket.off('payment_updated', wrapped);
 }
 
 export function onOrdersUpdated(handler) {
   if (!socket) return () => {};
-  socket.on('orders_updated', handler);
-  return () => socket.off('orders_updated', handler);
+  const wrapped = wrapHandler('orders_updated', handler);
+  socket.on('orders_updated', wrapped);
+  return () => socket.off('orders_updated', wrapped);
 }
 
 export function onKitchenUpdated(handler) {
   if (!socket) return () => {};
-  socket.on('kitchen_updated', handler);
-  return () => socket.off('kitchen_updated', handler);
+  const wrapped = wrapHandler('kitchen_updated', handler);
+  socket.on('kitchen_updated', wrapped);
+  return () => socket.off('kitchen_updated', wrapped);
 }
 
 export function onServerCalled(handler) {
   if (!socket) return () => {};
-  socket.on('server_called', handler);
-  return () => socket.off('server_called', handler);
+  const wrapped = wrapHandler('server_called', handler);
+  socket.on('server_called', wrapped);
+  return () => socket.off('server_called', wrapped);
 }
 
 export function onNewServerCall(handler) {
   if (!socket) return () => {};
-  socket.on('new_server_call', handler);
-  return () => socket.off('new_server_call', handler);
+  const wrapped = wrapHandler('new_server_call', handler);
+  socket.on('new_server_call', wrapped);
+  return () => socket.off('new_server_call', wrapped);
 }
 
 export function onServerCallUpdated(handler) {
   if (!socket) return () => {};
-  socket.on('server_call_updated', handler);
-  return () => socket.off('server_call_updated', handler);
+  const wrapped = wrapHandler('server_call_updated', handler);
+  socket.on('server_call_updated', wrapped);
+  return () => socket.off('server_call_updated', wrapped);
+}
+
+export function onServerCallsUpdated(handler) {
+  if (!socket) return () => {};
+  const wrapped = wrapHandler('server_calls_updated', handler);
+  socket.on('server_calls_updated', wrapped);
+  return () => socket.off('server_calls_updated', wrapped);
 }
 
 export function emitOrderStatusUpdated(orderId, status) {

@@ -88,7 +88,8 @@ export async function updateOrderStatus(req, res) {
       }
       try {
         req.app.get('io').emit('payment_updated', { orderId, status: 'paid' });
-        console.log('EMITTING payment_updated', orderId);
+        req.app.get('io').emit('orders_updated', { orderId });
+        console.log('[SOCKET EMIT] payment_updated + orders_updated', orderId);
       } catch (socketErr) {
         console.warn('[updateOrderStatus] payment socket emit failed:', socketErr.message);
       }
@@ -98,7 +99,7 @@ export async function updateOrderStatus(req, res) {
       req.app.get('io').emit('order_status_updated', order);
       req.app.get('io').emit('orders_updated', { orderId: order.id });
       req.app.get('io').emit('kitchen_updated', { orderId: order.id });
-      console.log('EMITTING order_status_updated + orders_updated + kitchen_updated', order.order_number, status);
+      console.log('[SOCKET EMIT] order_status_updated + orders_updated + kitchen_updated', order.order_number, status);
     } catch (socketErr) {
       console.warn('[updateOrderStatus] socket emit failed:', socketErr.message);
     }

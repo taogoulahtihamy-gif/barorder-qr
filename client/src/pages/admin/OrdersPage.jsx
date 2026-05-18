@@ -9,7 +9,7 @@ import OrderTimeline from '../../components/OrderTimeline';
 import OrderDetailsModal from '../../components/OrderDetailsModal';
 import { useApp } from '../../context/AppContext';
 import { getOrders, updateOrderStatus, mapOrder } from '../../services/adminService';
-import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated, onOrdersUpdated, onKitchenUpdated } from '../../services/socketService';
+import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated, onOrdersUpdated, onKitchenUpdated, getSocket } from '../../services/socketService';
 import { formatCurrency } from '../../utils/formatters';
 import { printKitchenTicket, printCustomerReceipt, printCashierInvoice } from '../../utils/printService';
 import { playNewOrderSound, vibrateIfSupported } from '../../services/notificationService';
@@ -130,6 +130,7 @@ export default function OrdersPage() {
   const roleDefault = ROLE_DEFAULT_FILTER[user?.role] || 'all';
   const [filter, setFilter] = useState(roleDefault);
   const refreshOrders = useCallback(async () => {
+    console.log('[REFETCH TRIGGERED] orders');
     try {
       const result = await getOrders();
       setOrders(Array.isArray(result) ? result : []);
@@ -142,9 +143,11 @@ export default function OrdersPage() {
     setLoading(true);
     refreshOrders().finally(() => setLoading(false));
 
-    const polling = setInterval(refreshOrders, 5000);
-
     const socket = connectSocket();
+    const polling = setInterval(() => {
+      if (!socket?.connected) refreshOrders();
+    }, 5000);
+
     const unsubNew = socket ? onNewOrder(() => {
       refreshOrders();
       playOrderSound();

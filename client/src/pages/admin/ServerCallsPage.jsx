@@ -7,7 +7,7 @@ import Badge from '../../components/Badge';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { useApp } from '../../context/AppContext';
 import { getServerCalls, updateServerCallStatus } from '../../services/adminService';
-import { connectSocket, onNewServerCall, onServerCallUpdated } from '../../services/socketService';
+import { connectSocket, onNewServerCall, onServerCallUpdated, onServerCallsUpdated, getSocket } from '../../services/socketService';
 
 const STATUS_CONFIG = {
   pending: { label: 'En attente', color: 'text-yellow-400', variant: 'pending' },
@@ -22,6 +22,7 @@ export default function ServerCallsPage() {
   const [filter, setFilter] = useState('');
 
   const refresh = useCallback(async () => {
+    console.log('[REFETCH TRIGGERED] server-calls');
     try {
       const result = await getServerCalls(filter || undefined);
       setCalls(Array.isArray(result) ? result : []);
@@ -36,14 +37,18 @@ export default function ServerCallsPage() {
   }, [refresh]);
 
   useEffect(() => {
-    const polling = setInterval(refresh, 5000);
     const socket = connectSocket();
+    const polling = setInterval(() => {
+      if (!socket?.connected) refresh();
+    }, 5000);
     const unsub1 = socket ? onNewServerCall(refresh) : () => {};
     const unsub2 = socket ? onServerCallUpdated(refresh) : () => {};
+    const unsub3 = socket ? onServerCallsUpdated(refresh) : () => {};
     return () => {
       clearInterval(polling);
       unsub1();
       unsub2();
+      unsub3();
     };
   }, [refresh]);
 

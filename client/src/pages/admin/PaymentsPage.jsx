@@ -4,7 +4,7 @@ import Badge from '../../components/Badge';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { useApp } from '../../context/AppContext';
 import { getPayments } from '../../services/adminService';
-import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated } from '../../services/socketService';
+import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated, onOrdersUpdated } from '../../services/socketService';
 
 const filters = ['all', 'wave', 'cash', 'orange_money', 'paid', 'pending'];
 
@@ -24,6 +24,7 @@ export default function PaymentsPage() {
   const { t } = useApp();
 
   const refresh = useCallback(async () => {
+    console.log('[REFETCH TRIGGERED] payments');
     try {
       const result = await getPayments();
       if (Array.isArray(result)) setPayments(result);
@@ -36,18 +37,22 @@ export default function PaymentsPage() {
     setLoading(true);
     refresh().finally(() => setLoading(false));
 
-    const polling = setInterval(refresh, 10000);
-
     const socket = connectSocket();
+    const polling = setInterval(() => {
+      if (!socket?.connected) refresh();
+    }, 5000);
+
     const unsub1 = socket ? onNewOrder(refresh) : () => {};
     const unsub2 = socket ? onOrderStatusUpdated(refresh) : () => {};
     const unsub3 = socket ? onPaymentUpdated(refresh) : () => {};
+    const unsub4 = socket ? onOrdersUpdated(refresh) : () => {};
 
     return () => {
       clearInterval(polling);
       unsub1();
       unsub2();
       unsub3();
+      unsub4();
     };
   }, [refresh]);
 

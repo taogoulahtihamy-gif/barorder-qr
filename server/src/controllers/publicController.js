@@ -245,7 +245,8 @@ export async function createOrder(req, res) {
       `, [order.id, methodLabel, roundedTotal, paymentMethod.toUpperCase(), Date.now()]);
       try {
         req.app.get('io').emit('payment_updated', { orderId: order.id, status: 'paid' });
-        console.log('EMITTING payment_updated', order.id);
+        req.app.get('io').emit('orders_updated', { orderId: order.id });
+        console.log('[SOCKET EMIT] payment_updated + orders_updated', order.id);
       } catch (e) {
         console.warn('[createOrder] payment socket emit failed:', e.message);
       }
@@ -280,7 +281,7 @@ export async function createOrder(req, res) {
       req.app.get('io').emit('new_order', { ...fullOrder, items: orderItems });
       req.app.get('io').emit('orders_updated', { orderId: order.id });
       req.app.get('io').emit('kitchen_updated', { orderId: order.id });
-      console.log('EMITTING new_order + orders_updated + kitchen_updated', orderNumber);
+      console.log('[SOCKET EMIT] new_order + orders_updated + kitchen_updated', orderNumber);
     } catch (e) {
       console.warn('[createOrder] socket emit failed:', e.message);
     }
@@ -359,7 +360,10 @@ export async function callServer(req, res) {
       RETURNING *
     `, [rid, resolvedTableId, resolvedTableNumber, message || '']);
     try {
+      req.app.get('io').emit('server_call_created', call);
       req.app.get('io').emit('new_server_call', call);
+      req.app.get('io').emit('server_calls_updated', { serverCallId: call.id });
+      console.log('[SOCKET EMIT] server_call_created + new_server_call + server_calls_updated');
     } catch {}
     res.status(201).json(call);
   } catch (err) {
