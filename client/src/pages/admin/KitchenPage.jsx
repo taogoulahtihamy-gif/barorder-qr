@@ -6,7 +6,7 @@ import Button from '../../components/Button';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { useApp } from '../../context/AppContext';
 import { getOrders, updateOrderStatus } from '../../services/adminService';
-import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated, onNewServerCall } from '../../services/socketService';
+import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated, onNewServerCall, onOrdersUpdated, onKitchenUpdated } from '../../services/socketService';
 import { printKitchenTicket } from '../../utils/printService';
 
 const KANBAN_COLUMNS = [
@@ -23,7 +23,7 @@ const columnActions = {
 
 function normalizeStatus(s) {
   if (s === 'pending') return 'new';
-  if (s === 'accepted') return 'preparing';
+  if (s === 'accepted') return 'new';
   return s;
 }
 
@@ -79,14 +79,9 @@ export default function KitchenPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [autoPrint, setAutoPrint] = useState(() => localStorage.getItem('autoPrintKitchen') === 'true');
   const { t } = useApp();
   const refreshInterval = useRef(null);
   const [tick, setTick] = useState(0);
-
-  useEffect(() => {
-    localStorage.setItem('autoPrintKitchen', autoPrint);
-  }, [autoPrint]);
 
   useEffect(() => {
     const iv = setInterval(() => setTick(t => t + 1), 1000);
@@ -109,23 +104,15 @@ export default function KitchenPage() {
     refreshInterval.current = setInterval(refreshOrders, 5000);
 
     const socket = connectSocket();
-    const unsubNew = socket ? onNewOrder((data) => {
+    const unsubNew = socket ? onNewOrder(() => {
       refreshOrders();
       playSound();
       toast.success('Nouvelle commande !');
-      if (autoPrint) {
-        const order = {
-          orderNumber: data?.order_number || data?.orderNumber || '',
-          table: data?.table_number || data?.table_id || '',
-          items: (data?.items || []).map(i => ({ name: i.product_name || i.name, qty: i.quantity })),
-          kitchenNote: data?.kitchen_note || data?.kitchenNote || '',
-          createdAt: data?.created_at || data?.createdAt,
-        };
-        printKitchenTicket(order);
-      }
     }) : () => {};
     const unsubStatus = socket ? onOrderStatusUpdated(() => refreshOrders()) : () => {};
     const unsubPay = socket ? onPaymentUpdated(() => refreshOrders()) : () => {};
+    const unsubOrdersUpdated = socket ? onOrdersUpdated(() => refreshOrders()) : () => {};
+    const unsubKitchenUpdated = socket ? onKitchenUpdated(() => refreshOrders()) : () => {};
     const unsubServerCall = socket ? onNewServerCall((call) => {
       playSound();
       toast.custom((tInstance) => (
@@ -151,15 +138,16 @@ export default function KitchenPage() {
       unsubNew();
       unsubStatus();
       unsubPay();
+      unsubOrdersUpdated();
+      unsubKitchenUpdated();
       unsubServerCall();
     };
-  }, [refreshOrders, autoPrint, navigate]);
+  }, [refreshOrders, navigate]);
 
   const handleStatusUpdate = useCallback(async (orderId, newStatus) => {
-    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, order_status: newStatus } : o));
     try {
       await updateOrderStatus(orderId, newStatus);
-      refreshOrders();
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
       toast.success('Statut mis à jour');
     } catch (e) {
       refreshOrders();
@@ -200,15 +188,6 @@ export default function KitchenPage() {
           </span>
         </div>
         <div className="flex items-center gap-3">
-          <label className="flex items-center gap-2 text-xs text-white/40 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={autoPrint}
-              onChange={(e) => setAutoPrint(e.target.checked)}
-              className="w-3.5 h-3.5 rounded border-white/20 bg-zinc-800 text-gold-500 focus:ring-gold-500/30"
-            />
-            Auto-print
-          </label>
           <button
             onClick={toggleFullscreen}
             className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white/70 hover:text-white transition-colors text-sm"

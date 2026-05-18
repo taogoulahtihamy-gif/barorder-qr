@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { Eye, Printer, ChefHat } from 'lucide-react';
 import Card from '../../components/Card';
@@ -9,7 +9,7 @@ import OrderTimeline from '../../components/OrderTimeline';
 import OrderDetailsModal from '../../components/OrderDetailsModal';
 import { useApp } from '../../context/AppContext';
 import { getOrders, updateOrderStatus, mapOrder } from '../../services/adminService';
-import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated } from '../../services/socketService';
+import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated, onOrdersUpdated, onKitchenUpdated } from '../../services/socketService';
 import { formatCurrency } from '../../utils/formatters';
 import { printKitchenTicket, printCustomerReceipt, printCashierInvoice } from '../../utils/printService';
 import { playNewOrderSound, vibrateIfSupported } from '../../services/notificationService';
@@ -129,33 +129,14 @@ export default function OrdersPage() {
   const { t, user } = useApp();
   const roleDefault = ROLE_DEFAULT_FILTER[user?.role] || 'all';
   const [filter, setFilter] = useState(roleDefault);
-  const [autoPrint, setAutoPrint] = useState(() => localStorage.getItem('autoPrintKitchen') === 'true');
-  const prevOrdersRef = useRef([]);
-
-  useEffect(() => {
-    localStorage.setItem('autoPrintKitchen', autoPrint);
-  }, [autoPrint]);
-
   const refreshOrders = useCallback(async () => {
     try {
       const result = await getOrders();
-      setOrders((prev) => {
-        const prevCount = prev.length;
-        const newCount = Array.isArray(result) ? result.length : 0;
-        if (newCount > prevCount) {
-          playOrderSound();
-          toast.success('Nouvelle commande !');
-          if (autoPrint && Array.isArray(result) && result.length > 0) {
-            const newOrders = result.slice(0, newCount - prevCount);
-            newOrders.forEach((o) => printKitchenTicket(o));
-          }
-        }
-        return Array.isArray(result) ? result : [];
-      });
+      setOrders(Array.isArray(result) ? result : []);
     } catch (err) {
       console.error('[OrdersPage] refresh failed:', err);
     }
-  }, [autoPrint]);
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -175,18 +156,22 @@ export default function OrdersPage() {
     const unsubPay = socket ? onPaymentUpdated(() => {
       refreshOrders();
     }) : () => {};
+    const unsubOrdersUpdated = socket ? onOrdersUpdated(() => {
+      refreshOrders();
+    }) : () => {};
+    const unsubKitchenUpdated = socket ? onKitchenUpdated(() => {
+      refreshOrders();
+    }) : () => {};
 
     return () => {
       clearInterval(polling);
       unsubNew();
       unsubStatus();
       unsubPay();
+      unsubOrdersUpdated();
+      unsubKitchenUpdated();
     };
   }, [refreshOrders]);
-
-  useEffect(() => {
-    prevOrdersRef.current = orders;
-  }, [orders]);
 
   const handleStatusUpdate = useCallback(async (orderId, newStatus) => {
     try {
@@ -223,15 +208,7 @@ export default function OrdersPage() {
               </button>
             ))}
           </div>
-          <label className="flex items-center gap-2 text-[11px] md:text-xs text-white/40 cursor-pointer select-none flex-shrink-0">
-            <input
-              type="checkbox"
-              checked={autoPrint}
-              onChange={(e) => setAutoPrint(e.target.checked)}
-              className="w-3.5 h-3.5 rounded border-white/20 bg-zinc-800 text-gold-500 focus:ring-gold-500/30"
-            />
-            Auto-print cuisine
-          </label>
+
         </div>
       </div>
 

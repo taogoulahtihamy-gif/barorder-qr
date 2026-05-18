@@ -96,7 +96,9 @@ export async function updateOrderStatus(req, res) {
 
     try {
       req.app.get('io').emit('order_status_updated', order);
-      console.log('EMITTING order_status_updated', order.order_number, status);
+      req.app.get('io').emit('orders_updated', { orderId: order.id });
+      req.app.get('io').emit('kitchen_updated', { orderId: order.id });
+      console.log('EMITTING order_status_updated + orders_updated + kitchen_updated', order.order_number, status);
     } catch (socketErr) {
       console.warn('[updateOrderStatus] socket emit failed:', socketErr.message);
     }

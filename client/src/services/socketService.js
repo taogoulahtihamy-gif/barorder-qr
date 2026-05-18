@@ -70,6 +70,18 @@ export function onPaymentUpdated(handler) {
   return () => socket.off('payment_updated', handler);
 }
 
+export function onOrdersUpdated(handler) {
+  if (!socket) return () => {};
+  socket.on('orders_updated', handler);
+  return () => socket.off('orders_updated', handler);
+}
+
+export function onKitchenUpdated(handler) {
+  if (!socket) return () => {};
+  socket.on('kitchen_updated', handler);
+  return () => socket.off('kitchen_updated', handler);
+}
+
 export function onServerCalled(handler) {
   if (!socket) return () => {};
   socket.on('server_called', handler);

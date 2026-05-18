@@ -278,7 +278,9 @@ export async function createOrder(req, res) {
 
     try {
       req.app.get('io').emit('new_order', { ...fullOrder, items: orderItems });
-      console.log('EMITTING new_order', orderNumber);
+      req.app.get('io').emit('orders_updated', { orderId: order.id });
+      req.app.get('io').emit('kitchen_updated', { orderId: order.id });
+      console.log('EMITTING new_order + orders_updated + kitchen_updated', orderNumber);
     } catch (e) {
       console.warn('[createOrder] socket emit failed:', e.message);
     }

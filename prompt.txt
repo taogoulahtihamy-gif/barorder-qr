@@ -1,42 +1,187 @@
-Fix kitchen status movement and annoying print ticket page.
+Fix BarOrder critical order workflow regressions.
 
-PROBLEM 1 — Kitchen status does not move visually:
-On /admin/kitchen, when clicking “Commencer” or “Prête”, the toast says “Statut mis à jour” but the order card stays in the same column until reload.
+CURRENT PROBLEMS:
+1. In kitchen, when I click “Commencer”, the card appears/disappears but the visible action/status does not change correctly. It still shows “Commencer”.
+2. When I click on an order/card, it triggers printing/print preview. I do NOT want any print action when clicking an order. Print must happen ONLY when clicking an explicit “Imprimer” button.
+3. When a customer creates an order from the client QR interface, the order no longer appears in admin orders/kitchen/other user dashboards.
 
-Fix:
-1. After successful status update, update local state immediately.
-2. Move the order card to the correct column without refresh:
-   - Nouvelle -> En préparation after Commencer
-   - En préparation -> Prête after Prête
-3. Also refetch orders after update as fallback.
-4. Ensure status names are normalized:
-   - nouvelle/pending -> nouvelle
-   - accepted -> accepted
-   - preparing/en_preparation -> preparing
-   - ready/prete -> ready
-5. Kitchen columns must use backend status consistently.
-6. No duplicate order cards.
+DO NOT break:
+- login
+- roles
+- users
+- promotions
+- QR tables
+- checkout
+- existing orders
+- mobile responsive
 
-PROBLEM 2 — Print button opens annoying ticket page/tab:
-Currently, clicking print opens a separate ticket page that stays open.
+==================================================
+A. STOP ACCIDENTAL PRINTING
+==================================================
+Search all frontend code for:
+window.print
+window.open
+printKitchenTicket
+printReceipt
+autoPrint
+onClick
 
-Fix:
-1. Do not navigate away from admin page.
-2. Use hidden printable iframe or window that:
-   - opens print dialog
-   - prints ticket
-   - closes automatically after print
-3. For browser fallback, open a small print window and auto-close after 1 second.
-4. Kitchen print should print only kitchen ticket, not full invoice page.
-5. Admin order print should not create many tabs.
+Rules:
+- Clicking an order card must ONLY open details or do nothing.
+- Clicking “Commencer”, “Prête”, “Accepter”, “Servie”, “Payée” must NEVER print.
+- Printing must happen ONLY from buttons labeled:
+  - Imprimer
+  - Ticket cuisine
+  - Reçu
+- Remove any auto-print triggered by:
+  - card click
+  - order status change
+  - order creation
+  - page load
+  - socket event
+- Keep auto-print toggle disabled by default.
+- If auto-print exists, it must require explicit user activation and never run by default.
 
-DESIGN:
-Keep current premium kitchen design.
+==================================================
+B. FIX KITCHEN STATUS UPDATE
+==================================================
+Normalize statuses everywhere.
 
-TESTS:
-- Click Commencer: card moves to En préparation immediately.
-- Click Prête: card moves to Prête immediately.
-- Print ticket: print dialog opens, no annoying persistent page.
-- No reload needed.
-- npm run build passes.
-- commit and push.
+Use canonical backend statuses:
+- pending
+- accepted
+- preparing
+- ready
+- served
+- paid
+- cancelled
+
+French UI labels:
+- pending = Nouvelle
+- accepted = Acceptée
+- preparing = En préparation
+- ready = Prête
+- served = Servie
+- paid = Payée
+- cancelled = Annulée
+
+Button logic:
+- pending or accepted => button “Commencer” sends status "preparing"
+- preparing => button “Prête” sends status "ready"
+- ready => no “Commencer” button
+- paid/cancelled => no kitchen action
+
+After API success:
+- update local order status immediately
+- remove card from old column
+- insert card in new column
+- button label must update immediately
+- then refetch orders as fallback
+
+Important:
+Do not compare French labels directly for business logic.
+Use canonical status values only.
+
+==================================================
+C. FIX CUSTOMER ORDER CREATION VISIBILITY
+==================================================
+Customer orders created from QR/checkout must appear immediately in:
+- /admin/orders
+- /admin/kitchen
+- dashboard latest orders
+- relevant role pages
+
+Inspect:
+- CheckoutPage
+- orderService
+- publicController
+- orders controller
+- socket emission
+- admin orders fetch
+- kitchen fetch
+
+Backend after successful order creation must:
+1. insert order
+2. insert order items
+3. return full order with items
+4. emit socket event:
+   - new_order
+   - orders_updated
+   - kitchen_updated
+5. never silently fail if payment is simulated
+
+Frontend admin/kitchen must:
+- listen to new_order/orders_updated/kitchen_updated
+- refetch orders
+- also poll every 5 seconds as fallback
+
+==================================================
+D. BACKEND API CHECK
+==================================================
+Verify these endpoints work in production:
+- POST /api/public/orders
+- GET /api/admin/orders
+- GET /api/admin/kitchen/orders or equivalent
+- PATCH /api/admin/orders/:id/status
+
+If endpoint names differ, adapt without breaking current frontend.
+
+Add logs:
+- when public order is created
+- when socket event emitted
+- when status updated
+
+==================================================
+E. DATABASE SAFETY
+==================================================
+Do not drop data.
+
+Ensure orders table supports:
+- status
+- accepted_at
+- preparing_at
+- ready_at
+- served_at
+- paid_at
+- cancelled_at
+- payment_status
+- payment_method
+- table_id
+- restaurant_id
+
+Use ALTER TABLE ADD COLUMN IF NOT EXISTS only.
+
+==================================================
+F. TESTS
+==================================================
+Run:
+npm run build
+
+Then verify manually in code or with logs:
+1. Client creates order from /r/le-palais/table/3
+2. New order appears in admin orders
+3. New order appears in kitchen
+4. Click Commencer:
+   - no print opens
+   - status becomes preparing
+   - card moves to En préparation
+   - button changes to Prête
+5. Click Prête:
+   - no print opens
+   - status becomes ready
+   - card moves to Prête
+6. Print happens only when clicking Imprimer
+
+==================================================
+G. COMMIT
+==================================================
+git add .
+git commit -m "Fix order creation visibility kitchen status and print triggers"
+git push origin main
+
+Final output must include:
+- files modified
+- build result
+- confirmation no automatic print remains
+- confirmation customer orders appear in admin/kitchen
+- confirmation kitchen status buttons update correctly
