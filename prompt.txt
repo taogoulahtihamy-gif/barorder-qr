@@ -1,68 +1,42 @@
-Upgrade BarOrder with professional restaurant receipts and kitchen tickets.
+Fix mobile layout for OrdersPage filter/header section.
 
-Goals:
-- printable kitchen ticket
-- printable customer receipt
-- cashier invoice
-- thermal printer friendly layout
+Problem:
+On mobile, the “Auto-print cuisine” checkbox overlaps the status filters and breaks the layout.
 
-1. Kitchen ticket
-Create compact kitchen ticket view:
-- order number
-- table number
-- time
-- items
-- quantities
-- kitchen note
-- highlight urgent/hot items
-- no prices
+Required fixes:
 
-Add:
-- Print kitchen ticket button
-- Auto-print option toggle
+1. Mobile responsive header
+On screens < 768px:
+- place filters on first row
+- place “Auto-print cuisine” on second row
+- full width
+- aligned left
+- no overlap
+- allow horizontal scroll for filter pills if needed
 
-2. Customer receipt
-Create premium receipt:
-- BarOrder logo
-- restaurant name
-- table
-- order id
-- date/time
-- ordered items
-- subtotal
-- taxes if configured
-- total
-- payment method
-- QR code
-- thank you message
+2. Desktop behavior
+On desktop:
+- keep current inline layout
+- filters + auto-print aligned correctly
 
-3. Cashier invoice
-Add:
-- paid stamp
-- cashier name
-- payment timestamp
+3. Styling
+- cleaner spacing
+- reduce checkbox text size slightly on mobile
+- add margin-top between rows
+- preserve dark premium design
 
-4. Printing
-Use browser print styles:
-- thermal width 58mm and 80mm
-- dark UI should print white background
-- hide admin sidebar during print
+4. Technical
+Use:
+- flex-wrap
+- gap
+- overflow-x-auto
+- min-width for filter pills
+- responsive Tailwind classes
 
-5. PDF export
-Add:
-- download PDF receipt
-
-6. Order details modal
-Add:
-- View details
-- Print
-- Download PDF
-
-7. Build and push.
-
-Acceptance:
-- kitchen can print kitchen ticket
-- cashier can print invoice
-- customer receipt looks professional
-- print layout clean
-- mobile print works
+5. Acceptance
+- no overlap on iPhone/mobile
+- filters remain clickable
+- checkbox visible and aligned
+- no horizontal broken UI
+- build passes
+- commit and push
