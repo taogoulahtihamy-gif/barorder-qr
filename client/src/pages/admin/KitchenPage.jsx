@@ -156,11 +156,13 @@ export default function KitchenPage() {
   }, [refreshOrders, autoPrint, navigate]);
 
   const handleStatusUpdate = useCallback(async (orderId, newStatus) => {
+    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, order_status: newStatus } : o));
     try {
       await updateOrderStatus(orderId, newStatus);
-      await refreshOrders();
+      refreshOrders();
       toast.success('Statut mis à jour');
     } catch (e) {
+      refreshOrders();
       toast.error(e?.response?.data?.error || 'Erreur de mise à jour');
     }
   }, [refreshOrders]);

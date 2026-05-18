@@ -1,197 +1,42 @@
-Tu vas transformer BarOrder QR en vraie plateforme SaaS restaurant avec paiements réels, analytics et architecture multi-restaurants.
+Fix kitchen status movement and annoying print ticket page.
 
-IMPORTANT :
-- ne casse RIEN de l’existant
-- garder le design premium actuel
-- build doit rester clean
-- vérifier mobile + desktop
-- push github à la fin
+PROBLEM 1 — Kitchen status does not move visually:
+On /admin/kitchen, when clicking “Commencer” or “Prête”, the toast says “Statut mis à jour” but the order card stays in the same column until reload.
 
-==================================================
-1. WAVE PAYMENT READY
-==================================================
+Fix:
+1. After successful status update, update local state immediately.
+2. Move the order card to the correct column without refresh:
+   - Nouvelle -> En préparation after Commencer
+   - En préparation -> Prête after Prête
+3. Also refetch orders after update as fallback.
+4. Ensure status names are normalized:
+   - nouvelle/pending -> nouvelle
+   - accepted -> accepted
+   - preparing/en_preparation -> preparing
+   - ready/prete -> ready
+5. Kitchen columns must use backend status consistently.
+6. No duplicate order cards.
 
-Créer architecture propre pour intégration Wave Sénégal.
+PROBLEM 2 — Print button opens annoying ticket page/tab:
+Currently, clicking print opens a separate ticket page that stays open.
 
-BACKEND :
-Créer :
-server/src/services/waveService.js
+Fix:
+1. Do not navigate away from admin page.
+2. Use hidden printable iframe or window that:
+   - opens print dialog
+   - prints ticket
+   - closes automatically after print
+3. For browser fallback, open a small print window and auto-close after 1 second.
+4. Kitchen print should print only kitchen ticket, not full invoice page.
+5. Admin order print should not create many tabs.
 
-Fonctions :
-- createWavePayment()
-- verifyWavePayment()
-- handleWaveWebhook()
+DESIGN:
+Keep current premium kitchen design.
 
-Créer routes :
-/api/payments/wave/create
-/api/payments/wave/webhook
-/api/payments/wave/status/:id
-
-Ajouter env :
-WAVE_API_KEY=
-WAVE_BASE_URL=
-WAVE_WEBHOOK_SECRET=
-
-IMPORTANT :
-Même si API réelle pas encore branchée :
-- architecture complète
-- simulation propre
-- statut paiement dynamique
-- préparation production
-
-==================================================
-2. ORANGE MONEY READY
-==================================================
-
-Créer :
-server/src/services/orangeMoneyService.js
-
-Fonctions :
-- createOrangePayment()
-- verifyOrangePayment()
-
-Routes :
-/api/payments/orange/create
-/api/payments/orange/status/:id
-
-Ajouter env :
-OM_API_KEY=
-OM_MERCHANT_KEY=
-OM_BASE_URL=
-
-==================================================
-3. CHECKOUT PREMIUM
-==================================================
-
-Améliorer page checkout client.
-
-AJOUTER :
-- loader paiement
-- statut paiement live
-- succès animé
-- erreur élégante
-- expiration paiement
-- bouton “Réessayer”
-
-Paiement doit :
-- créer vraie transaction backend
-- enregistrer payment_method
-- enregistrer payment_status
-
-==================================================
-4. TABLE PAYMENTS DATABASE
-==================================================
-
-Créer table SQL :
-payments
-
-Colonnes :
-- id
-- order_id
-- provider
-- provider_payment_id
-- amount
-- currency
-- status
-- created_at
-- paid_at
-- metadata JSON
-
-Ajouter migration propre.
-
-==================================================
-5. DASHBOARD ANALYTICS
-==================================================
-
-Créer vraie page analytics premium.
-
-Afficher :
-- chiffre du jour
-- chiffre semaine
-- commandes aujourd’hui
-- top produits
-- top tables
-- moyen paiement utilisé
-- temps moyen préparation
-
-Ajouter charts premium.
-
-==================================================
-6. MULTI RESTAURANTS
-==================================================
-
-Préparer vraie architecture SaaS.
-
-Ajouter partout :
-restaurant_id
-
-Créer :
-- restaurant settings
-- nom
-- logo
-- couleurs
-- slug
-- devise
-
-Chaque restaurant doit être isolé.
-
-==================================================
-7. PWA INSTALLABLE
-==================================================
-
-Transformer app en vraie PWA.
-
-Ajouter :
-- manifest propre
-- install prompt
-- icônes
-- splash screen
-- offline fallback
-- mode standalone
-
-==================================================
-8. IMPRESSION THERMIQUE READY
-==================================================
-
-Préparer architecture ESC/POS.
-
-Créer :
-client/src/services/printerService.js
-
-Fonctions :
-- printKitchenTicket()
-- printReceipt()
-
-Format :
-- ticket cuisine
-- ticket caisse
-
-==================================================
-9. STABILITÉ PRODUCTION
-==================================================
-
-Vérifier :
-- aucun localhost hardcodé
-- aucune erreur console critique
-- aucun crash mobile
-- socket cleanup
-- loaders partout
-- try/catch backend
-
-==================================================
-10. FINAL
-==================================================
-
-À la fin :
-- npm build
-- tests rapides
-- git add .
-- commit clair
-- git push
-
-Puis afficher :
-- fichiers créés
-- fonctionnalités ajoutées
-- endpoints créés
-- résultat build
-- prochaines étapes recommandées
+TESTS:
+- Click Commencer: card moves to En préparation immediately.
+- Click Prête: card moves to Prête immediately.
+- Print ticket: print dialog opens, no annoying persistent page.
+- No reload needed.
+- npm run build passes.
+- commit and push.

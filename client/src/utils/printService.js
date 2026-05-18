@@ -166,15 +166,36 @@ export function printCashierInvoice(order, restaurant, cashierName) {
   openPrintWindow(html);
 }
 
+let printIframeId = 0;
+
 function openPrintWindow(html) {
-  const win = window.open('', '_blank');
-  if (!win) return;
-  win.document.write(html);
-  win.document.close();
-  win.focus();
+  const id = `print-frame-${++printIframeId}`;
+  let iframe = document.getElementById(id);
+  if (!iframe) {
+    iframe = document.createElement('iframe');
+    iframe.id = id;
+    iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none;opacity:0;pointer-events:none';
+    document.body.appendChild(iframe);
+  }
+  const doc = iframe.contentDocument || iframe.contentWindow.document;
+  doc.open();
+  doc.write(html);
+  doc.close();
+
   setTimeout(() => {
-    win.print();
-    setTimeout(() => win.close(), 500);
+    try {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+    } catch {
+      const win = window.open('', '_blank', 'width=400,height=600,menubar=no,toolbar=no,location=no');
+      if (win) {
+        win.document.write(html);
+        win.document.close();
+        win.focus();
+        setTimeout(() => { win.print(); setTimeout(() => win.close(), 1000); }, 300);
+      }
+    }
+    setTimeout(() => { if (iframe.parentNode) iframe.parentNode.removeChild(iframe); }, 1000);
   }, 300);
 }
 
