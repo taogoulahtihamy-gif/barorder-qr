@@ -6,6 +6,6 @@ import { requireRole } from '../middlewares/roles.js';
 const router = Router();
 
 router.get('/', auth, requireRole('admin', 'super_admin', 'manager', 'waiter', 'kitchen', 'cashier'), getOrders);
-router.patch('/:id/status', auth, requireRole('admin', 'super_admin', 'manager', 'waiter', 'kitchen'), updateOrderStatus);
+router.patch('/:id/status', auth, requireRole('admin', 'super_admin', 'manager', 'waiter', 'kitchen', 'cashier'), updateOrderStatus);
 
 export default router;

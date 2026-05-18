@@ -13,16 +13,12 @@ const KANBAN_COLUMNS = [
   { key: 'new', label: 'Nouvelle', color: 'from-rose-500/20 to-rose-500/5', border: 'border-rose-500/30' },
   { key: 'accepted', label: 'Acceptée', color: 'from-amber-500/20 to-amber-500/5', border: 'border-amber-500/30' },
   { key: 'preparing', label: 'En préparation', color: 'from-blue-500/20 to-blue-500/5', border: 'border-blue-500/30' },
-  { key: 'ready', label: 'Prête', color: 'from-emerald-500/20 to-emerald-500/5', border: 'border-emerald-500/30' },
-  { key: 'served', label: 'Servie', color: 'from-zinc-500/20 to-zinc-500/5', border: 'border-zinc-500/30' },
 ];
 
 const columnActions = {
   new: [{ label: 'Accepter', status: 'accepted', variant: 'gold' }],
   accepted: [{ label: 'En préparation', status: 'preparing', variant: 'primary' }],
   preparing: [{ label: 'Prête', status: 'ready', variant: 'primary' }],
-  ready: [{ label: 'Servie', status: 'served', variant: 'primary' }],
-  served: [],
 };
 
 function normalizeStatus(s) {
@@ -90,6 +86,7 @@ export default function KitchenPage() {
     const socket = connectSocket();
     const unsubNew = socket ? onNewOrder(() => {
       refreshOrders();
+      playSound();
       toast.success('Nouvelle commande !');
     }) : () => {};
     const unsubStatus = socket ? onOrderStatusUpdated(() => {

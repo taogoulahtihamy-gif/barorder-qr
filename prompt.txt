@@ -1,33 +1,61 @@
-Fix customer menu black screen.
+Upgrade BarOrder order workflow to a real restaurant realtime system.
 
-The browser console does not show a clear red error, but the customer menu page turns black after about 1 second.
+Implement full order lifecycle.
 
-Focus on recent promotions/client menu changes.
+Statuses:
+- pending
+- preparing
+- ready
+- served
+- paid
+- cancelled
 
-Directly inspect:
-- MenuPage
-- TableWelcome
-- promotion components
-- cart add logic
-- public promotions API call
+Tasks:
 
-Fix all possible runtime crashes:
-- null restaurant
-- null categories
-- null products
-- null promotions
-- undefined price/old_price
-- failed promotions fetch
-- invalid image_url
-- undefined cart item fields
+1. Backend
+- Add status validation
+- Add timestamps:
+  created_at
+  preparing_at
+  ready_at
+  served_at
+  paid_at
+- Add PATCH /api/orders/:id/status
 
-If promotions fail, do not crash the page.
-Hide promotions and continue rendering menu.
+2. Role permissions
+- waiter:
+  create orders
+  mark served
+- kitchen:
+  mark preparing
+  mark ready
+- cashier:
+  mark paid
+- admin/super_admin:
+  full access
 
-Run build, commit, push.
+3. Frontend realtime
+- Orders page auto-refresh every 5 seconds
+OR websocket realtime if already configured
+
+4. UI
+- Color badges per status
+- Sound notification for new orders
+- Kitchen page only shows:
+  pending + preparing
+- Waiter page shows:
+  ready + served
+- Cashier page shows:
+  served + paid
+
+5. Add order timeline UI
+Example:
+Pending -> Preparing -> Ready -> Served -> Paid
+
+6. Build and push.
 
 Acceptance:
-- client menu remains visible after loading
-- products display
-- cart works
-- no black screen
+- Full restaurant workflow works
+- Roles only see allowed actions
+- Orders update live
+- UI remains premium dark gold

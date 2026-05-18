@@ -1,9 +1,10 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
 import Card from '../../components/Card';
 import Badge from '../../components/Badge';
 import Button from '../../components/Button';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import OrderTimeline from '../../components/OrderTimeline';
 import { useApp } from '../../context/AppContext';
 import { getOrders, updateOrderStatus, mapOrder } from '../../services/adminService';
 import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated } from '../../services/socketService';
@@ -21,6 +22,12 @@ const statusActions = {
 };
 
 const statusFilters = ['all', 'new', 'accepted', 'preparing', 'ready', 'served', 'paid', 'cancelled'];
+
+const ROLE_DEFAULT_FILTER = {
+  kitchen: 'new',
+  waiter: 'ready',
+  cashier: 'served',
+};
 
 const actionLabels = {
   accepted: 'Accepter',
@@ -89,11 +96,11 @@ const filterLabels = {
 const badgeVariant = {
   new: 'pending',
   pending: 'pending',
-  accepted: 'preparing',
+  accepted: 'accepted',
   preparing: 'preparing',
   ready: 'ready',
-  served: 'delivered',
-  paid: 'delivered',
+  served: 'served',
+  paid: 'paid',
   cancelled: 'cancelled',
 };
 
@@ -102,16 +109,54 @@ function normalizeStatus(s) {
   return s;
 }
 
+function playOrderSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 660;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(0.25, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.15);
+    setTimeout(() => {
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.frequency.value = 880;
+      osc2.type = 'sine';
+      gain2.gain.setValueAtTime(0.25, ctx.currentTime + 0.2);
+      gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+      osc2.start(ctx.currentTime + 0.2);
+      osc2.stop(ctx.currentTime + 0.35);
+    }, 150);
+  } catch {}
+}
+
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all');
-  const { t } = useApp();
+  const { t, user } = useApp();
+  const roleDefault = ROLE_DEFAULT_FILTER[user?.role] || 'all';
+  const [filter, setFilter] = useState(roleDefault);
+  const prevOrdersRef = useRef([]);
 
   const refreshOrders = useCallback(async () => {
     try {
       const result = await getOrders();
-      setOrders(Array.isArray(result) ? result : []);
+      setOrders((prev) => {
+        const prevCount = prev.length;
+        const newCount = Array.isArray(result) ? result.length : 0;
+        if (newCount > prevCount) {
+          playOrderSound();
+          toast.success('Nouvelle commande !');
+        }
+        return Array.isArray(result) ? result : [];
+      });
     } catch (err) {
       console.error('[OrdersPage] refresh failed:', err);
     }
@@ -126,11 +171,8 @@ export default function OrdersPage() {
     const socket = connectSocket();
     const unsubNew = socket ? onNewOrder(() => {
       refreshOrders();
+      playOrderSound();
       toast.success('Nouvelle commande !');
-      try {
-        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACAf39/f4B/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+');
-        audio.play().catch(() => {});
-      } catch {}
     }) : () => {};
     const unsubStatus = socket ? onOrderStatusUpdated(() => {
       refreshOrders();
@@ -146,6 +188,10 @@ export default function OrdersPage() {
       unsubPay();
     };
   }, [refreshOrders]);
+
+  useEffect(() => {
+    prevOrdersRef.current = orders;
+  }, [orders]);
 
   const handleStatusUpdate = useCallback(async (orderId, newStatus) => {
     try {
@@ -222,6 +268,9 @@ export default function OrdersPage() {
                     {order.note && !order.kitchenNote && (
                       <p className="text-xs text-yellow-400/70 mt-1 italic">📝 {order.note}</p>
                     )}
+                    <div className="mt-2 pt-2 border-t border-white/5">
+                      <OrderTimeline status={order.status} />
+                    </div>
                     <div className="flex items-center gap-3 mt-2 text-xs text-white/40">
                       {order.paymentStatus && <span>Paiement: {t(order.paymentStatus)}</span>}
                       <button

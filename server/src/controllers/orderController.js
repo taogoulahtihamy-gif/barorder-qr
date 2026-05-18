@@ -22,6 +22,12 @@ export async function getOrders(req, res) {
   }
 }
 
+const ROLE_TRANSITIONS = {
+  waiter: ['served'],
+  kitchen: ['preparing', 'ready'],
+  cashier: ['paid'],
+};
+
 export async function updateOrderStatus(req, res) {
   try {
     const orderId = Number(req.params.id);
@@ -29,16 +35,34 @@ export async function updateOrderStatus(req, res) {
     const { status } = req.body;
     const validStatuses = ['new', 'accepted', 'preparing', 'ready', 'served', 'paid', 'cancelled'];
 
-    console.log('[updateOrderStatus]', { orderId, restaurantId, status });
+    console.log('[updateOrderStatus]', { orderId, restaurantId, status, role: req.user?.role });
 
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ error: 'Statut invalide', status });
     }
 
+    const userRole = req.user?.role || '';
+
+    if (!['admin', 'super_admin', 'manager'].includes(userRole)) {
+      const allowed = ROLE_TRANSITIONS[userRole] || [];
+      if (!allowed.includes(status)) {
+        return res.status(403).json({ error: 'Action non autorisée pour ce rôle' });
+      }
+    }
+
+    const timestampCol = status === 'cancelled' ? 'cancelled_at'
+      : status === 'accepted' ? 'accepted_at'
+      : status === 'preparing' ? 'preparing_at'
+      : status === 'ready' ? 'ready_at'
+      : status === 'served' ? 'served_at'
+      : status === 'paid' ? 'paid_at'
+      : null;
+
     const sql = `
       UPDATE orders SET
         order_status = $1::text,
         payment_status = CASE WHEN $2::text = 'paid' THEN 'paid'::text ELSE payment_status END
+        ${timestampCol ? `, ${timestampCol} = NOW()` : ''}
       WHERE id = $3 AND (restaurant_id = $4 OR restaurant_id IS NULL)
       RETURNING *
     `;
