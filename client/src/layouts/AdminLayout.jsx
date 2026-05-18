@@ -1,15 +1,15 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, ShoppingBag, Package, Tags, Grid3X3,
-  Wallet, BarChart3, Settings, LogOut, Globe, Menu, X, ChefHat, Bell, Users,
+  Wallet, BarChart3, Settings, LogOut, Globe, Menu, X, ChefHat, Bell, Users, ClipboardCheck,
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { connectSocket, onNewServerCall, onServerCallUpdated } from '../services/socketService';
 
 const ROLE_PAGES = {
-  admin: ['dashboard','orders','kitchen','server-calls','products','categories','tables','payments','stats','users','settings'],
-  super_admin: ['dashboard','orders','kitchen','server-calls','products','categories','tables','payments','stats','users','settings'],
+  admin: ['dashboard','orders','kitchen','server-calls','products','categories','tables','payments','stats','users','settings','role-test'],
+  super_admin: ['dashboard','orders','kitchen','server-calls','products','categories','tables','payments','stats','users','settings','role-test'],
   manager: ['dashboard','orders','kitchen','server-calls','products','categories','tables','payments','stats','settings'],
   waiter: ['orders','server-calls','tables'],
   kitchen: ['orders','kitchen'],
@@ -27,6 +27,7 @@ const NAV_ITEMS = [
   { path: '/admin/payments', label: 'Payments', icon: Wallet, page: 'payments' },
   { path: '/admin/stats', label: 'Statistics', icon: BarChart3, page: 'stats' },
   { path: '/admin/users', label: 'Users', icon: Users, page: 'users' },
+  { path: '/admin/role-test', label: 'Test rôles', icon: ClipboardCheck, page: 'role-test' },
   { path: '/admin/settings', label: 'Settings', icon: Settings, page: 'settings' },
 ];
 

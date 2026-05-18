@@ -1,150 +1,48 @@
-Create a professional admin user-management page for BarOrder QR.
+Create a complete role testing checklist page for BarOrder QR.
 
-IMPORTANT:
-- Directly modify real project files.
-- Do not break existing working features.
-- Do not show demo credentials on the login page anymore.
-- Keep the current dark premium BarOrder design.
-- Run build and commit/push real changes.
+Goal:
+Add a temporary admin page:
+/admin/role-test
 
-GOAL:
-When logged in as admin or super_admin, the user can manually create and manage login accounts with roles.
+Visible only to admin and super_admin.
 
-1. LOGIN PAGE CLEANUP
-Remove the visible demo credentials list from /admin/login:
-- super@barorder.sn / admin123
-- manager@barorder.sn / admin123
-- waiter@barorder.sn / admin123
-- kitchen@barorder.sn / admin123
-- cashier@barorder.sn / admin123
-
-Improve the login page:
-- cleaner centered card
-- better spacing
-- clearer title: “Connexion administration”
-- no hidden/black text
-- no credentials displayed publicly
-- responsive mobile layout
-
-2. ADMIN USERS PAGE
-Create or improve:
-/admin/users
-
-Visible only for:
-- super_admin
-- admin
-
-Not visible for:
-- manager
-- waiter
-- kitchen
-- cashier
-
-3. USER FORM
-Add a form to create accounts manually.
-
-Fields:
+The page must show:
+1. Current logged-in user:
 - name
 - email
-- password
 - role
 - restaurant_id
-- is_active
 
-Roles dropdown:
-- admin
-- manager
-- waiter
+2. Role permissions matrix:
+- dashboard
+- orders
 - kitchen
-- cashier
+- payments
+- server calls
+- products
+- categories
+- tables
+- users
+- stats
+- settings
 
-Only super_admin can create:
-- super_admin
+3. For each page:
+- show if current role has access or not
+- provide a test button to open the page
+- if forbidden, show “Accès non autorisé attendu”
 
-4. USERS LIST
-Show existing users:
-- name
-- email
-- role
-- status active/inactive
-- created_at
-- actions
+4. Add sidebar link:
+“Test rôles”
+visible only to admin/super_admin.
 
-Actions:
-- activate/deactivate
-- edit role
-- reset password
-- delete only if safe, otherwise deactivate
+5. Do not break existing pages.
 
-5. BACKEND
-Use existing users table:
-id
-restaurant_id
-name
-email
-password_hash
-role
-created_at
-is_active
+6. Keep dark premium responsive design.
 
-IMPORTANT:
-- password must be hashed with bcrypt
-- never return password_hash to frontend
-- validate role values
-- prevent duplicate email
-- require authentication
-- require admin/super_admin permission
+7. Run build, commit and push.
 
-Routes:
-GET /api/admin/users
-POST /api/admin/users
-PATCH /api/admin/users/:id
-PATCH /api/admin/users/:id/status
-PATCH /api/admin/users/:id/password
-
-6. SECURITY RULES
-- super_admin can create/update all roles
-- admin can create/update manager, waiter, kitchen, cashier only
-- admin cannot create or edit super_admin
-- inactive users cannot login
-- forbidden access returns 403, not crash
-
-7. FRONTEND ACCESS
-- Add “Utilisateurs” menu item in admin sidebar only for admin/super_admin
-- If forbidden role opens /admin/users, show “Accès non autorisé”
-- Do not crash
-
-8. PRODUCTION SOCKET FIX
-Also fix production socket issue:
-The frontend must never connect to http://localhost:5000 in production.
-Use:
-import.meta.env.VITE_API_URL || "https://barorder-qr.onrender.com"
-for API and socket.io.
-
-Search and remove hardcoded localhost:5000 from production code.
-
-9. TESTS
-Run:
-npm run build
-
-Verify:
-- login page no longer displays demo credentials
-- admin can open /admin/users
-- admin can create user manually
-- created user can login
-- role-based sidebar changes correctly
-- kitchen user cannot open users page
-- no localhost:5000 in production bundle/source
-
-10. COMMIT
-Run:
-git status
-git add .
-git commit -m "Add admin user management and clean login"
-git push origin main
-
-Final output must include:
-- modified files
-- build result
-- confirmation users page works
-- confirmation demo credentials removed from login
+Acceptance:
+- admin sees /admin/role-test
+- kitchen cannot access /admin/role-test
+- role permissions are clearly visible
+- direct route access is tested cleanly
