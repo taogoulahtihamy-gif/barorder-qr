@@ -1,10 +1,10 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { TrendingUp, DollarSign, ShoppingBag, BarChart3, PieChart } from 'lucide-react';
 import Card from '../../components/Card';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { useApp } from '../../context/AppContext';
 import { getStats } from '../../services/adminService';
-import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated, onOrdersUpdated } from '../../services/socketService';
+import { connectSocket, onPaymentUpdated } from '../../services/socketService';
 
 function MiniBar({ value, max, label, color = 'bg-wave-500' }) {
   return (
@@ -23,13 +23,21 @@ export default function StatsPage() {
   const [loading, setLoading] = useState(true);
   const { t } = useApp();
 
+  const isFetchingRef = useRef(false);
+  const lastFetchAtRef = useRef(0);
   const refresh = useCallback(async () => {
+    const now = Date.now();
+    if (isFetchingRef.current || now - lastFetchAtRef.current < 2000) return;
+    isFetchingRef.current = true;
+    lastFetchAtRef.current = now;
     console.log('[REFETCH TRIGGERED] stats');
     try {
       const result = await getStats();
       if (result) setStats(result);
     } catch (err) {
       console.error('[StatsPage] refresh failed:', err);
+    } finally {
+      isFetchingRef.current = false;
     }
   }, []);
 
@@ -42,17 +50,11 @@ export default function StatsPage() {
       if (!socket?.connected) refresh();
     }, 5000);
 
-    const unsub1 = socket ? onNewOrder(refresh) : () => {};
-    const unsub2 = socket ? onOrderStatusUpdated(refresh) : () => {};
-    const unsub3 = socket ? onPaymentUpdated(refresh) : () => {};
-    const unsub4 = socket ? onOrdersUpdated(refresh) : () => {};
+    const unsub1 = socket ? onPaymentUpdated(refresh) : () => {};
 
     return () => {
       clearInterval(polling);
       unsub1();
-      unsub2();
-      unsub3();
-      unsub4();
     };
   }, [refresh]);
 

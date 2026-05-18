@@ -1,10 +1,10 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import Card from '../../components/Card';
 import Badge from '../../components/Badge';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { useApp } from '../../context/AppContext';
 import { getPayments } from '../../services/adminService';
-import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated, onOrdersUpdated } from '../../services/socketService';
+import { connectSocket, onPaymentUpdated } from '../../services/socketService';
 
 const filters = ['all', 'wave', 'cash', 'orange_money', 'paid', 'pending'];
 
@@ -23,13 +23,21 @@ export default function PaymentsPage() {
   const [filter, setFilter] = useState('all');
   const { t } = useApp();
 
+  const isFetchingRef = useRef(false);
+  const lastFetchAtRef = useRef(0);
   const refresh = useCallback(async () => {
+    const now = Date.now();
+    if (isFetchingRef.current || now - lastFetchAtRef.current < 2000) return;
+    isFetchingRef.current = true;
+    lastFetchAtRef.current = now;
     console.log('[REFETCH TRIGGERED] payments');
     try {
       const result = await getPayments();
       if (Array.isArray(result)) setPayments(result);
     } catch (err) {
       console.error('[PaymentsPage] refresh failed:', err);
+    } finally {
+      isFetchingRef.current = false;
     }
   }, []);
 
@@ -42,17 +50,11 @@ export default function PaymentsPage() {
       if (!socket?.connected) refresh();
     }, 5000);
 
-    const unsub1 = socket ? onNewOrder(refresh) : () => {};
-    const unsub2 = socket ? onOrderStatusUpdated(refresh) : () => {};
-    const unsub3 = socket ? onPaymentUpdated(refresh) : () => {};
-    const unsub4 = socket ? onOrdersUpdated(refresh) : () => {};
+    const unsub1 = socket ? onPaymentUpdated(refresh) : () => {};
 
     return () => {
       clearInterval(polling);
       unsub1();
-      unsub2();
-      unsub3();
-      unsub4();
     };
   }, [refresh]);
 

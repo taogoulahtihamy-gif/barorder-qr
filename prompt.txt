@@ -1,61 +1,142 @@
-Optimize BarOrder realtime synchronization speed.
+Fix BarOrder realtime synchronization performance without removing features.
 
-Current situation:
-Synchronization works again, but it takes 10–20 seconds.
-We need near-instant updates under 1–2 seconds.
+IMPORTANT:
+- Do NOT rollback.
+- Do NOT remove features.
+- Do NOT break orders, kitchen, server calls, payments, promotions, QR, users, roles, print.
+- Keep current premium design.
+- Fix only synchronization, timeout, and refresh routing.
 
-Goal:
-Use socket.io realtime first, polling only as fallback.
+CURRENT ERROR:
+AxiosError: timeout of 3000ms exceeded
 
-Fix:
-
-1. Backend socket emit
-After each action, emit immediately:
-- order created => new_order + orders_updated + kitchen_updated
-- order status updated => order_status_updated + orders_updated + kitchen_updated
-- server call created => server_call_created + server_calls_updated
-- server call accepted/resolved => server_call_updated + server_calls_updated
-- payment updated => payment_updated + orders_updated
-
-2. Frontend listeners
-Ensure admin pages listen to these events:
-- /admin/orders
-- /admin/kitchen
-- /admin/server-calls
-- /admin/payments
+CURRENT PROBLEM:
+Too many pages refetch at the same time:
+- orders
+- kitchen
+- payments
+- server-calls
 - dashboard
 
-On socket event:
-- refetch immediately
-- do not wait for polling interval
+This slows the app and causes delayed synchronization.
 
-3. Socket connection
-Fix production socket URL:
-https://barorder-qr.onrender.com
+==================================================
+1. INCREASE API TIMEOUT
+==================================================
 
-No localhost.
-No duplicate socket connections.
-No memory leaks.
+Find the axios/API client.
 
-4. Polling fallback
-Keep polling, but reduce to:
-- 5 seconds maximum
-Only fallback if socket disconnected.
+Change timeout:
+- production: 20000 ms
+- development: 10000 ms
 
-5. Add logs:
-Frontend:
-[SOCKET CONNECTED]
-[SOCKET EVENT RECEIVED] eventName
-[REFETCH TRIGGERED]
+If request times out:
+- do not clear existing data
+- do not blank the page
+- show small toast: “Synchronisation en cours…”
+- retry silently
 
-Backend:
-[SOCKET EMIT] eventName
+==================================================
+2. PREVENT REFRESH STORM
+==================================================
 
-6. Acceptance:
-- New client order appears in admin orders in under 2 seconds.
-- New order appears in kitchen in under 2 seconds.
-- Server call appears in waiter/admin in under 2 seconds.
-- Status change updates all open tabs in under 2 seconds.
-- If socket fails, polling still updates within 5 seconds.
+Create centralized refresh routing.
 
-Build, commit, push.
+Do NOT trigger global refetch for every socket event.
+
+Each socket event must refresh only the related page.
+
+Rules:
+
+A. new_order
+Refresh only:
+- admin orders
+- kitchen
+- dashboard
+
+Do NOT refresh:
+- payments
+- server-calls
+- users
+- products
+- tables
+
+B. order_status_updated
+Refresh only:
+- admin orders
+- kitchen
+- dashboard
+
+Do NOT refresh:
+- server-calls
+- users
+- products
+- tables
+
+C. kitchen_updated
+Refresh only:
+- kitchen
+
+D. server_call_created
+Refresh only:
+- server-calls
+- dashboard
+
+Also:
+- notify waiter/admin/manager
+- do NOT refresh orders
+- do NOT refresh kitchen
+- do NOT refresh payments
+
+E. server_call_updated
+Refresh only:
+- server-calls
+- dashboard
+
+Do NOT refresh:
+- orders
+- kitchen
+- payments
+
+F. payment_updated
+Refresh only:
+- payments
+- orders
+- dashboard
+
+Do NOT refresh:
+- kitchen
+- server-calls
+- products
+
+G. product_updated / category_updated
+Refresh only:
+- products
+- categories
+- client menu
+
+Do NOT refresh:
+- orders
+- kitchen
+- payments
+- server-calls
+
+==================================================
+3. PAGE-SPECIFIC FETCH LOCKS
+==================================================
+
+For each admin page:
+- OrdersPage
+- KitchenPage
+- ServerCallsPage
+- PaymentsPage
+- DashboardPage
+
+Add:
+- isFetchingRef
+- lastFetchAtRef
+
+Rules:
+- if already fetching, skip duplicate request
+- max 1 refetch per page every 2 seconds
+- dashboard max 1

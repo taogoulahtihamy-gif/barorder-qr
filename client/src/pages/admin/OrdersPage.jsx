@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { Eye, Printer, ChefHat } from 'lucide-react';
 import Card from '../../components/Card';
@@ -9,7 +9,7 @@ import OrderTimeline from '../../components/OrderTimeline';
 import OrderDetailsModal from '../../components/OrderDetailsModal';
 import { useApp } from '../../context/AppContext';
 import { getOrders, updateOrderStatus, mapOrder } from '../../services/adminService';
-import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated, onOrdersUpdated, onKitchenUpdated, getSocket } from '../../services/socketService';
+import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated } from '../../services/socketService';
 import { formatCurrency } from '../../utils/formatters';
 import { printKitchenTicket, printCustomerReceipt, printCashierInvoice } from '../../utils/printService';
 import { playNewOrderSound, vibrateIfSupported } from '../../services/notificationService';
@@ -129,13 +129,21 @@ export default function OrdersPage() {
   const { t, user } = useApp();
   const roleDefault = ROLE_DEFAULT_FILTER[user?.role] || 'all';
   const [filter, setFilter] = useState(roleDefault);
+  const isFetchingRef = useRef(false);
+  const lastFetchAtRef = useRef(0);
   const refreshOrders = useCallback(async () => {
+    const now = Date.now();
+    if (isFetchingRef.current || now - lastFetchAtRef.current < 2000) return;
+    isFetchingRef.current = true;
+    lastFetchAtRef.current = now;
     console.log('[REFETCH TRIGGERED] orders');
     try {
       const result = await getOrders();
       setOrders(Array.isArray(result) ? result : []);
     } catch (err) {
       console.error('[OrdersPage] refresh failed:', err);
+    } finally {
+      isFetchingRef.current = false;
     }
   }, []);
 
@@ -159,20 +167,12 @@ export default function OrdersPage() {
     const unsubPay = socket ? onPaymentUpdated(() => {
       refreshOrders();
     }) : () => {};
-    const unsubOrdersUpdated = socket ? onOrdersUpdated(() => {
-      refreshOrders();
-    }) : () => {};
-    const unsubKitchenUpdated = socket ? onKitchenUpdated(() => {
-      refreshOrders();
-    }) : () => {};
 
     return () => {
       clearInterval(polling);
       unsubNew();
       unsubStatus();
       unsubPay();
-      unsubOrdersUpdated();
-      unsubKitchenUpdated();
     };
   }, [refreshOrders]);
 

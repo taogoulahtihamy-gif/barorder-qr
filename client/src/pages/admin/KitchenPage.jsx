@@ -6,7 +6,7 @@ import Button from '../../components/Button';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { useApp } from '../../context/AppContext';
 import { getOrders, updateOrderStatus } from '../../services/adminService';
-import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated, onNewServerCall, onOrdersUpdated, onKitchenUpdated, onServerCallsUpdated, getSocket } from '../../services/socketService';
+import { connectSocket, onNewOrder, onOrderStatusUpdated, onKitchenUpdated, onNewServerCall } from '../../services/socketService';
 import { printKitchenTicket } from '../../utils/printService';
 
 const KANBAN_COLUMNS = [
@@ -88,13 +88,21 @@ export default function KitchenPage() {
     return () => clearInterval(iv);
   }, []);
 
+  const isFetchingRef = useRef(false);
+  const lastFetchAtRef = useRef(0);
   const refreshOrders = useCallback(async () => {
+    const now = Date.now();
+    if (isFetchingRef.current || now - lastFetchAtRef.current < 2000) return;
+    isFetchingRef.current = true;
+    lastFetchAtRef.current = now;
     console.log('[REFETCH TRIGGERED] kitchen');
     try {
       const result = await getOrders();
       setOrders(Array.isArray(result) ? result : []);
     } catch (err) {
       console.error('[KitchenPage] refresh failed:', err);
+    } finally {
+      isFetchingRef.current = false;
     }
   }, []);
 
@@ -113,10 +121,7 @@ export default function KitchenPage() {
       toast.success('Nouvelle commande !');
     }) : () => {};
     const unsubStatus = socket ? onOrderStatusUpdated(() => refreshOrders()) : () => {};
-    const unsubPay = socket ? onPaymentUpdated(() => refreshOrders()) : () => {};
-    const unsubOrdersUpdated = socket ? onOrdersUpdated(() => refreshOrders()) : () => {};
     const unsubKitchenUpdated = socket ? onKitchenUpdated(() => refreshOrders()) : () => {};
-    const unsubServerCallsUpdated = socket ? onServerCallsUpdated(() => refreshOrders()) : () => {};
     const unsubServerCall = socket ? onNewServerCall((call) => {
       playSound();
       toast.custom((tInstance) => (
@@ -141,10 +146,7 @@ export default function KitchenPage() {
       clearInterval(refreshInterval.current);
       unsubNew();
       unsubStatus();
-      unsubPay();
-      unsubOrdersUpdated();
       unsubKitchenUpdated();
-      unsubServerCallsUpdated();
       unsubServerCall();
     };
   }, [refreshOrders, navigate]);

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { DollarSign, ShoppingBag, Clock, TrendingUp, Users, Package, Bell, BarChart3, Timer, CreditCard } from 'lucide-react';
 import Card from '../../components/Card';
 import Badge from '../../components/Badge';
@@ -6,7 +6,7 @@ import Button from '../../components/Button';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { useApp } from '../../context/AppContext';
 import { getDashboard, markAlertHandled } from '../../services/adminService';
-import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated, onNewServerCall, onServerCallUpdated, onOrdersUpdated, onKitchenUpdated, onServerCallsUpdated } from '../../services/socketService';
+import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated, onNewServerCall, onServerCallUpdated } from '../../services/socketService';
 
 function MiniBar({ values, height = 60, color = 'from-gold-500 to-amber-500' }) {
   const max = Math.max(...values, 1);
@@ -48,13 +48,21 @@ export default function DashboardPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const isFetchingRef = useRef(false);
+  const lastFetchAtRef = useRef(0);
   const refresh = useCallback(async () => {
+    const now = Date.now();
+    if (isFetchingRef.current || now - lastFetchAtRef.current < 2000) return;
+    isFetchingRef.current = true;
+    lastFetchAtRef.current = now;
     console.log('[REFETCH TRIGGERED] dashboard');
     try {
       const result = await getDashboard();
       if (result) setData(result);
     } catch (err) {
       console.error('[DashboardPage] refresh:', err.message);
+    } finally {
+      isFetchingRef.current = false;
     }
   }, []);
 
@@ -71,13 +79,10 @@ export default function DashboardPage() {
     const unsub3 = socket ? onPaymentUpdated(refresh) : () => {};
     const unsub4 = socket ? onNewServerCall(refresh) : () => {};
     const unsub5 = socket ? onServerCallUpdated(refresh) : () => {};
-    const unsub6 = socket ? onOrdersUpdated(refresh) : () => {};
-    const unsub7 = socket ? onKitchenUpdated(refresh) : () => {};
-    const unsub8 = socket ? onServerCallsUpdated(refresh) : () => {};
 
     return () => {
       clearInterval(polling);
-      unsub1(); unsub2(); unsub3(); unsub4(); unsub5(); unsub6(); unsub7(); unsub8();
+      unsub1(); unsub2(); unsub3(); unsub4(); unsub5();
     };
   }, [refresh]);
 

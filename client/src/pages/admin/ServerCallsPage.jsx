@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Bell, CheckCircle, XCircle, Clock, Filter } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Card from '../../components/Card';
@@ -7,7 +7,7 @@ import Badge from '../../components/Badge';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { useApp } from '../../context/AppContext';
 import { getServerCalls, updateServerCallStatus } from '../../services/adminService';
-import { connectSocket, onNewServerCall, onServerCallUpdated, onServerCallsUpdated, getSocket } from '../../services/socketService';
+import { connectSocket, onNewServerCall, onServerCallUpdated, onServerCallsUpdated } from '../../services/socketService';
 
 const STATUS_CONFIG = {
   pending: { label: 'En attente', color: 'text-yellow-400', variant: 'pending' },
@@ -21,13 +21,21 @@ export default function ServerCallsPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
 
+  const isFetchingRef = useRef(false);
+  const lastFetchAtRef = useRef(0);
   const refresh = useCallback(async () => {
+    const now = Date.now();
+    if (isFetchingRef.current || now - lastFetchAtRef.current < 2000) return;
+    isFetchingRef.current = true;
+    lastFetchAtRef.current = now;
     console.log('[REFETCH TRIGGERED] server-calls');
     try {
       const result = await getServerCalls(filter || undefined);
       setCalls(Array.isArray(result) ? result : []);
     } catch (err) {
       console.error('[ServerCallsPage] refresh failed:', err);
+    } finally {
+      isFetchingRef.current = false;
     }
   }, [filter]);
 
