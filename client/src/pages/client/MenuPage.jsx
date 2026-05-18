@@ -10,7 +10,7 @@ import CartDrawer from '../../components/CartDrawer';
 import { useApp } from '../../context/AppContext';
 import { formatPrice } from '../../utils/formatters';
 import { callServer } from '../../services/serverCallService';
-import { getMenuBySlug } from '../../services/menuService';
+import { getMenuBySlug, getPromotions } from '../../services/menuService';
 import api from '../../services/api';
 
 export default function MenuPage() {
@@ -19,6 +19,7 @@ export default function MenuPage() {
   const { addToCart, removeFromCart, updateQuantity, cart, cartTotal, cartCount, t, setTableId, setRestaurantId, setRestaurantSlug, setRestaurant, restaurant } = useApp();
   const [items, setItems] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [promotions, setPromotions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeCategory, setActiveCategory] = useState('Tout');
@@ -108,6 +109,9 @@ export default function MenuPage() {
           setCategories(['Tout', ...uniqueCats.map(c => c.name)]);
           setRestaurantId(rid);
         }
+        if (effectiveSlug && !cancelled) {
+          getPromotions(effectiveSlug).then(setPromotions).catch(() => {});
+        }
         if (!cancelled) setLoading(false);
       } catch (err) {
         if (!cancelled) {
@@ -185,6 +189,45 @@ export default function MenuPage() {
         {callCooldown ? <CheckCircle size={18} /> : <Phone size={18} />}
         {callCooldown ? 'Serveur appelé' : t('Appeler un serveur')}
       </button>
+
+      {promotions.length > 0 && (
+        <div className="mb-4 space-y-2">
+          <h2 className="text-sm font-semibold text-gold-500 flex items-center gap-1.5">
+            <Percent size={14} /> Offres du moment
+          </h2>
+          {promotions.map((promo) => (
+            <div key={promo.id} className="bg-gradient-to-r from-gold-500/10 to-transparent border border-gold-500/20 rounded-xl p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-white font-semibold text-sm">{promo.title}</h3>
+                  {promo.description && <p className="text-white/50 text-xs mt-0.5">{promo.description}</p>}
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <span className="text-gold-500 font-bold text-sm">{Number(promo.price).toLocaleString('fr-FR')} FCFA</span>
+                    {promo.old_price && (
+                      <span className="text-white/30 line-through text-xs">{Number(promo.old_price).toLocaleString('fr-FR')} FCFA</span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    addToCart({
+                      id: `promo-${promo.id}`,
+                      name: promo.title,
+                      price: Number(promo.price),
+                      description: promo.description || '',
+                      is_promotion: true,
+                    });
+                    toast.success('Offre ajoutée au panier');
+                  }}
+                  className="flex-shrink-0 px-3 py-1.5 rounded-lg bg-gold-500 text-black text-xs font-semibold hover:bg-gold-600 transition-colors"
+                >
+                  Commander
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="relative mb-4">
         <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />

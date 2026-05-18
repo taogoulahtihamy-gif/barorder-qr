@@ -53,3 +53,12 @@ export async function getRestaurantBySlug(slug) {
   const { data } = await api.get(`/api/public/restaurant/${slug}`);
   return data;
 }
+
+export async function getPromotions(slug) {
+  try {
+    const { data } = await api.get(`/api/public/r/${slug}/promotions`);
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+}

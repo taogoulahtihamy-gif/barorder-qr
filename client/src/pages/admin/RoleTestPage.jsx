@@ -14,6 +14,7 @@ const PERMISSION_MATRIX = {
   payments: { label: 'Payments', roles: ['admin', 'super_admin', 'manager', 'cashier'], path: '/admin/payments' },
   stats: { label: 'Statistics', roles: ['admin', 'super_admin', 'manager'], path: '/admin/stats' },
   users: { label: 'Utilisateurs', roles: ['admin', 'super_admin'], path: '/admin/users' },
+  promotions: { label: 'Promotions', roles: ['admin', 'super_admin', 'manager'], path: '/admin/promotions' },
   settings: { label: 'Settings', roles: ['admin', 'super_admin', 'manager'], path: '/admin/settings' },
 };
 

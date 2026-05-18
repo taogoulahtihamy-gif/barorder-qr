@@ -11,6 +11,7 @@ import serverCallRoutes from './serverCalls.js';
 import settingsRoutes from './settings.js';
 import statsRoutes from './stats.js';
 import userRoutes from './users.js';
+import promotionRoutes from './promotions.js';
 import { query } from '../config/database.js';
 
 const router = Router();
@@ -28,6 +29,7 @@ router.use('/admin/server-alerts', serverCallRoutes);
 router.use('/admin/settings', settingsRoutes);
 router.use('/admin/stats', statsRoutes);
 router.use('/admin/users', userRoutes);
+router.use('/admin/promotions', promotionRoutes);
 
 router.get('/restaurants', async (req, res) => {
   try {

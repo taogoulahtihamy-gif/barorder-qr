@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { getTable, getMenu, getMenuBySlug, createOrder, getOrderByNumber, callServer, getRestaurantBySlug, getRestaurants } from '../controllers/publicController.js';
+import { getPublicPromotions } from '../controllers/promotionController.js';
 
 const router = Router();
 
@@ -13,5 +14,6 @@ router.post('/server-call', callServer);
 
 router.get('/r/:slug/menu', getMenuBySlug);
 router.get('/r/:slug/menu/:tableId', getMenuBySlug);
+router.get('/r/:slug/promotions', getPublicPromotions);
 
 export default router;

@@ -103,3 +103,16 @@ CREATE TABLE IF NOT EXISTS server_calls (
   message TEXT,
   created_at TIMESTAMP DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS promotions (
+  id SERIAL PRIMARY KEY,
+  restaurant_id INTEGER REFERENCES restaurants(id) ON DELETE CASCADE,
+  title VARCHAR(200) NOT NULL,
+  description TEXT,
+  price INTEGER NOT NULL,
+  old_price INTEGER,
+  start_date DATE,
+  end_date DATE,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP DEFAULT NOW()
+);

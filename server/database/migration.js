@@ -31,6 +31,7 @@ export async function runMigrations() {
     `ALTER TABLE server_calls ADD COLUMN IF NOT EXISTS table_number VARCHAR(20)`,
     `UPDATE server_calls sc SET restaurant_id = rt.restaurant_id FROM restaurant_tables rt WHERE rt.id = sc.table_id AND sc.restaurant_id IS NULL`,
     `UPDATE server_calls sc SET table_number = rt.table_number FROM restaurant_tables rt WHERE rt.id = sc.table_id AND sc.table_number IS NULL`,
+    `CREATE TABLE IF NOT EXISTS promotions (id SERIAL PRIMARY KEY, restaurant_id INTEGER REFERENCES restaurants(id) ON DELETE CASCADE, title VARCHAR(200) NOT NULL, description TEXT, price INTEGER NOT NULL, old_price INTEGER, start_date DATE, end_date DATE, is_active BOOLEAN DEFAULT true, created_at TIMESTAMP DEFAULT NOW())`,
   ];
 
   for (const sql of steps) {

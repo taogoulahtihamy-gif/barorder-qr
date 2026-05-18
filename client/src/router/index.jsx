@@ -27,6 +27,7 @@ import SettingsPage from '../pages/admin/SettingsPage';
 import ServerCallsPage from '../pages/admin/ServerCallsPage';
 import UsersPage from '../pages/admin/UsersPage';
 import RoleTestPage from '../pages/admin/RoleTestPage';
+import PromotionsPage from '../pages/admin/PromotionsPage';
 
 export default function AppRouter() {
   return (
@@ -60,6 +61,7 @@ export default function AppRouter() {
         <Route path="settings" element={<ProtectedRoute roles={['admin','super_admin','manager']}><SettingsPage /></ProtectedRoute>} />
         <Route path="users" element={<ProtectedRoute roles={['admin','super_admin']}><UsersPage /></ProtectedRoute>} />
         <Route path="role-test" element={<ProtectedRoute roles={['admin','super_admin']}><RoleTestPage /></ProtectedRoute>} />
+        <Route path="promotions" element={<ProtectedRoute roles={['admin','super_admin','manager']}><PromotionsPage /></ProtectedRoute>} />
       </Route>
     </Routes>
   );
