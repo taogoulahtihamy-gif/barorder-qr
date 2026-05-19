@@ -175,6 +175,7 @@ export default function DashboardPage() {
           </div>
           <div className="space-y-2">
             {data.recentOrders.map((order) => {
+              const status = order.status || 'new';
               const badgeVariant = {
                 new: 'pending', pending: 'pending', accepted: 'preparing',
                 preparing: 'preparing', ready: 'ready', served: 'delivered',
@@ -182,9 +183,9 @@ export default function DashboardPage() {
               };
               return (
                 <Card key={order.id} className="flex flex-col gap-1.5 min-w-0 transition-all duration-200 hover:border-gold-500/20">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
                     <span className="text-sm font-medium text-white truncate min-w-0">{order.id}</span>
-                    <Badge variant={badgeVariant[order.status] || 'default'}>{t(order.status)}</Badge>
+                    <Badge variant={badgeVariant[status] || 'default'} className="flex-shrink-0">{t(status)}</Badge>
                   </div>
                   <p className="text-xs text-white/40 min-w-0">{t('Table')} {order.table} &middot; {(order.items || []).slice(0, 3).join(', ')}{order.items?.length > 3 ? '...' : ''}</p>
                   <p className="text-xs text-white/30 min-w-0">{order.time}</p>

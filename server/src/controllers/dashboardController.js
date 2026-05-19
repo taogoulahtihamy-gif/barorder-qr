@@ -79,7 +79,7 @@ export async function getDashboard(req, res) {
         table: o.table_number,
         items: recentItems[i] || [],
         total: o.total_amount,
-        status: o.status,
+        status: o.order_status,
         time: o.created_at,
       })),
       topProducts: topProducts.map(p => ({
