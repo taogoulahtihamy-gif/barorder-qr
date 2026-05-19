@@ -65,7 +65,7 @@ export default function StatsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-white mb-6">{t('Statistiques')}</h1>
+      <h1 className="text-2xl font-bold text-white mb-6">{t('Statistics')}</h1>
 
       <div className="grid grid-cols-2 gap-4 mb-8">
         <Card>
@@ -105,9 +105,9 @@ export default function StatsPage() {
               {t('Payment split')}
             </h3>
             <div className="space-y-3">
-              <PaymentBar label="Wave" pct={stats.paymentMethodSplit.wave} color="bg-wave-500" />
-              <PaymentBar label="Orange Money" pct={stats.paymentMethodSplit.orange_money} color="bg-orange-500" />
-              <PaymentBar label="Cash" pct={stats.paymentMethodSplit.cash} color="bg-gold-500" />
+              <PaymentBar label={t('Wave')} pct={stats.paymentMethodSplit.wave} color="bg-wave-500" />
+              <PaymentBar label={t('Orange Money')} pct={stats.paymentMethodSplit.orange_money} color="bg-orange-500" />
+              <PaymentBar label={t('Cash')} pct={stats.paymentMethodSplit.cash} color="bg-gold-500" />
             </div>
           </Card>
 

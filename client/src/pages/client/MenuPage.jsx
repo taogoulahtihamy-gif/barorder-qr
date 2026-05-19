@@ -51,7 +51,7 @@ export default function MenuPage() {
           const result = await getMenuBySlug(effectiveSlug, tableId);
           if (cancelled) return;
           if (!result || !result.products) {
-            setError('Impossible de charger le menu');
+            setError(t('Impossible de charger le menu'));
             setLoading(false);
             return;
           }
@@ -117,7 +117,7 @@ export default function MenuPage() {
       } catch (err) {
         if (!cancelled) {
           console.error('[MenuPage] load error:', err);
-          setError('Impossible de charger le menu. Vérifiez votre connexion.');
+          setError(t('Impossible de charger le menu. Vérifiez votre connexion.'));
           setLoading(false);
         }
       }
@@ -133,11 +133,11 @@ export default function MenuPage() {
     try {
       const rid = restaurant?.id || restaurantId || '1';
       await callServer(tableId, rid);
-      toast.success('Un serveur arrive bientôt');
+      toast.success(t('Un serveur arrive bientôt'));
       setCallCooldown(true);
       cooldownTimer.current = setTimeout(() => setCallCooldown(false), 30000);
     } catch (e) {
-      toast.error('Erreur lors de l\'appel');
+      toast.error(t('Erreur lors de l\'appel'));
     } finally {
       setCalling(false);
     }
@@ -151,10 +151,10 @@ export default function MenuPage() {
         <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-4">
           <AlertTriangle size={32} className="text-red-400" />
         </div>
-        <h2 className="text-lg font-bold text-white mb-2">Erreur de chargement</h2>
+        <h2 className="text-lg font-bold text-white mb-2">{t('Erreur de chargement')}</h2>
         <p className="text-sm text-white/50 mb-6 max-w-xs">{error}</p>
         <Button onClick={() => window.location.reload()} className="flex items-center gap-2">
-          <RefreshCw size={16} /> Réessayer
+          <RefreshCw size={16} /> {t('Réessayer')}
         </Button>
       </div>
     );
@@ -188,19 +188,19 @@ export default function MenuPage() {
         }`}
       >
         {callCooldown ? <CheckCircle size={18} /> : <Phone size={18} />}
-        {callCooldown ? 'Serveur appelé' : t('Appeler un serveur')}
+        {callCooldown ? t('Serveur appelé') : t('Appeler un serveur')}
       </button>
 
       {promotions.length > 0 && (
         <div className="mb-4 space-y-2">
           <h2 className="text-sm font-semibold text-gold-500 flex items-center gap-1.5">
-            <Percent size={14} /> Offres du moment
+            <Percent size={14} /> {t('Offres du moment')}
           </h2>
           {promotions.map((promo) => (
             <div key={promo.id ?? Math.random()} className="bg-gradient-to-r from-gold-500/10 to-transparent border border-gold-500/20 rounded-xl p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-white font-semibold text-sm">{promo.title || 'Promotion'}</h3>
+                  <h3 className="text-white font-semibold text-sm">{promo.title || t('Promotion')}</h3>
                   {promo.description && <p className="text-white/50 text-xs mt-0.5">{promo.description}</p>}
                   <div className="flex items-center gap-2 mt-1.5">
                     <span className="text-gold-500 font-bold text-sm">{promo.price != null ? Number(promo.price).toLocaleString('fr-FR') : '—'} FCFA</span>
@@ -218,11 +218,11 @@ export default function MenuPage() {
                       description: promo.description || '',
                       is_promotion: true,
                     });
-                    toast.success('Offre ajoutée au panier');
+                    toast.success(t('Offre ajoutée au panier'));
                   }}
                   className="flex-shrink-0 px-3 py-1.5 rounded-lg bg-gold-500 text-black text-xs font-semibold hover:bg-gold-600 transition-colors"
                 >
-                  Commander
+                  {t('Commander')}
                 </button>
               </div>
             </div>

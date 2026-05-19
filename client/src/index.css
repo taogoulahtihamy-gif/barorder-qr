@@ -8,3 +8,14 @@
   ::-webkit-scrollbar-track { background: #0a0a0a; }
   ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
 }
+
+@layer utilities {
+  .btn-mobile {
+    @apply flex items-center justify-center text-center leading-none;
+    min-height: 44px;
+  }
+  .badge-mobile {
+    @apply inline-flex items-center justify-center whitespace-nowrap;
+    min-height: 28px;
+  }
+}

@@ -63,20 +63,20 @@ export default function ServerCallsPage() {
   const handleAcknowledge = async (id) => {
     try {
       await updateServerCallStatus(id, 'acknowledged');
-      toast.success('Appel accepté');
+      toast.success(t('Appel accepté'));
       refresh();
     } catch (e) {
-      toast.error('Erreur');
+      toast.error(t('Erreur'));
     }
   };
 
   const handleResolve = async (id) => {
     try {
       await updateServerCallStatus(id, 'resolved');
-      toast.success('Appel résolu');
+      toast.success(t('Appel résolu'));
       refresh();
     } catch (e) {
-      toast.error('Erreur');
+      toast.error(t('Erreur'));
     }
   };
 
@@ -88,8 +88,8 @@ export default function ServerCallsPage() {
     <div className="overflow-hidden">
       <div className="flex items-center justify-between mb-4 sm:mb-6">
         <div className="flex items-center gap-3">
-          <h1 className="text-xl sm:text-2xl font-bold text-white">Appels serveur</h1>
-          <span className="text-sm text-white/30">{calls.length} appel{calls.length !== 1 ? 's' : ''}</span>
+          <h1 className="text-xl sm:text-2xl font-bold text-white">{t('Appels serveur')}</h1>
+          <span className="text-sm text-white/30">{calls.length} {t('appel')}{calls.length !== 1 ? 's' : ''}</span>
         </div>
       </div>
 
@@ -103,7 +103,7 @@ export default function ServerCallsPage() {
               filter === f ? 'bg-gold-500 text-black font-medium' : 'bg-zinc-800 text-white/60 hover:text-white'
             }`}
           >
-            {f ? STATUS_CONFIG[f]?.label || f : 'Tous'}
+            {f ? t(STATUS_CONFIG[f]?.label || f) : t('Tous')}
           </button>
         ))}
       </div>
@@ -112,7 +112,7 @@ export default function ServerCallsPage() {
         {calls.length === 0 ? (
           <div className="text-center py-16">
             <Bell size={48} className="mx-auto text-white/10 mb-4" />
-            <p className="text-white/30 text-sm">Aucun appel serveur</p>
+            <p className="text-white/30 text-sm">{t('Aucun appel serveur')}</p>
           </div>
         ) : (
           calls.map((call) => {
@@ -129,8 +129,8 @@ export default function ServerCallsPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <span className="text-sm font-semibold text-white break-words">Table {call.tableNumber || call.tableId}</span>
-                        <Badge variant={cfg.variant} className="flex-shrink-0">{cfg.label}</Badge>
+                        <span className="text-sm font-semibold text-white break-words">{t('Table')} {call.tableNumber || call.tableId}</span>
+                        <Badge variant={cfg.variant} className="flex-shrink-0">{t(cfg.label)}</Badge>
                       </div>
                       {call.message && (
                         <p className="text-xs text-white/50 mb-1 break-words">{call.message}</p>
@@ -148,7 +148,7 @@ export default function ServerCallsPage() {
                         className="text-xs px-3 py-1.5 w-full sm:w-auto justify-center"
                         onClick={() => handleAcknowledge(call.id)}
                       >
-                        <CheckCircle size={14} className="mr-1" /> Accepter
+                        <CheckCircle size={14} className="mr-1" /> {t('Accepter')}
                       </Button>
                     )}
                     {call.status !== 'resolved' && (
@@ -157,7 +157,7 @@ export default function ServerCallsPage() {
                         className="text-xs px-3 py-1.5 text-white/50 hover:text-white w-full sm:w-auto justify-center"
                         onClick={() => handleResolve(call.id)}
                       >
-                        <XCircle size={14} className="mr-1" /> Résoudre
+                        <XCircle size={14} className="mr-1" /> {t('Résoudre')}
                       </Button>
                     )}
                   </div>

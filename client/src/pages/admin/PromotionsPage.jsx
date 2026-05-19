@@ -6,9 +6,11 @@ import Card from '../../components/Card';
 import Input from '../../components/Input';
 import Modal from '../../components/Modal';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import { useApp } from '../../context/AppContext';
 import api from '../../services/api';
 
 export default function PromotionsPage() {
+  const { t } = useApp();
   const [promotions, setPromotions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -62,40 +64,40 @@ export default function PromotionsPage() {
       end_date: form.end_date || null,
       is_active: form.is_active,
     };
-    if (!payload.title || !payload.price) { toast.error('Titre et prix requis'); return; }
+    if (!payload.title || !payload.price) { toast.error(t('Titre et prix requis')); return; }
     try {
       if (editing) {
         await api.patch(`/api/admin/promotions/${editing.id}`, payload);
-        toast.success('Promotion mise a jour');
+        toast.success(t('Promotion mise à jour'));
       } else {
         await api.post('/api/admin/promotions', payload);
-        toast.success('Promotion creee');
+        toast.success(t('Promotion créée'));
       }
       setModalOpen(false);
       fetchPromotions();
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Erreur');
+      toast.error(err.response?.data?.error || t('Erreur'));
     }
   };
 
   const toggleActive = async (p) => {
     try {
       await api.patch(`/api/admin/promotions/${p.id}/status`, { is_active: !p.is_active });
-      toast.success(p.is_active ? 'Promotion desactivee' : 'Promotion activee');
+      toast.success(p.is_active ? t('Promotion désactivée') : t('Promotion activée'));
       fetchPromotions();
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Erreur');
+      toast.error(err.response?.data?.error || t('Erreur'));
     }
   };
 
   const handleDelete = async (p) => {
-    if (!window.confirm(`Supprimer la promotion "${p.title}" ?`)) return;
+    if (!window.confirm(`${t('Supprimer la promotion')} "${p.title}" ?`)) return;
     try {
       await api.delete(`/api/admin/promotions/${p.id}`);
-      toast.success('Promotion supprimee');
+      toast.success(t('Promotion supprimée'));
       fetchPromotions();
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Erreur');
+      toast.error(err.response?.data?.error || t('Erreur'));
     }
   };
 
@@ -104,15 +106,15 @@ export default function PromotionsPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-white">Promotions</h1>
+        <h1 className="text-2xl font-bold text-white">{t('Promotions')}</h1>
         <Button variant="gold" onClick={openCreate} className="flex items-center gap-2">
-          <Plus size={18} /> Ajouter
+          <Plus size={18} /> {t('Ajouter')}
         </Button>
       </div>
 
       <div className="grid gap-4">
         {promotions.length === 0 && (
-          <Card><p className="text-white/30 text-center py-8">Aucune promotion</p></Card>
+          <Card><p className="text-white/30 text-center py-8">{t('Aucune promotion')}</p></Card>
         )}
         {promotions.map((p) => (
           <Card key={p.id}>
@@ -122,9 +124,9 @@ export default function PromotionsPage() {
                   <Tag size={16} className="text-gold-500 flex-shrink-0" />
                   <h3 className="text-white font-semibold truncate">{p.title}</h3>
                   {p.is_active ? (
-                    <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">Actif</span>
+                    <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">{t('Actif')}</span>
                   ) : (
-                    <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded">Inactif</span>
+                    <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded">{t('Inactif')}</span>
                   )}
                 </div>
                 {p.description && <p className="text-white/50 text-sm mb-2">{p.description}</p>}
@@ -145,23 +147,23 @@ export default function PromotionsPage() {
                 <button
                   onClick={() => toggleActive(p)}
                   className={`p-2 rounded-lg transition-colors ${p.is_active ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'}`}
-                  title={p.is_active ? 'Desactiver' : 'Activer'}
+                  title={p.is_active ? t('Désactiver') : t('Activer')}
                 >
                   {p.is_active ? <X size={14} /> : <Check size={14} />}
                 </button>
                 <button
                   onClick={() => openEdit(p)}
                   className="p-2 rounded-lg bg-white/5 text-white/60 hover:bg-white/10 transition-colors"
-                  title="Modifier"
+                  title={t('Modifier')}
                 >
-                  Modifier
+                  {t('Modifier')}
                 </button>
                 <button
                   onClick={() => handleDelete(p)}
                   className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
-                  title="Supprimer"
+                  title={t('Supprimer')}
                 >
-                  Supprimer
+                  {t('Supprimer')}
                 </button>
               </div>
             </div>
@@ -169,11 +171,11 @@ export default function PromotionsPage() {
         ))}
       </div>
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? "Modifier la promotion" : 'Ajouter une promotion'}>
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? t('Modifier la promotion') : t('Ajouter une promotion')}>
         <form onSubmit={handleSave} className="space-y-4">
-          <Input label="Titre" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
+          <Input label={t('Titre')} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
           <div className="space-y-1.5">
-            <label className="text-sm text-white/60">Description</label>
+            <label className="text-sm text-white/60">{t('Description')}</label>
             <textarea
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -182,15 +184,15 @@ export default function PromotionsPage() {
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <Input label="Prix (FCFA)" type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required />
-            <Input label="Ancien prix" type="number" value={form.old_price} onChange={(e) => setForm({ ...form, old_price: e.target.value })} />
+            <Input label={t('Price') + ' (FCFA)'} type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required />
+            <Input label={t('Ancien prix')} type="number" value={form.old_price} onChange={(e) => setForm({ ...form, old_price: e.target.value })} />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <Input label="Date debut" type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
-            <Input label="Date fin" type="date" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} />
+            <Input label={t('Date debut')} type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
+            <Input label={t('Date fin')} type="date" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} />
           </div>
           <div className="flex items-center gap-3">
-            <label className="text-sm text-white/60">Active</label>
+            <label className="text-sm text-white/60">{t('Active')}</label>
             <button
               type="button"
               onClick={() => setForm({ ...form, is_active: !form.is_active })}
@@ -200,8 +202,8 @@ export default function PromotionsPage() {
             </button>
           </div>
           <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>Annuler</Button>
-            <Button type="submit" variant="gold">{editing ? 'Enregistrer' : 'Creer'}</Button>
+            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>{t('Cancel')}</Button>
+            <Button type="submit" variant="gold">{editing ? t('Save') : t('Créer')}</Button>
           </div>
         </form>
       </Modal>

@@ -79,30 +79,30 @@ export default function AdminLayout() {
 
     const unsubOrder = socket ? onNewOrder((data) => {
       const orderNum = data?.order_number || data?.orderNumber || '';
-      notifyRole('new_order', 'Nouvelle commande', `Commande ${orderNum}`, playNotificationSound);
+      notifyRole('new_order', t('Nouvelle commande'), `${t('Commande')} ${orderNum}`, playNotificationSound);
     }) : () => {};
 
     const unsubStatus = socket ? onOrderStatusUpdated((data) => {
       const status = data?.order_status || data?.status || '';
       const orderNum = data?.order_number || data?.orderNumber || '';
       if (status === 'ready') {
-        notifyRole('order_ready', 'Commande prête', `Commande ${orderNum}`, playNotificationSound);
+        notifyRole('order_ready', t('Commande prête'), `${t('Commande')} ${orderNum}`, playNotificationSound);
       } else if (status === 'served') {
-        notifyRole('order_served', 'Commande servie', `Commande ${orderNum}`, playNotificationSound);
+        notifyRole('order_served', t('Commande servie'), `${t('Commande')} ${orderNum}`, playNotificationSound);
       }
     }) : () => {};
 
     const unsubPay = socket ? onPaymentUpdated(() => {
-      notifyRole('payment_pending', 'Paiement en attente', 'Un paiement nécessite votre attention', playNotificationSound);
+      notifyRole('payment_pending', t('Paiement en attente'), t('Un paiement nécessite votre attention'), playNotificationSound);
     }) : () => {};
 
     const unsubServerNew = socket ? onNewServerCall((call) => {
       const tableStr = call?.table_number || call?.table_id || '';
-      notifyRole('server_call', 'Appel serveur', `Table ${tableStr}`, playServerCallSound);
+      notifyRole('server_call', t('Appel serveur'), `${t('Table')} ${tableStr}`, playServerCallSound);
     }) : () => {};
 
     const unsubServerUpd = socket ? onServerCallUpdated((call) => {
-      addNotification({ type: 'server_call_resolved', title: 'Appel résolu', body: `Table ${call?.table_number || call?.table_id || ''}` });
+      addNotification({ type: 'server_call_resolved', title: t('Appel résolu'), body: `${t('Table')} ${call?.table_number || call?.table_id || ''}` });
     }) : () => {};
 
     const polling = setInterval(() => {
@@ -121,7 +121,7 @@ export default function AdminLayout() {
       unsubServerUpd();
       clearInterval(polling);
     };
-  }, [notifyRole, addNotification]);
+  }, [notifyRole, addNotification, t]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -216,8 +216,8 @@ export default function AdminLayout() {
   );
 
   return (
-    <div className="min-h-screen bg-black flex">
-      <div className="hidden lg:flex">
+    <div className="min-h-screen bg-black flex overflow-x-hidden max-w-full">
+      <div className="hidden lg:flex flex-shrink-0">
         {sidebarContent}
       </div>
 
@@ -230,18 +230,18 @@ export default function AdminLayout() {
         </div>
       )}
 
-      <main className="flex-1 flex flex-col min-h-screen">
+      <main className="flex-1 flex flex-col min-h-screen max-w-full w-full overflow-x-hidden">
         {soundBanner && (
           <div className="sticky top-0 z-50 bg-gold-500/10 border-b border-gold-500/20 px-4 py-2.5 flex items-center justify-between">
             <p className="text-xs text-gold-400 font-medium flex items-center gap-2">
-              <Volume2 size={14} /> Activer les notifications sonores
+              <Volume2 size={14} /> {t('Activer les notifications sonores')}
             </p>
             <div className="flex items-center gap-2">
               <button
                 onClick={handleEnableSound}
                 className="text-xs px-3 py-1 rounded-lg bg-gold-500 text-black font-semibold hover:bg-gold-600 transition-colors"
               >
-                Activer
+                {t('Activer')}
               </button>
               <button
                 onClick={() => setSoundBanner(false)}
@@ -274,16 +274,16 @@ export default function AdminLayout() {
               {bellOpen && (
                 <div className="absolute right-0 top-full mt-2 w-72 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
                   <div className="p-3 border-b border-white/10 flex items-center justify-between">
-                    <span className="text-sm font-semibold text-white">Notifications</span>
+                    <span className="text-sm font-semibold text-white">{t('Notifications')}</span>
                     {unreadCount > 0 && (
                       <button onClick={markAllRead} className="text-xs text-gold-500 hover:text-gold-400 transition-colors">
-                        Tout lu
+                        {t('Tout lu')}
                       </button>
                     )}
                   </div>
                   <div className="max-h-64 overflow-y-auto">
                     {notifications.length === 0 ? (
-                      <p className="text-sm text-white/30 text-center py-4">Aucune notification</p>
+                      <p className="text-sm text-white/30 text-center py-4">{t('Aucune notification')}</p>
                     ) : (
                       notifications.map((n) => (
                         <div key={n.id} className={`flex items-start gap-3 px-3 py-2.5 hover:bg-white/5 border-b border-white/5 last:border-0 ${n.read ? 'opacity-50' : ''}`}>
@@ -309,7 +309,7 @@ export default function AdminLayout() {
                       onClick={markAllRead}
                       className="w-full p-2.5 text-xs font-medium text-gold-500 hover:bg-gold-500/10 transition-colors border-t border-white/10"
                     >
-                      Tout marquer comme lu
+                      {t('Tout marquer comme lu')}
                     </button>
                   )}
                 </div>
@@ -338,16 +338,16 @@ export default function AdminLayout() {
             {bellOpen && (
               <div className="absolute right-0 top-full mt-2 w-80 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
                 <div className="p-3 border-b border-white/10 flex items-center justify-between">
-                  <span className="text-sm font-semibold text-white">Notifications</span>
+                  <span className="text-sm font-semibold text-white">{t('Notifications')}</span>
                   {unreadCount > 0 && (
                     <button onClick={markAllRead} className="text-xs text-gold-500 hover:text-gold-400 transition-colors">
-                      Tout lu
+                      {t('Tout lu')}
                     </button>
                   )}
                 </div>
                 <div className="max-h-72 overflow-y-auto">
                   {notifications.length === 0 ? (
-                    <p className="text-sm text-white/30 text-center py-4">Aucune notification</p>
+                    <p className="text-sm text-white/30 text-center py-4">{t('Aucune notification')}</p>
                   ) : (
                     notifications.map((n) => (
                       <div key={n.id} className={`flex items-start gap-3 px-3 py-2.5 hover:bg-white/5 border-b border-white/5 last:border-0 ${n.read ? 'opacity-50' : ''}`}>
@@ -373,7 +373,7 @@ export default function AdminLayout() {
                     onClick={markAllRead}
                     className="w-full p-2.5 text-xs font-medium text-gold-500 hover:bg-gold-500/10 transition-colors border-t border-white/10"
                   >
-                    Tout marquer comme lu
+                    {t('Tout marquer comme lu')}
                   </button>
                 )}
               </div>
@@ -385,7 +385,7 @@ export default function AdminLayout() {
           </button>
         </header>
 
-        <div className="flex-1 overflow-auto p-4 lg:p-6">
+        <div className="flex-1 overflow-auto p-4 lg:p-6 max-w-full w-full safe-area-bottom">
           <Outlet />
         </div>
       </main>

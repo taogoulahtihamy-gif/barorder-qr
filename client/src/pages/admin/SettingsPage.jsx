@@ -47,34 +47,34 @@ export default function SettingsPage() {
     setSaving(true);
     try {
       await updateSettings(settings);
-      toast.success('Paramètres enregistrés');
+      toast.success(t('Paramètres enregistrés'));
     } catch (e) {
-      toast.error(e?.response?.data?.error || 'Erreur lors de la sauvegarde');
+      toast.error(e?.response?.data?.error || t('Erreur lors de la sauvegarde'));
     }
     setSaving(false);
   };
 
-  if (loading) return <div className="text-white/40 text-center py-8">Chargement...</div>;
+  if (loading) return <div className="text-white/40 text-center py-8">{t('Chargement...')}</div>;
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-white mb-6">Paramètres</h1>
+      <h1 className="text-2xl font-bold text-white mb-6">{t('Settings')}</h1>
 
       <div className="space-y-4 max-w-lg">
         <Card>
-          <h3 className="font-medium text-white mb-4">Profil du restaurant</h3>
+          <h3 className="font-medium text-white mb-4">{t('Profil du restaurant')}</h3>
           <div className="space-y-4">
-            <Input label="Nom du restaurant" value={settings.name} onChange={(e) => handleChange('name', e.target.value)} />
-            <Input label="Slug (URL unique)" value={settings.slug} onChange={(e) => handleChange('slug', e.target.value)} placeholder="mon-restaurant" />
-            <label className="text-sm text-white/60">Logo</label>
+            <Input label={t('Nom du restaurant')} value={settings.name} onChange={(e) => handleChange('name', e.target.value)} />
+            <Input label={t('Slug (URL unique)')} value={settings.slug} onChange={(e) => handleChange('slug', e.target.value)} placeholder="mon-restaurant" />
+            <label className="text-sm text-white/60">{t('Logo')}</label>
             <div className="flex gap-2">
-              <input placeholder="URL du logo" value={settings.logo_url} onChange={(e) => handleChange('logo_url', e.target.value)} className="flex-1 bg-zinc-900 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-gold-500/50" />
+              <input placeholder={t('URL du logo')} value={settings.logo_url} onChange={(e) => handleChange('logo_url', e.target.value)} className="flex-1 bg-zinc-900 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-gold-500/50" />
               <label className="flex items-center gap-1.5 px-3 bg-zinc-800 border border-white/10 rounded-xl cursor-pointer hover:bg-zinc-700 transition-colors text-xs text-white/70 whitespace-nowrap">
                 <input type="file" accept="image/*" className="hidden" onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (!file) return;
                   if (file.size > 2 * 1024 * 1024) {
-                    toast.error('Image trop lourde. Choisissez une image de moins de 2 Mo.');
+                    toast.error(t('Image trop lourde. Choisissez une image de moins de 2 Mo.'));
                     e.target.value = '';
                     return;
                   }
@@ -83,16 +83,16 @@ export default function SettingsPage() {
                   reader.readAsDataURL(file);
                 }} />
                 <Upload size={14} />
-                Choisir
+                {t('Choisir un logo')}
               </label>
             </div>
             {settings.logo_url && (
               <img src={settings.logo_url} alt="logo preview" className="w-20 h-20 rounded-lg object-cover border border-white/10" onError={(e) => { e.target.style.display = 'none'; }} />
             )}
-            <Input label="Adresse" value={settings.address} onChange={(e) => handleChange('address', e.target.value)} />
-            <Input label="Téléphone" value={settings.phone} onChange={(e) => handleChange('phone', e.target.value)} />
+            <Input label={t('Adresse')} value={settings.address} onChange={(e) => handleChange('address', e.target.value)} />
+            <Input label={t('Téléphone')} value={settings.phone} onChange={(e) => handleChange('phone', e.target.value)} />
             <div className="space-y-1.5">
-              <label className="text-sm text-white/60">Devise</label>
+              <label className="text-sm text-white/60">{t('Devise')}</label>
               <select
                 value={settings.currency}
                 onChange={(e) => handleChange('currency', e.target.value)}
@@ -102,7 +102,7 @@ export default function SettingsPage() {
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm text-white/60">Couleur principale</label>
+              <label className="text-sm text-white/60">{t('Couleur principale')}</label>
               <div className="flex items-center gap-3">
                 <input
                   type="color"
@@ -117,7 +117,7 @@ export default function SettingsPage() {
         </Card>
 
         <Button onClick={handleSave} disabled={saving} className="w-full">
-          {saving ? 'Enregistrement...' : 'Enregistrer les paramètres'}
+          {saving ? t('Enregistrement...') : t('Enregistrer les paramètres')}
         </Button>
       </div>
     </div>

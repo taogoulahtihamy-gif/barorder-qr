@@ -58,20 +58,20 @@ export default function ProductsPage() {
       }
       setModalOpen(false);
       refreshList();
-      toast.success(editing ? 'Produit modifié' : 'Produit créé');
+      toast.success(editing ? t('Produit modifié') : t('Produit créé'));
     } catch (e) {
-      toast.error(e?.response?.data?.error || 'Erreur lors de l\'enregistrement');
+      toast.error(e?.response?.data?.error || t("Erreur lors de l'enregistrement"));
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Supprimer ce produit ?')) return;
+    if (!window.confirm(t('Supprimer ce produit ?'))) return;
     try {
       await deleteProduct(id);
       refreshList();
-      toast.success('Produit supprimé');
+      toast.success(t('Produit supprimé'));
     } catch (e) {
-      toast.error(e?.response?.data?.error || 'Erreur lors de la suppression');
+      toast.error(e?.response?.data?.error || t('Erreur lors de la suppression'));
     }
   };
 
@@ -79,9 +79,9 @@ export default function ProductsPage() {
     try {
       await toggleProductAvailability(id);
       refreshList();
-      toast.success('Disponibilité modifiée');
+      toast.success(t('Disponibilité modifiée'));
     } catch (e) {
-      toast.error('Erreur lors du changement de disponibilité');
+      toast.error(t('Erreur lors du changement de disponibilité'));
     }
   };
 
@@ -89,7 +89,7 @@ export default function ProductsPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) {
-      toast.error('Image trop lourde. Choisissez une image de moins de 2 Mo.');
+      toast.error(t('Image trop lourde. Choisissez une image de moins de 2 Mo.'));
       e.target.value = '';
       return;
     }
@@ -105,7 +105,7 @@ export default function ProductsPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-white">{t('Produits')}</h1>
+        <h1 className="text-2xl font-bold text-white">{t('Products')}</h1>
         <Button onClick={openAdd} className="flex items-center gap-1">
           <Plus size={16} /> {t('Add')}
         </Button>
@@ -128,7 +128,7 @@ export default function ProductsPage() {
               <p className="text-sm font-semibold text-gold-500">{formatCurrency(product.price)}</p>
             </div>
             <div className="flex items-center gap-1">
-              <button onClick={() => handleToggleAvailability(product.id)} className="p-1.5 text-white/40 hover:text-wave-500 transition-colors" title={product.available ? 'Désactiver' : 'Activer'}>
+              <button onClick={() => handleToggleAvailability(product.id)} className="p-1.5 text-white/40 hover:text-wave-500 transition-colors" title={product.available ? t('Désactiver') : t('Activer')}>
                 {product.available ? <Eye size={16} /> : <EyeOff size={16} />}
               </button>
               <button onClick={() => openEdit(product)} className="p-1.5 text-white/40 hover:text-wave-500 transition-colors">

@@ -159,7 +159,7 @@ export default function OrdersPage() {
     const unsubNew = socket ? onNewOrder(() => {
       refreshOrders();
       playOrderSound();
-      toast.success('Nouvelle commande !');
+      toast.success(t('Nouvelle commande !'));
     }) : () => {};
     const unsubStatus = socket ? onOrderStatusUpdated(() => {
       refreshOrders();
@@ -174,17 +174,17 @@ export default function OrdersPage() {
       unsubStatus();
       unsubPay();
     };
-  }, [refreshOrders]);
+  }, [refreshOrders, t]);
 
   const handleStatusUpdate = useCallback(async (orderId, newStatus) => {
     try {
       await updateOrderStatus(orderId, newStatus);
       await refreshOrders();
-      toast.success('Statut mis à jour');
+      toast.success(t('Statut mis à jour'));
     } catch (e) {
-      toast.error(e?.response?.data?.error || 'Erreur de mise à jour');
+      toast.error(e?.response?.data?.error || t('Erreur de mise à jour'));
     }
-  }, [refreshOrders]);
+  }, [refreshOrders, t]);
 
   const filtered = filter === 'all'
     ? orders
@@ -194,7 +194,7 @@ export default function OrdersPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-white mb-6">{t('Commandes')}</h1>
+      <h1 className="text-2xl font-bold text-white mb-6">{t('Orders')}</h1>
 
       <div className="mb-6">
         <div className="flex flex-col md:flex-row md:items-center gap-3">
@@ -260,13 +260,13 @@ export default function OrdersPage() {
                       <OrderTimeline status={order.status} />
                     </div>
                     <div className="flex items-center gap-3 mt-2 text-xs text-white/40">
-                      {order.paymentStatus && <span>Paiement: {t(order.paymentStatus)}</span>}
+                      {order.paymentStatus && <span>{t('Payment')}: {t(order.paymentStatus)}</span>}
                       <PrintButtons order={order} />
                       <button
                         onClick={() => setSelectedOrder(order)}
                         className="text-wave-400 hover:text-wave-300 transition-colors flex items-center gap-1"
                       >
-                        <Eye size={14} /> Détails
+                        <Eye size={14} /> {t('Details')}
                       </button>
                     </div>
                   </div>
@@ -275,7 +275,7 @@ export default function OrdersPage() {
                     <div className="flex gap-1.5 flex-wrap justify-end min-w-[140px]">
                       {normalizeStatus(order.status) === 'paid' ? (
                         <span className="text-xs font-medium text-wave-500 bg-wave-500/10 px-3 py-1.5 rounded-lg">
-                          Terminée
+                          {t('Terminée')}
                         </span>
                       ) : (
                         actions.map((action) => (
@@ -296,7 +296,7 @@ export default function OrdersPage() {
           );
         })}
         {filtered.length === 0 && (
-          <p className="text-center text-white/30 py-8">Aucune commande</p>
+          <p className="text-center text-white/30 py-8">{t('Aucune commande')}</p>
         )}
       </div>
 

@@ -41,20 +41,20 @@ export default function TablesPage() {
       setNewTableName('');
       setNewCapacity(4);
       refreshList();
-      toast.success('Table créée');
+      toast.success(t('Table créée'));
     } catch (e) {
-      toast.error(e?.response?.data?.error || 'Erreur lors de l\'ajout');
+      toast.error(e?.response?.data?.error || t("Erreur lors de l'ajout"));
     }
   };
 
   const handleDelete = async (id, name) => {
-    if (!window.confirm(`Supprimer ${name} ?`)) return;
+    if (!window.confirm(`${t('Supprimer')} ${name} ?`)) return;
     try {
       await deleteTable(id);
       refreshList();
-      toast.success('Table supprimée');
+      toast.success(t('Table supprimée'));
     } catch (e) {
-      toast.error(e?.response?.data?.error || 'Erreur lors de la suppression');
+      toast.error(e?.response?.data?.error || t('Erreur lors de la suppression'));
     }
   };
 
@@ -66,9 +66,9 @@ export default function TablesPage() {
       if (qrModal?.id === table.id) {
         setQrModal(prev => ({ ...prev, qr_url: result.qr_code_url, qrUrl: result.qrUrl }));
       }
-      toast.success('QR code généré');
+      toast.success(t('QR code généré'));
     } catch (e) {
-      toast.error(e?.response?.data?.error || 'Erreur lors de la génération du QR');
+      toast.error(e?.response?.data?.error || t("Erreur lors de la génération du QR"));
     }
     setGeneratingId(null);
   };
@@ -88,7 +88,7 @@ export default function TablesPage() {
   const downloadQR = (table) => {
     const src = qrImageSrc(table);
     if (!src) {
-      toast.error('Générez d\'abord le QR code');
+      toast.error(t("Génère d'abord le QR code"));
       return;
     }
     const link = document.createElement('a');
@@ -102,7 +102,7 @@ export default function TablesPage() {
   const printTableCard = (table) => {
     const src = qrImageSrc(table);
     if (!src) {
-      toast.error('Générez d\'abord le QR code');
+      toast.error(t("Génère d'abord le QR code"));
       return;
     }
     const restaurantName = table.restaurant_name || 'BarOrder';
@@ -128,7 +128,7 @@ export default function TablesPage() {
         <img class="qr-img" src="${src}" />
         <div class="table-number">${table.name}</div>
         <div class="instructions">Ouvrez l'appareil photo de votre téléphone et scannez ce QR pour voir le menu et commander</div>
-        <div class="branding">BarOrder — Commande par QR</div>
+        <div class="branding">BarOrder &mdash; Commande par QR</div>
       </body>
       </html>
     `);
@@ -182,7 +182,7 @@ export default function TablesPage() {
                 <p className="text-xs text-white/40 mt-0.5">{t('Capacity')}: {table.capacity} {t('people')}</p>
                 {table.qrUrl && (
                   <button
-                    onClick={() => { navigator.clipboard.writeText(absoluteUrl(table)); toast.success('Lien copié'); }}
+                    onClick={() => { navigator.clipboard.writeText(absoluteUrl(table)); toast.success(t('Lien copié')); }}
                     className="text-[11px] text-gold-500/50 hover:text-gold-500 truncate max-w-full block mt-1 transition-colors text-left"
                   >
                     {absoluteUrl(table)}
@@ -209,7 +209,7 @@ export default function TablesPage() {
                 disabled={!qrImageSrc(table)}
                 className="flex items-center gap-1 px-2 py-1 text-[11px] bg-white/5 rounded-lg text-white/50 hover:text-gold-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
-                <Printer size={12} /> Imprimer
+                <Printer size={12} /> {t('Imprimer')}
               </button>
               <button
                 onClick={() => handleGenerateQR(table)}
@@ -299,9 +299,9 @@ export default function TablesPage() {
             </div>
             <Button variant="ghost" onClick={() => {
               navigator.clipboard.writeText(absoluteUrl(qrModal));
-              toast.success('Lien copié');
+              toast.success(t('Lien copié'));
             }} className="w-full">
-              Copier le lien
+              {t('Copier le lien')}
             </Button>
           </div>
         </Modal>

@@ -24,12 +24,12 @@ export default function RoleTestPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-white">Test des roles</h1>
+      <h1 className="text-2xl font-bold text-white">Test des rôles</h1>
 
       <Card>
         <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
           <User size={20} className="text-gold-500" />
-          Utilisateur connecte
+          Utilisateur connecté
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
@@ -41,7 +41,7 @@ export default function RoleTestPage() {
             <p className="text-white/80 text-sm">{user?.email || '-'}</p>
           </div>
           <div>
-            <p className="text-xs text-white/40 mb-1">Role</p>
+            <p className="text-xs text-white/40 mb-1">Rôle</p>
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium text-red-400 bg-red-500/10">
               <Shield size={12} />
               {user?.role || '-'}
@@ -64,8 +64,8 @@ export default function RoleTestPage() {
             <thead>
               <tr className="border-b border-white/5 text-sm text-white/40">
                 <th className="pb-3 font-medium">Page</th>
-                <th className="pb-3 font-medium">Acces</th>
-                <th className="pb-3 font-medium">Roles autorises</th>
+                <th className="pb-3 font-medium">Accès</th>
+                <th className="pb-3 font-medium">Rôles autorisés</th>
                 <th className="pb-3 font-medium text-right">Action</th>
               </tr>
             </thead>
@@ -78,11 +78,11 @@ export default function RoleTestPage() {
                     <td className="py-3">
                       {hasAccess ? (
                         <span className="inline-flex items-center gap-1 text-emerald-400 text-sm">
-                          <Check size={16} /> Autorise
+                          <Check size={16} /> Autorisé
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-red-400 text-sm" title="Acces non autorise attendu">
-                          <X size={16} /> Refuse
+                        <span className="inline-flex items-center gap-1 text-red-400 text-sm" title="Accès non autorisé attendu">
+                          <X size={16} /> Refusé
                         </span>
                       )}
                     </td>
@@ -109,7 +109,7 @@ export default function RoleTestPage() {
                           Ouvrir <ExternalLink size={12} />
                         </button>
                       ) : (
-                        <span className="text-xs text-white/30 italic">Acces non autorise attendu</span>
+                        <span className="text-xs text-white/30 italic">Accès non autorisé attendu</span>
                       )}
                     </td>
                   </tr>

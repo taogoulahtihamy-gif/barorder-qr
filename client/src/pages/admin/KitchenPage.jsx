@@ -67,7 +67,7 @@ function UrgencyBadge({ createdAt }) {
   const mins = Math.floor(diff / 60000);
   if (mins < 20) return null;
   return (
-    <span className="flex items-center gap-1 text-[10px] font-bold text-red-400 bg-red-500/15 px-2 py-0.5 rounded-full animate-pulse">
+    <span className="inline-flex items-center justify-center gap-1 text-[10px] font-bold text-red-400 bg-red-500/15 px-2 py-0.5 rounded-full animate-pulse min-h-[22px]">
       <AlertTriangle size={10} />
       URGENT
     </span>
@@ -189,29 +189,29 @@ export default function KitchenPage() {
     <div className={isFullscreen ? 'h-screen overflow-hidden bg-black' : ''}>
       <div className={`flex items-center justify-between mb-6 flex-wrap gap-2 ${isFullscreen ? 'px-4 pt-4' : ''}`}>
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-white">Cuisine</h1>
+          <h1 className="text-2xl font-bold text-white">{t('Cuisine')}</h1>
           <span className="text-sm text-white/40 font-mono">
-            {orders.length} commande{orders.length !== 1 ? 's' : ''}
+            {orders.length} {t('commande')}{orders.length !== 1 ? 's' : ''}
           </span>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={toggleFullscreen}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white/70 hover:text-white transition-colors text-sm"
+            className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white/70 hover:text-white transition-colors text-sm min-h-[44px]"
           >
             {isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
-            {isFullscreen ? 'Quitter' : 'Plein écran'}
+            {isFullscreen ? t('Quitter') : t('Plein écran')}
           </button>
         </div>
       </div>
 
-      <div className={`flex flex-col md:flex-row gap-4 md:overflow-x-auto pb-4 ${isFullscreen ? 'md:h-[calc(100vh-64px)] px-4' : ''}`}>
+      <div className="flex flex-col md:flex-row gap-4 md:overflow-x-auto pb-4 kanban-mobile-stack ${isFullscreen ? 'md:h-[calc(100vh-64px)] px-4' : ''}">
         {KANBAN_COLUMNS.map((column) => {
           const colOrders = grouped[column.key] || [];
           return (
             <div
               key={column.key}
-              className={`w-full md:w-[420px] md:flex-shrink-0 rounded-2xl border ${column.border} bg-gradient-to-b ${column.color} backdrop-blur-sm flex flex-col ${isFullscreen ? 'md:h-full' : 'md:max-h-[calc(100vh-200px)]'}`}
+              className={`w-full md:w-[420px] md:flex-shrink-0 rounded-2xl border ${column.border} bg-gradient-to-b ${column.color} backdrop-blur-sm flex flex-col ${isFullscreen ? 'md:h-full' : 'md:max-h-[calc(100vh-200px)]'} kanban-column-mobile`}
             >
               <div className={`flex items-center justify-between px-5 py-4 border-b border-white/10 sticky top-0 bg-black/40 backdrop-blur-lg rounded-t-2xl`}>
                 <div className="flex items-center gap-3">
@@ -251,7 +251,7 @@ export default function KitchenPage() {
                           {order.customerName && (
                             <span className="text-white/50 text-sm">👤 {order.customerName}</span>
                           )}
-                          <span className={`ml-auto text-xs px-2.5 py-1 rounded-full font-medium ${
+                          <span className={`ml-auto text-xs px-2.5 py-1 rounded-full font-medium inline-flex items-center justify-center min-h-[28px] ${
                             order.payment === 'Wave' ? 'bg-blue-500/15 text-blue-400' :
                             order.payment === 'Orange Money' ? 'bg-orange-500/15 text-orange-400' :
                             'bg-emerald-500/15 text-emerald-400'
@@ -275,21 +275,21 @@ export default function KitchenPage() {
                           </div>
                         )}
 
-                        <div className="flex items-center gap-3 pt-2">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
                           <button
                             onClick={() => printKitchenTicket(order)}
-                            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/50 hover:text-wave-400 transition-all text-sm font-medium"
+                            className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/50 hover:text-wave-400 transition-all text-sm font-medium min-h-[44px]"
                             title="Imprimer ticket"
                           >
                             <Printer size={16} /> Imprimer
                           </button>
-                          <span className="text-lg font-bold text-gold-500 ml-auto">{order.total}</span>
+                          <span className="text-lg font-bold text-gold-500 sm:ml-auto text-center sm:text-right">{order.total}</span>
                           <div className="flex gap-2">
                             {(columnActions[column.key] || []).map((action) => (
                               <Button
                                 key={action.status}
                                 variant={action.variant}
-                                className="text-sm px-5 py-2 font-bold"
+                                className="text-sm px-5 py-3 font-bold flex-1 sm:flex-none min-h-[48px]"
                                 onClick={() => handleStatusUpdate(order.id, action.status)}
                               >
                                 {action.label}
@@ -302,7 +302,7 @@ export default function KitchenPage() {
                   );
                 })}
                 {colOrders.length === 0 && (
-                  <div className="text-center py-12 text-white/20 text-base">Aucune commande</div>
+                    <div className="text-center py-12 text-white/20 text-base">{t('Aucune commande')}</div>
                 )}
               </div>
             </div>

@@ -2,6 +2,7 @@ html, body, #root {
   width: 100%;
   min-height: 100%;
   overflow-x: hidden;
+  max-width: 100%;
 }
 
 *, *::before, *::after {
@@ -224,3 +225,61 @@ input, select, textarea, button {
   font-size: 16px;
 }
 
+@media (max-width: 767px) {
+  .admin-main-mobile {
+    width: 100%;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  .admin-content-mobile {
+    padding: 16px !important;
+  }
+
+  .table-mobile-cards {
+    display: none;
+  }
+
+  .mobile-user-card {
+    display: block;
+  }
+}
+
+@media (min-width: 768px) {
+  .desktop-table {
+    display: table;
+  }
+  .mobile-user-card {
+    display: none;
+  }
+}
+
+.user-card-mobile {
+  background: rgba(24, 24, 27, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 16px;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.user-card-mobile .user-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+}
+
+.user-card-mobile .user-card-actions > * {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.overflow-safe {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}

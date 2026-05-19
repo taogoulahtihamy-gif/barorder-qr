@@ -19,7 +19,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
     if (!email || !password) {
-      setError('Veuillez entrer votre email et mot de passe');
+      setError(t('Veuillez entrer votre email et mot de passe'));
       return;
     }
     setLoading(true);
@@ -29,7 +29,7 @@ export default function LoginPage() {
       if (result.user) { setUser(result.user); }
       navigate('/admin/dashboard');
     } catch (err) {
-      setError(err.message || 'Email ou mot de passe incorrect');
+      setError(err.message || t('Email ou mot de passe incorrect'));
     } finally {
       setLoading(false);
     }
@@ -40,7 +40,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gold-500 mb-2">BarOrder</h1>
-          <p className="text-white/50 text-sm">Connexion administration</p>
+          <p className="text-white/50 text-sm">{t('Connexion administration')}</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">

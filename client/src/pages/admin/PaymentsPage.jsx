@@ -108,7 +108,7 @@ export default function PaymentsPage() {
           </Card>
         ))}
         {filtered.length === 0 && (
-          <p className="text-center text-white/30 py-8">Aucun paiement</p>
+          <p className="text-center text-white/30 py-8">{t('Aucun paiement')}</p>
         )}
       </div>
     </div>

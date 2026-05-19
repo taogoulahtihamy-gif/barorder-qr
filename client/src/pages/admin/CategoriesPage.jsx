@@ -50,20 +50,20 @@ export default function CategoriesPage() {
       }
       setModalOpen(false);
       refreshList();
-      toast.success(editing ? 'Catégorie modifiée' : 'Catégorie créée');
+      toast.success(editing ? t('Catégorie modifiée') : t('Catégorie créée'));
     } catch (e) {
-      toast.error(e?.response?.data?.error || 'Erreur lors de l\'enregistrement');
+      toast.error(e?.response?.data?.error || t('Erreur lors de l\'enregistrement'));
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Supprimer cette catégorie ?')) return;
+    if (!window.confirm(t('Supprimer cette catégorie ?'))) return;
     try {
       await deleteCategory(id);
       refreshList();
-      toast.success('Catégorie supprimée');
+      toast.success(t('Catégorie supprimée'));
     } catch (e) {
-      toast.error(e?.response?.data?.error || 'Erreur lors de la suppression');
+      toast.error(e?.response?.data?.error || t('Erreur lors de la suppression'));
     }
   };
 
@@ -72,7 +72,7 @@ export default function CategoriesPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-white">{t('Catégories')}</h1>
+        <h1 className="text-2xl font-bold text-white">{t('Categories')}</h1>
         <Button onClick={openAdd} className="flex items-center gap-1">
           <Plus size={16} /> {t('Add')}
         </Button>

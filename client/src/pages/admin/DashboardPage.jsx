@@ -93,19 +93,19 @@ export default function DashboardPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-white">{t('Tableau de bord')}</h1>
+        <h1 className="text-2xl font-bold text-white">{t('Dashboard')}</h1>
         <span className="text-xs text-white/30">
           {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
         </span>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
-        <StatCard icon={DollarSign} label="Chiffre du jour" value={data.revenueFormatted} color="text-gold-500" trend={8} />
-        <StatCard icon={ShoppingBag} label="Commandes aujourd'hui" value={data.ordersCount} color="text-wave-500" />
-        <StatCard icon={Clock} label="En attente" value={data.pendingOrders} color="text-yellow-400" />
-        <StatCard icon={TrendingUp} label="Panier moyen" value={data.avgOrderFormatted} color="text-blue-400" />
-        <StatCard icon={Users} label="Tables actives" value={data.activeTables} color="text-green-400" />
-        <StatCard icon={Package} label="Produits dispo." value={data.availableProducts} color="text-purple-400" />
+        <StatCard icon={DollarSign} label={t("Chiffre d'affaires du jour")} value={data.revenueFormatted} color="text-gold-500" trend={8} />
+        <StatCard icon={ShoppingBag} label={t("Commandes aujourd'hui")} value={data.ordersCount} color="text-wave-500" />
+        <StatCard icon={Clock} label={t('Commandes en attente')} value={data.pendingOrders} color="text-yellow-400" />
+        <StatCard icon={TrendingUp} label={t('Panier moyen')} value={data.avgOrderFormatted} color="text-blue-400" />
+        <StatCard icon={Users} label={t('Tables actives')} value={data.activeTables} color="text-green-400" />
+        <StatCard icon={Package} label={t('Produits disponibles')} value={data.availableProducts} color="text-purple-400" />
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6 mb-8">
@@ -113,9 +113,9 @@ export default function DashboardPage() {
           <Card>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                <BarChart3 size={18} className="text-gold-500" /> Revenus hebdomadaires
+                <BarChart3 size={18} className="text-gold-500" /> {t('Daily Revenue')}
               </h2>
-              <span className="text-xs text-white/30">Cette semaine</span>
+              <span className="text-xs text-white/30">{t('Cette semaine')}</span>
             </div>
             <MiniBar values={weekdayRevenue} height={120} color="from-gold-500 to-amber-500" />
             <div className="flex justify-between mt-2">
@@ -130,12 +130,12 @@ export default function DashboardPage() {
           <Card>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                <CreditCard size={18} className="text-gold-500" /> Paiements
+                <CreditCard size={18} className="text-gold-500" /> {t('Payments')}
               </h2>
             </div>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-white/70">Wave</span>
+                <span className="text-sm text-white/70">{t('Wave')}</span>
                 <div className="flex items-center gap-2">
                   <div className="w-24 h-2 rounded-full bg-white/10 overflow-hidden">
                     <div className="h-full rounded-full bg-wave-500" style={{ width: `${data.paymentSplit?.wave || 40}%` }} />
@@ -144,7 +144,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-white/70">Orange Money</span>
+                <span className="text-sm text-white/70">{t('Orange Money')}</span>
                 <div className="flex items-center gap-2">
                   <div className="w-24 h-2 rounded-full bg-white/10 overflow-hidden">
                     <div className="h-full rounded-full bg-orange-500" style={{ width: `${data.paymentSplit?.orange || 35}%` }} />
@@ -153,7 +153,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-white/70">Cash</span>
+                <span className="text-sm text-white/70">{t('Cash')}</span>
                 <div className="flex items-center gap-2">
                   <div className="w-24 h-2 rounded-full bg-white/10 overflow-hidden">
                     <div className="h-full rounded-full bg-emerald-500" style={{ width: `${data.paymentSplit?.cash || 25}%` }} />
@@ -202,7 +202,7 @@ export default function DashboardPage() {
             </h2>
             <Card>
               {data.topProducts.length === 0 ? (
-                <p className="text-sm text-white/30 text-center py-4">Aucun produit</p>
+                <p className="text-sm text-white/30 text-center py-4">{t('Aucun produit')}</p>
               ) : (
                 <div className="space-y-3">
                   {data.topProducts.map((product, i) => {
