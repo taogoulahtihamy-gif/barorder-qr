@@ -39,7 +39,7 @@ export function AppProvider({ children }) {
       return saved ? JSON.parse(saved) : null;
     } catch { return null; }
   });
-  const { lang: locale, toggleLanguage, t } = useT();
+  const { lang: locale, toggleLanguage, t, tStatus, tPaymentMethod } = useT();
 
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cart));
@@ -119,7 +119,7 @@ export function AppProvider({ children }) {
         hasRole, canAccess,
         setTableId, setRestaurantId, setRestaurantSlug, setRestaurant,
         addToCart, removeFromCart, updateQuantity, clearCart,
-        locale, toggleLanguage, t,
+        locale, toggleLanguage, t, tStatus, tPaymentMethod,
       }}
     >
       {children}

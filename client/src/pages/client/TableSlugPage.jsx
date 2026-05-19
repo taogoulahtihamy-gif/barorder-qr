@@ -198,17 +198,17 @@ export default function TableSlugPage() {
           </Button>
         </div>
 
-        {phone || address ? (
+          {phone || address ? (
           <div className={`px-4 mb-6 ${visible ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.3s' }}>
             <Card className="card-hover">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-1.5 h-1.5 rounded-full bg-wave-500 animate-pulse" />
                 <span className="text-xs text-wave-400 font-medium">{t('Ouvert')}</span>
                 <span className="text-xs text-white/30">·</span>
-                <span className="text-xs text-white/40">{t('Préparation')}: 20-30 min</span>
+                <span className="text-xs text-white/40">{t('Estimated time: 20-30 min')}</span>
               </div>
               <p className="text-xs text-white/50 leading-relaxed">
-                {t('Découvrez notre menu et commandez directement depuis votre table. Plats préparés avec des ingrédients frais et de saison.')}
+                {t('Browse our menu and order directly from your phone.')}
               </p>
               {phone && (
                 <div className="flex items-center gap-2 mt-3 text-xs text-white/40">
@@ -231,10 +231,10 @@ export default function TableSlugPage() {
                 <div className="w-1.5 h-1.5 rounded-full bg-wave-500 animate-pulse" />
                 <span className="text-xs text-wave-400 font-medium">{t('Ouvert')}</span>
                 <span className="text-xs text-white/30">·</span>
-                <span className="text-xs text-white/40">{t('Préparation')}: 20-30 min</span>
+                <span className="text-xs text-white/40">{t('Estimated time: 20-30 min')}</span>
               </div>
               <p className="text-xs text-white/50 leading-relaxed">
-                {t('Découvrez notre menu et commandez directement depuis votre table. Plats préparés avec des ingrédients frais et de saison.')}
+                {t('Browse our menu and order directly from your phone.')}
               </p>
             </Card>
           </div>

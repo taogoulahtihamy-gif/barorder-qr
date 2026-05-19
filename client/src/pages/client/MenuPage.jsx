@@ -203,9 +203,9 @@ export default function MenuPage() {
                   <h3 className="text-white font-semibold text-sm">{promo.title || t('Promotion')}</h3>
                   {promo.description && <p className="text-white/50 text-xs mt-0.5">{promo.description}</p>}
                   <div className="flex items-center gap-2 mt-1.5">
-                    <span className="text-gold-500 font-bold text-sm">{promo.price != null ? Number(promo.price).toLocaleString('fr-FR') : '—'} FCFA</span>
+                    <span className="text-gold-500 font-bold text-sm">{formatPrice(promo.price)}</span>
                     {promo.old_price != null && Number(promo.old_price) > 0 && (
-                      <span className="text-white/30 line-through text-xs">{Number(promo.old_price).toLocaleString('fr-FR')} FCFA</span>
+                      <span className="text-white/30 line-through text-xs">{formatPrice(promo.old_price)}</span>
                     )}
                   </div>
                 </div>

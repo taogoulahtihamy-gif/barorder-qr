@@ -13,7 +13,7 @@ const PAYMENT_EXPIRY = 5 * 60 * 1000;
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
-  const { cart, cartTotal, tableId, restaurantId, restaurantSlug, clearCart, t } = useApp();
+  const { cart, cartTotal, tableId, restaurantId, restaurantSlug, clearCart, t, tPaymentMethod } = useApp();
   const [paymentMethod, setPaymentMethod] = useState(null);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
@@ -28,7 +28,7 @@ export default function CheckoutPage() {
       timer = setTimeout(() => {
         setPaymentStatus('expired');
         setLoading(false);
-        toast.error('Paiement expiré. Veuillez réessayer.');
+        toast.error(t('Payment expired'));
       }, PAYMENT_EXPIRY);
     }
     return () => clearTimeout(timer);
@@ -36,19 +36,19 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async () => {
     if (!paymentMethod) {
-      toast.error('Veuillez sélectionner un moyen de paiement');
+      toast.error(t('Select a payment method'));
       return;
     }
     if (!customerName.trim()) {
-      toast.error('Veuillez entrer votre nom');
+      toast.error(t('Please enter your name'));
       return;
     }
     if (!customerPhone.trim()) {
-      toast.error('Veuillez entrer votre numéro de téléphone');
+      toast.error(t('Please enter your phone number'));
       return;
     }
     if (cart.length === 0) {
-      toast.error('Votre panier est vide');
+      toast.error(t('Your cart is empty'));
       return;
     }
     setLoading(true);
@@ -60,25 +60,25 @@ export default function CheckoutPage() {
         const qty = Number(item.quantity);
         const price = Number(item.price);
         if (!item.quantity || isNaN(qty) || qty < 1) {
-          toast.error(`Quantité invalide pour ${item.name || 'un article'}`);
+          toast.error(`${t('Invalid quantity for')} ${item.name || t('an item')}`);
           setLoading(false); setPaymentStatus(null); setPaymentStarted(null);
           return;
         }
         if (item.price == null || isNaN(price) || price < 0) {
-          toast.error(`Prix invalide pour ${item.name || 'un article'}`);
+          toast.error(`${t('Invalid price for')} ${item.name || t('an item')}`);
           setLoading(false); setPaymentStatus(null); setPaymentStarted(null);
           return;
         }
       }
       const total = Number(cartTotal);
       if (isNaN(total) || total < 0) {
-        toast.error('Erreur de calcul du total');
+        toast.error(t('Total calculation error'));
         setLoading(false); setPaymentStatus(null); setPaymentStarted(null);
         return;
       }
       const safeTableId = Number(tableId) || null;
       if (!safeTableId) {
-        toast.error('Table non identifiée. Veuillez scanner le QR code.');
+        toast.error(t('Table not identified'));
         setLoading(false); setPaymentStatus(null); setPaymentStarted(null);
         return;
       }
@@ -136,14 +136,14 @@ export default function CheckoutPage() {
       }, 1500);
     } catch (e) {
       setPaymentStatus('error');
-      toast.error(e?.response?.data?.error || 'Erreur lors de la création de la commande');
+      toast.error(e?.response?.data?.error || t('Order creation error'));
     }
   };
 
   const paymentOptions = [
-    { method: 'wave', label: 'Wave', desc: t('Pay with mobile money'), icon: Smartphone, color: 'text-wave-500', bgColor: 'border-wave-500 bg-wave-500/5' },
-    { method: 'orange_money', label: 'Orange Money', desc: 'Payer avec Orange Money', icon: OrangeIcon, color: 'text-orange-500', bgColor: 'border-orange-500 bg-orange-500/5' },
-    { method: 'cash', label: t('Cash à la livraison'), desc: t('Pay at the counter'), icon: Banknote, color: 'text-gold-500', bgColor: 'border-wave-500 bg-wave-500/5' },
+    { method: 'wave', label: tPaymentMethod('wave'), desc: t('Pay with mobile money'), icon: Smartphone, color: 'text-wave-500', bgColor: 'border-wave-500 bg-wave-500/5' },
+    { method: 'orange_money', label: tPaymentMethod('orange_money'), desc: t('Pay with Orange Money'), icon: OrangeIcon, color: 'text-orange-500', bgColor: 'border-orange-500 bg-orange-500/5' },
+    { method: 'cash', label: tPaymentMethod('cash'), desc: t('Pay at the counter'), icon: Banknote, color: 'text-gold-500', bgColor: 'border-wave-500 bg-wave-500/5' },
   ];
 
   if (paymentStatus === 'success') {
@@ -152,8 +152,8 @@ export default function CheckoutPage() {
         <div className="w-20 h-20 rounded-full bg-emerald-500/10 flex items-center justify-center mb-6 animate-bounce">
           <CheckCircle size={48} className="text-emerald-500" />
         </div>
-        <h2 className="text-2xl font-bold text-white mb-2">Commande confirmée !</h2>
-        <p className="text-white/50">Redirection vers votre commande...</p>
+        <h2 className="text-2xl font-bold text-white mb-2">{t('Order confirmed!')}</h2>
+        <p className="text-white/50">{t('Redirecting to your order...')}</p>
       </div>
     );
   }
@@ -164,8 +164,8 @@ export default function CheckoutPage() {
         <div className="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center mb-6">
           <XCircle size={48} className="text-red-400" />
         </div>
-        <h2 className="text-xl font-bold text-white mb-2">Erreur de paiement</h2>
-        <p className="text-white/50 mb-6">Un problème est survenu. Veuillez réessayer.</p>
+        <h2 className="text-xl font-bold text-white mb-2">{t('Payment error')}</h2>
+        <p className="text-white/50 mb-6">{t('A problem occurred. Please try again.')}</p>
         <Button onClick={() => { setPaymentStatus(null); setPaymentStarted(null); setLoading(false); }} className="w-full max-w-xs">
 {t('Retry')}
         </Button>
@@ -247,11 +247,11 @@ export default function CheckoutPage() {
         </Card>
 
         <Card>
-          <label className="block text-sm font-medium text-white mb-2">Note pour la cuisine</label>
+          <label className="block text-sm font-medium text-white mb-2">{t('Kitchen note')}</label>
           <textarea
             value={kitchenNote}
             onChange={(e) => setKitchenNote(e.target.value)}
-            placeholder="Ex: sans glaçon, bien cuit, allergies..."
+            placeholder={t('E.g. no ice, well done, allergies...')}
             rows={3}
             className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-gold-500/50 resize-none"
           />
@@ -288,9 +288,9 @@ export default function CheckoutPage() {
         >
           {loading && paymentStatus !== 'expired' ? (
             <span className="flex items-center gap-2 justify-center">
-              <Loader size={16} className="animate-spin" /> En cours...
+              <Loader size={16} className="animate-spin" /> {t('Processing...')}
             </span>
-          ) : paymentStatus === 'expired' || paymentStatus === 'error' ? 'Réessayer' : 'Confirmer la commande'}
+          ) : paymentStatus === 'expired' || paymentStatus === 'error' ? t('Retry') : t('Confirm order')}
         </Button>
       </div>
     </div>
