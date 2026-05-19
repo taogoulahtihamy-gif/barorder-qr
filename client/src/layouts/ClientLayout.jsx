@@ -1,17 +1,13 @@
-import { ShoppingCart, Phone, Globe } from 'lucide-react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Phone, Globe } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 
 export default function ClientLayout({ children }) {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { t, locale, toggleLanguage, cartCount, restaurant, tableId } = useApp();
+  const { t, locale, toggleLanguage, restaurant } = useApp();
   const brandColor = restaurant?.primary_color || '#D4AF37';
   const brandLogo = restaurant?.logo_url || '';
   const brandName = restaurant?.name || 'BarOrder';
-
-  const slug = restaurant?.slug || '';
-  const isMenuPage = location.pathname.includes('/menu/');
 
   return (
     <div className="min-h-screen bg-black flex flex-col">
@@ -29,24 +25,6 @@ export default function ClientLayout({ children }) {
           </button>
           <button onClick={() => navigate('/server-call')} className="p-2 text-white/70 hover:text-wave-500 transition-colors" title={t('Call Server')}>
             <Phone size={20} />
-          </button>
-          <button
-            onClick={() => {
-              if (isMenuPage) {
-                navigate(slug && tableId ? `/r/${slug}/table/${tableId}` : '/');
-              } else {
-                navigate('/cart');
-              }
-            }}
-            className="relative p-2 text-white/70 hover:text-gold-500 transition-colors"
-            title={t('Cart')}
-          >
-            <ShoppingCart size={20} />
-            {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-gold-500 text-black text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                {cartCount > 9 ? '9+' : cartCount}
-              </span>
-            )}
           </button>
         </div>
       </header>

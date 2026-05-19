@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import ClientLayout from '../layouts/ClientLayout';
 import AdminLayout from '../layouts/AdminLayout';
 import ProtectedRoute from '../components/ProtectedRoute';
@@ -6,6 +6,7 @@ import ProtectedRoute from '../components/ProtectedRoute';
 import LandingPage from '../pages/client/LandingPage';
 import RestaurantsPage from '../pages/client/RestaurantsPage';
 import TablePage from '../pages/client/TablePage';
+import TableWelcome from '../pages/client/TableWelcome';
 import MenuPage from '../pages/client/MenuPage';
 import CartPage from '../pages/client/CartPage';
 import CheckoutPage from '../pages/client/CheckoutPage';
@@ -34,11 +35,23 @@ export default function AppRouter() {
     <Routes>
       <Route path="/" element={<ClientLayout><LandingPage /></ClientLayout>} />
       <Route path="/restaurants" element={<ClientLayout><RestaurantsPage /></ClientLayout>} />
+
+      {/* Customer sub-routes under /r/:slug/table/:tableId */}
+      <Route path="/r/:slug/table/:tableId" element={<ClientLayout><TableWelcome /></ClientLayout>} />
+      <Route path="/r/:slug/table/:tableId/menu" element={<ClientLayout><MenuPage /></ClientLayout>} />
+      <Route path="/r/:slug/table/:tableId/cart" element={<ClientLayout><CartPage /></ClientLayout>} />
+      <Route path="/r/:slug/table/:tableId/assistance" element={<ClientLayout><ServerCallPage /></ClientLayout>} />
+
+      {/* Old QR routes - redirect to welcome page */}
+      <Route path="/r/:slug/menu/:tableId" element={<Navigate to="../table/:tableId" replace />} />
+      <Route path="/r/:restaurantSlug/table/:tableId" element={<ClientLayout><TableSlugPage /></ClientLayout>} />
+
+      {/* Legacy routes - keep working */}
       <Route path="/menu/:restaurantSlug/:tableId" element={<ClientLayout><MenuPage /></ClientLayout>} />
       <Route path="/menu/:tableId" element={<ClientLayout><MenuPage /></ClientLayout>} />
-      <Route path="/r/:slug/menu/:tableId" element={<ClientLayout><MenuPage /></ClientLayout>} />
-      <Route path="/r/:restaurantSlug/table/:tableId" element={<ClientLayout><TableSlugPage /></ClientLayout>} />
       <Route path="/table/:tableId" element={<ClientLayout><TablePage /></ClientLayout>} />
+
+      {/* Global client routes */}
       <Route path="/cart" element={<ClientLayout><CartPage /></ClientLayout>} />
       <Route path="/checkout" element={<ClientLayout><CheckoutPage /></ClientLayout>} />
       <Route path="/order/:orderNumber" element={<ClientLayout><OrderPage /></ClientLayout>} />

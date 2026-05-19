@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import Badge from '../../components/Badge';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import CartDrawer from '../../components/CartDrawer';
+import BottomNav from '../../components/BottomNav';
 import { useApp } from '../../context/AppContext';
 import { formatPrice } from '../../utils/formatters';
 import { getMenuBySlug, getPromotions } from '../../services/menuService';
@@ -207,10 +208,25 @@ export default function MenuPage() {
     return found ? found.quantity : 0;
   };
 
+  const slug = restaurant?.slug || effectiveSlug;
+  const base = slug && tableId ? `/r/${slug}/table/${tableId}` : '';
+
   return (
     <div className="min-h-screen bg-black pb-32">
-      <div className="px-4 pt-3 pb-1">
+      <div className="flex items-center justify-between px-4 pt-3 pb-1">
         <p className="text-xs text-white/40">{t('Table')} {tableId}</p>
+        <button
+          onClick={() => { if (base) navigate(`${base}/cart`); }}
+          className="relative p-2 text-white/60 hover:text-gold-500 transition-colors"
+          title={t('Cart')}
+        >
+          <ShoppingCart size={18} />
+          {cartCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 bg-gold-500 text-black text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+              {cartCount > 9 ? '9+' : cartCount}
+            </span>
+          )}
+        </button>
       </div>
 
       <div className="px-4 space-y-4">
@@ -390,6 +406,7 @@ export default function MenuPage() {
       />
 
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
+      <BottomNav />
     </div>
   );
 }

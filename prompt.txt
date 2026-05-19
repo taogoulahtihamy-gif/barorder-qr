@@ -1,107 +1,63 @@
-Corrige sérieusement l’interface client.
+URGENT FIX customer QR routing and bottom navigation.
 
-PROBLÈMES À RÉGLER OBLIGATOIREMENT :
+Current problems:
+1. When scanning QR, it sometimes opens menu directly instead of welcome/home page.
+2. On customer welcome page, clicking cart icon sends user to welcome/home instead of cart.
+3. Bottom navigation routes are wrong/confused.
 
-1. Supprimer le header en double
-Actuellement “Le Palais” apparaît deux fois avec les icônes téléphone/langue/panier.
-Il ne doit y avoir qu’un seul header sticky en haut.
+Correct routing:
 
-Structure attendue :
-- Header unique :
-  - Logo/Nom restaurant à gauche : Le Palais
-  - Icônes à droite : téléphone, langue FR/EN, panier
-- En dessous :
-  - Nom restaurant
-  - Table actuelle
-  - Barre de recherche
-  - Catégories
-  - Liste produits
+QR scan URL:
+ /r/:slug/table/:tableId
 
-2. Corriger le comportement du QR code
-Quand un client scanne le QR code d’une table, il doit arriver sur l’accueil client, pas directement sur le menu.
+This route MUST always render TableWelcome / customer home page.
 
-Route attendue :
-/?table=11
+Customer welcome page:
+- “Voir le menu” button => /r/:slug/table/:tableId/menu
+- cart icon => /r/:slug/table/:tableId/cart
+- assistance icon/button => /r/:slug/table/:tableId/assistance
 
-ou
+Customer menu page:
+- cart icon => /r/:slug/table/:tableId/cart
+- bottom nav Menu => /r/:slug/table/:tableId/menu
+- bottom nav Cart => /r/:slug/table/:tableId/cart
+- bottom nav Assistance => /r/:slug/table/:tableId/assistance
 
-/client?table=11
+Customer cart page:
+- bottom nav Menu => menu
+- Cart => cart
+- Assistance => assistance
 
-L’accueil client doit afficher :
-- Bienvenue chez Le Palais
-- Table 11
-- Bouton “Voir le menu”
-- Bouton “Appeler un serveur”
-- Bouton “Voir mon panier”
-- Design premium restaurant
+Do NOT redirect automatically from welcome to menu.
+Remove any useEffect or navigate() that sends /r/:slug/table/:tableId directly to menu.
 
-Le menu ne doit s’ouvrir qu’après clic sur “Voir le menu”.
+Important:
+- Keep tableId preserved everywhere.
+- Keep slug preserved everywhere.
+- No NaN tableId.
+- Cart route must never point to welcome.
+- Menu route must never replace welcome route.
 
-3. Corriger la navigation
-Créer clairement :
-- Page AccueilClient
-- Page MenuClient
-- Page PanierClient
-- Page ConfirmationCommande
+Files to inspect:
+- router/index.jsx
+- App.jsx
+- TableWelcome.jsx
+- MenuPage.jsx
+- CustomerLayout.jsx
+- BottomNav.jsx
+- CartPage.jsx
+- CheckoutPage.jsx
 
-Ne pas mélanger accueil et menu dans la même page.
+Acceptance:
+- scanning QR opens welcome page
+- clicking Voir le menu opens menu
+- clicking cart opens cart
+- bottom nav works correctly
+- no automatic redirect to menu
+- build passes
 
-4. Corriger les catégories
-Les catégories doivent être propres et scrollables horizontalement sans casser l’écran :
-- Tout
-- Plats
-- Grillades
-- Boissons
-- Bières
-- Divers
-- Desserts
-
-Le bouton actif doit être doré.
-Les autres boutons doivent être sombres avec bordure légère.
-
-5. Corriger le design mobile
-Le site doit être parfaitement adapté téléphone :
-- pas de débordement horizontal
-- pas de contenu coupé à droite
-- padding régulier
-- cartes produits modernes
-- boutons + bien alignés
-- images bien cadrées
-- texte lisible
-
-6. Corriger les doublons produits
-La liste affiche actuellement des produits en double.
-Chaque produit doit apparaître une seule fois sauf si c’est volontaire dans la base de données.
-Vérifie le tableau/array des produits et supprime les doublons.
-
-7. Corriger les images manquantes
-Quand un produit n’a pas d’image, afficher une image placeholder propre, mais éviter l’icône assiette répétée partout.
-Utilise une vraie image par défaut plus élégante ou une carte sombre premium.
-
-8. Corriger le bouton langue
-Le bouton FR/EN doit fonctionner partout :
-- Accueil client
-- Menu
-- Panier
-- Confirmation
-- Admin si concerné
-
-9. Corriger le panier
-Quand on clique sur + :
-- Ajouter le produit au panier
-- Afficher un petit badge avec le nombre d’articles
-- Le panier doit rester accessible depuis le header
-
-10. Résultat attendu
-Je veux une interface client premium, propre, mobile-first, sans doublon, avec :
-- Accueil client après scan QR
-- Menu uniquement après clic
-- Header unique
-- Catégories propres
-- Produits non dupliqués
-- Panier fonctionnel
-- Langue fonctionnelle
-
-Ne fais pas de petites corrections partielles.
-Refactorise proprement les composants React si nécessaire.
-Vérifie toutes les routes, tous les imports, et donne-moi le code complet corrigé.
+Run:
+npm run build
+git add .
+git commit -m "Fix customer QR routing and bottom navigation"
+git push origin main
