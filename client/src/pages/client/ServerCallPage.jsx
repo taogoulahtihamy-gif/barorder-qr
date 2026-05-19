@@ -27,7 +27,7 @@ export default function ServerCallPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black pb-20">
+    <div className="min-h-screen bg-black pb-32">
       <div className="flex flex-col items-center justify-center min-h-[80vh] px-4 text-center">
         {called ? (
           <>

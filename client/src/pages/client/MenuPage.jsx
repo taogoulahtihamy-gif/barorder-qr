@@ -15,7 +15,7 @@ function ProductDetailModal({ item, onClose, onAdd, onRemove, onUpdateQty, qty }
   const { t } = useApp();
   if (!item) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center" onClick={onClose}>
       <div className="fixed inset-0 bg-black/70" onClick={onClose} />
       <div
         className="relative w-full sm:max-w-md bg-zinc-900 border-t sm:border border-white/10 rounded-t-2xl sm:rounded-2xl p-6 max-h-[85vh] overflow-y-auto animate-fade-in"
@@ -383,7 +383,7 @@ export default function MenuPage() {
       </div>
 
       {cart.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 p-4 pb-safe bg-black/95 backdrop-blur-lg border-t border-white/10">
+        <div className="fixed bottom-[65px] left-0 right-0 z-30 p-4 bg-black/95 backdrop-blur-lg border-t border-white/10">
           <button
             onClick={() => setCartOpen(true)}
             className="w-full flex items-center justify-center gap-3 bg-gold-500 text-black font-semibold py-3.5 rounded-xl hover:bg-gold-400 transition-colors shadow-lg shadow-gold-500/20"

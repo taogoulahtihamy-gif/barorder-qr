@@ -57,7 +57,7 @@ export default function TableWelcome() {
   const base = slug && tableId ? `/r/${slug}/table/${tableId}` : '';
 
   return (
-    <div className="relative min-h-screen bg-black overflow-hidden pb-20">
+    <div className="relative min-h-screen bg-black overflow-hidden pb-32">
       <style>{`
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }

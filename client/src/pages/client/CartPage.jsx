@@ -16,7 +16,7 @@ export default function CartPage() {
 
   if (cart.length === 0) {
     return (
-      <div className="min-h-screen bg-black pb-20">
+      <div className="min-h-screen bg-black pb-32">
         <div className="p-4">
           <EmptyState icon={ShoppingBag} title={t('Your cart is empty')} description={t('Browse the menu to add items')} />
           <Button onClick={() => { if (base) navigate(`${base}/menu`); else navigate(-1); }} className="w-full mt-4">
