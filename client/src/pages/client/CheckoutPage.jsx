@@ -167,7 +167,7 @@ export default function CheckoutPage() {
         <h2 className="text-xl font-bold text-white mb-2">Erreur de paiement</h2>
         <p className="text-white/50 mb-6">Un problème est survenu. Veuillez réessayer.</p>
         <Button onClick={() => { setPaymentStatus(null); setPaymentStarted(null); setLoading(false); }} className="w-full max-w-xs">
-          Réessayer
+{t('Retry')}
         </Button>
       </div>
     );
@@ -176,7 +176,7 @@ export default function CheckoutPage() {
   return (
     <div className="p-4 pb-28">
       <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-white/50 hover:text-white mb-4 transition-colors">
-        <ArrowLeft size={18} /> Retour
+        <ArrowLeft size={18} /> {t('Back')}
       </button>
 
       <h1 className="text-xl font-bold text-white mb-6">{t('Checkout')}</h1>
@@ -185,8 +185,8 @@ export default function CheckoutPage() {
         <div className="mb-4 p-4 rounded-xl bg-gold-500/10 border border-gold-500/20 flex items-center gap-3">
           <Loader size={20} className="text-gold-500 animate-spin" />
           <div>
-            <p className="text-sm font-medium text-gold-500">Paiement en cours...</p>
-            <p className="text-xs text-white/40">Veuillez patienter</p>
+            <p className="text-sm font-medium text-gold-500">{t('Payment in progress...')}</p>
+            <p className="text-xs text-white/40">{t('Please wait')}</p>
           </div>
         </div>
       )}
@@ -195,27 +195,27 @@ export default function CheckoutPage() {
         <div className="mb-4 p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center gap-3">
           <XCircle size={20} className="text-red-400" />
           <div>
-            <p className="text-sm font-medium text-red-400">Paiement expiré</p>
-            <p className="text-xs text-white/40">Le délai de paiement a été dépassé</p>
+            <p className="text-sm font-medium text-red-400">{t('Payment expired')}</p>
+            <p className="text-xs text-white/40">{t('Payment time exceeded')}</p>
           </div>
         </div>
       )}
 
       <div className="space-y-4 mb-6">
         <Card>
-          <h3 className="font-medium text-white mb-3">Informations client</h3>
+          <h3 className="font-medium text-white mb-3">{t('Customer info')}</h3>
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <label className="text-sm text-white/60">Nom *</label>
+              <label className="text-sm text-white/60">{t('Name *')}</label>
               <input
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="Votre nom"
+                placeholder={t('Your name')}
                 className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-gold-500/50"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm text-white/60">Téléphone *</label>
+              <label className="text-sm text-white/60">{t('Phone *')}</label>
               <input
                 value={customerPhone}
                 onChange={(e) => setCustomerPhone(e.target.value)}

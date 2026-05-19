@@ -33,15 +33,15 @@ export default function RoleTestPage() {
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
-            <p className="text-xs text-white/40 mb-1">Nom</p>
+            <p className="text-xs text-white/40 mb-1">{t('Name')}</p>
             <p className="text-white font-medium">{user?.name || '-'}</p>
           </div>
           <div>
-            <p className="text-xs text-white/40 mb-1">Email</p>
+            <p className="text-xs text-white/40 mb-1">{t('Email')}</p>
             <p className="text-white/80 text-sm">{user?.email || '-'}</p>
           </div>
           <div>
-            <p className="text-xs text-white/40 mb-1">Rôle</p>
+            <p className="text-xs text-white/40 mb-1">{t('Role')}</p>
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium text-red-400 bg-red-500/10">
               <Shield size={12} />
               {user?.role || '-'}

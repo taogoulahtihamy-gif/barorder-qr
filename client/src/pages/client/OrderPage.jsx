@@ -70,7 +70,7 @@ export default function OrderPage() {
       setOrder((prev) => {
         if (!prev) return prev;
         if (String(prev.id) === String(data.id) || prev.orderNumber === data.order_number) {
-          toast.success('Statut mis à jour');
+          toast.success(t('Status updated'));
           return { ...prev, status: updatedStatus };
         }
         return prev;
@@ -125,15 +125,15 @@ export default function OrderPage() {
               </div>
             )}
             <div className="flex items-center justify-between">
-              <span className="text-sm text-white/60">Statut</span>
+              <span className="text-sm text-white/60">{t('Status')}</span>
               <Badge variant={badgeVariant[order.status] || 'pending'}>
                 {t(order.status)}
               </Badge>
             </div>
             <div className="flex items-center justify-between mt-2">
-              <span className="text-sm text-white/60">Paiement</span>
+              <span className="text-sm text-white/60">{t('Payment')}</span>
               <span className={`text-xs font-medium ${order.paymentStatus === 'paid' ? 'text-wave-500' : 'text-yellow-400'}`}>
-                {order.paymentStatus === 'paid' ? 'Payé' : 'Impayé'}
+                {order.paymentStatus === 'paid' ? t('Paid') : t('Unpaid')}
               </span>
             </div>
             {order.totalAmount > 0 && (

@@ -66,14 +66,14 @@ function PrintButtons({ order }) {
       <button
         onClick={(e) => { e.stopPropagation(); printKitchenTicket(order); }}
         className="text-wave-400 hover:text-wave-300 transition-colors"
-        title="Ticket cuisine"
+        title={t('Kitchen ticket')}
       >
         <ChefHat size={14} />
       </button>
       <button
         onClick={(e) => { e.stopPropagation(); printCustomerReceipt(order); }}
         className="text-gold-500 hover:text-gold-400 transition-colors"
-        title="Facture client"
+        title={t('Customer receipt')}
       >
         <Printer size={14} />
       </button>

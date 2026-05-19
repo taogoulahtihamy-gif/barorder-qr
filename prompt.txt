@@ -1,142 +1,145 @@
-Fix BarOrder realtime synchronization performance without removing features.
+Refactor BarOrder bilingual system radically and completely.
 
-IMPORTANT:
-- Do NOT rollback.
-- Do NOT remove features.
-- Do NOT break orders, kitchen, server calls, payments, promotions, QR, users, roles, print.
-- Keep current premium design.
-- Fix only synchronization, timeout, and refresh routing.
+Problem:
+Only some titles change language. Many old texts remain hardcoded in French/English.
 
-CURRENT ERROR:
-AxiosError: timeout of 3000ms exceeded
+Goal:
+When language = EN, absolutely every visible text must be English.
+When language = FR, absolutely every visible text must be French.
+No mixed language anywhere.
 
-CURRENT PROBLEM:
-Too many pages refetch at the same time:
-- orders
-- kitchen
-- payments
-- server-calls
-- dashboard
+Method:
+1. Create one central translation system:
+client/src/i18n/translations.js
+client/src/i18n/I18nProvider.jsx
+client/src/i18n/useT.js
 
-This slows the app and causes delayed synchronization.
+2. Translation hook:
+const { t, lang, setLang } = useT()
 
-==================================================
-1. INCREASE API TIMEOUT
-==================================================
+3. Every visible string must use t("key").
+Forbidden:
+- hardcoded button labels
+- hardcoded titles
+- hardcoded toasts
+- hardcoded placeholders
+- hardcoded status labels
+- hardcoded modal text
+- hardcoded sidebar labels
+- hardcoded empty states
 
-Find the axios/API client.
+4. Search entire client/src for visible strings and replace all of them:
+- Dashboard
+- Orders
+- Kitchen
+- Server calls
+- Products
+- Categories
+- Tables
+- Payments
+- Promotions
+- Users
+- Role test
+- Settings
+- Client welcome
+- Menu
+- Cart
+- Checkout
+- Order tracking
+- Toasts
+- Modals
+- Errors
+- Print labels
+- QR labels
 
-Change timeout:
-- production: 20000 ms
-- development: 10000 ms
+5. Add complete dictionaries:
+fr: { ... }
+en: { ... }
 
-If request times out:
-- do not clear existing data
-- do not blank the page
-- show small toast: “Synchronisation en cours…”
-- retry silently
+6. Add helpers:
+tStatus(status)
+tPaymentMethod(method)
+tRole(role)
+tAction(action)
 
-==================================================
-2. PREVENT REFRESH STORM
-==================================================
+Examples:
+pending:
+FR = Nouvelle
+EN = New
 
-Create centralized refresh routing.
+preparing:
+FR = En préparation
+EN = Preparing
 
-Do NOT trigger global refetch for every socket event.
+ready:
+FR = Prête
+EN = Ready
 
-Each socket event must refresh only the related page.
+paid:
+FR = Payée
+EN = Paid
 
-Rules:
+cash:
+FR = Espèces
+EN = Cash
 
-A. new_order
-Refresh only:
-- admin orders
-- kitchen
-- dashboard
+wave:
+FR = Wave
+EN = Wave
 
-Do NOT refresh:
-- payments
-- server-calls
-- users
-- products
-- tables
+orange_money:
+FR = Orange Money
+EN = Orange Money
 
-B. order_status_updated
-Refresh only:
-- admin orders
-- kitchen
-- dashboard
+admin:
+FR = Administrateur
+EN = Administrator
 
-Do NOT refresh:
-- server-calls
-- users
-- products
-- tables
+manager:
+FR = Manager
+EN = Manager
 
-C. kitchen_updated
-Refresh only:
-- kitchen
+7. Language switch:
+- must update instantly without page refresh
+- must persist in localStorage
+- must affect admin and client pages
+- same language state everywhere
 
-D. server_call_created
-Refresh only:
-- server-calls
-- dashboard
+8. Missing translation protection:
+If key is missing:
+- console.warn missing key
+- show English fallback
+- never show undefined
+- never show raw key in production UI
 
-Also:
-- notify waiter/admin/manager
-- do NOT refresh orders
-- do NOT refresh kitchen
-- do NOT refresh payments
+9. Add audit script:
+Create:
+client/scripts/i18n-audit.js
 
-E. server_call_updated
-Refresh only:
-- server-calls
-- dashboard
+It must scan client/src and report hardcoded visible French/English strings in JSX:
+- text between tags
+- placeholder
+- title
+- aria-label
+- toast messages
+- button labels
 
-Do NOT refresh:
-- orders
-- kitchen
-- payments
+Add npm script:
+"i18n:audit": "node scripts/i18n-audit.js"
 
-F. payment_updated
-Refresh only:
-- payments
-- orders
-- dashboard
+10. Acceptance:
+Run:
+npm run i18n:audit
+npm run build
 
-Do NOT refresh:
-- kitchen
-- server-calls
-- products
+The audit must show no critical hardcoded UI strings.
 
-G. product_updated / category_updated
-Refresh only:
-- products
-- categories
-- client menu
+Manual test:
+- switch to EN: no French text visible anywhere
+- switch to FR: no English text visible anywhere
+- test especially kitchen, orders, users, checkout, menu, modals, toasts
 
-Do NOT refresh:
-- orders
-- kitchen
-- payments
-- server-calls
-
-==================================================
-3. PAGE-SPECIFIC FETCH LOCKS
-==================================================
-
-For each admin page:
-- OrdersPage
-- KitchenPage
-- ServerCallsPage
-- PaymentsPage
-- DashboardPage
-
-Add:
-- isFetchingRef
-- lastFetchAtRef
-
-Rules:
-- if already fetching, skip duplicate request
-- max 1 refetch per page every 2 seconds
-- dashboard max 1
+11. Commit and push:
+git add .
+git commit -m "Refactor complete bilingual translation system"
+git push origin main

@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { useLocale } from '../utils/translations';
+import { useT } from '../i18n/useT';
 
 const PERMISSIONS = {
   super_admin: ['restaurants','users','settings','payments','analytics','products','categories','tables','orders','kitchen','server_calls','dashboard','stats'],
@@ -39,7 +39,7 @@ export function AppProvider({ children }) {
       return saved ? JSON.parse(saved) : null;
     } catch { return null; }
   });
-  const { locale, toggleLanguage, t } = useLocale();
+  const { lang: locale, toggleLanguage, t } = useT();
 
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cart));

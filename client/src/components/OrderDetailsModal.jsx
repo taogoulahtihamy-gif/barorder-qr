@@ -3,6 +3,7 @@ import Badge from './Badge';
 import OrderTimeline from './OrderTimeline';
 import { printKitchenTicket, printCustomerReceipt, printCashierInvoice, downloadPDF } from '../utils/printService';
 import { formatPrice } from '../utils/formatters';
+import { useApp } from '../context/AppContext';
 
 const badgeVariant = {
   new: 'pending', pending: 'pending', accepted: 'accepted',
@@ -12,6 +13,7 @@ const badgeVariant = {
 
 export default function OrderDetailsModal({ order, restaurant, userRole, cashierName, onClose }) {
   if (!order) return null;
+  const { t } = useApp();
   const isPaid = order.paymentStatus === 'paid' || order.status === 'paid';
 
   return (
@@ -87,20 +89,20 @@ export default function OrderDetailsModal({ order, restaurant, userRole, cashier
               onClick={() => printKitchenTicket(order, restaurant?.name)}
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-zinc-800 text-white/80 hover:bg-zinc-700 text-xs font-medium transition-colors"
             >
-              <ChefHat size={14} /> Ticket cuisine
+              <ChefHat size={14} /> {t('Kitchen ticket')}
             </button>
             <button
               onClick={() => printCustomerReceipt(order, restaurant)}
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-zinc-800 text-white/80 hover:bg-zinc-700 text-xs font-medium transition-colors"
             >
-              <Receipt size={14} /> Facture client
+              <Receipt size={14} /> {t('Customer receipt')}
             </button>
             {isPaid && (
               <button
                 onClick={() => printCashierInvoice(order, restaurant, cashierName)}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-zinc-800 text-white/80 hover:bg-zinc-700 text-xs font-medium transition-colors"
               >
-                <FileText size={14} /> Facture acquittée
+                <FileText size={14} /> {t('Paid invoice')}
               </button>
             )}
             <button

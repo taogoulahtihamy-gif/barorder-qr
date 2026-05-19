@@ -8,6 +8,35 @@ function formatDateTime(date) {
   return `${dd}/${mm}/${yyyy} ${hh}:${mi}`;
 }
 
+function t(label) {
+  const locale = typeof window !== 'undefined' ? (localStorage.getItem('locale') || 'fr') : 'fr';
+  const dict = {
+    'Client': { fr: 'Client', en: 'Customer' },
+    'Statut': { fr: 'Statut', en: 'Status' },
+    'Paiement': { fr: 'Paiement', en: 'Payment' },
+    'Commande': { fr: 'Commande', en: 'Order' },
+    'Table': { fr: 'Table', en: 'Table' },
+    'Heure': { fr: 'Heure', en: 'Time' },
+    'Total': { fr: 'Total', en: 'Total' },
+    'Payé': { fr: 'Payé', en: 'Paid' },
+    'En attente': { fr: 'En attente', en: 'Pending' },
+    'Caissier': { fr: 'Caissier', en: 'Cashier' },
+    'Payé le': { fr: 'Payé le', en: 'Paid on' },
+    'Merci de votre visite ! À bientôt 😊': { fr: 'Merci de votre visite ! À bientôt 😊', en: 'Thank you for visiting! See you soon 😊' },
+    '--- Ticket cuisine ---': { fr: '--- Ticket cuisine ---', en: '--- Kitchen ticket ---' },
+    'Facture': { fr: 'Facture', en: 'Receipt' },
+    'CUISINE': { fr: 'CUISINE', en: 'KITCHEN' },
+    'Date': { fr: 'Date', en: 'Date' },
+    'Facture Caissier': { fr: 'Facture Caissier', en: 'Cashier Invoice' },
+    'FACTURE': { fr: 'FACTURE', en: 'INVOICE' },
+    'PAYÉ': { fr: 'PAYÉ', en: 'PAID' },
+    '--- Facture acquittée ---': { fr: '--- Facture acquittée ---', en: '--- Paid invoice ---' },
+  };
+  const entry = dict[label];
+  if (!entry) return label;
+  return entry[locale] || label;
+}
+
 function getPrintStyles(thermalWidth) {
   const w = thermalWidth === 58 ? '58mm' : '80mm';
   return `
@@ -60,31 +89,31 @@ function buildKitchenTicket(order, restaurantName) {
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Ticket Cuisine</title>
 <style>${getPrintStyles(58)}</style></head><body>
 <div class="header">
-  <h1>🍽️ CUISINE</h1>
+  <h1>🍽️ ${t('CUISINE')}</h1>
   <div class="sub">${escapeHtml(restaurantName || 'BarOrder')}</div>
 </div>
 <div class="divider"></div>
-<div class="row"><span>Commande</span><strong>${escapeHtml(order.orderNumber || '#')}</strong></div>
-<div class="row"><span>Table</span><strong>${escapeHtml(order.table || '')}</strong></div>
-<div class="row"><span>Heure</span>${time}</div>
+<div class="row"><span>${t('Commande')}</span><strong>${escapeHtml(order.orderNumber || '#')}</strong></div>
+<div class="row"><span>${t('Table')}</span><strong>${escapeHtml(order.table || '')}</strong></div>
+<div class="row"><span>${t('Heure')}</span>${time}</div>
 <div class="divider"></div>
 ${items.map(i => `<div class="item-row">
   <span class="item-qty">x${i.qty || 1}</span>
   <span class="item-name">${escapeHtml(i.name)}</span>
 </div>`).join('')}
 ${order.kitchenNote ? `<div class="divider"></div><div class="note">📝 ${escapeHtml(order.kitchenNote)}</div>` : ''}
-${order.customerName ? `<div class="row" style="margin-top:4px"><span>Client</span>${escapeHtml(order.customerName)}</div>` : ''}
+${order.customerName ? `<div class="row" style="margin-top:4px"><span>${t('Client')}</span>${escapeHtml(order.customerName)}</div>` : ''}
 <div class="divider-solid"></div>
-<div class="footer">--- Ticket cuisine ---</div>
+<div class="footer">${t('--- Ticket cuisine ---')}</div>
 </body></html>`;
 }
 
 function buildCustomerReceipt(order, restaurant, paymentDetails) {
   const items = order.items || [];
   const subtotal = items.reduce((s, i) => s + (i.price || 0) * (i.qty || 1), 0);
-  const paidLabel = order.paymentStatus === 'paid' ? '✅ Payé' : '⏳ En attente';
+  const paidLabel = order.paymentStatus === 'paid' ? `✅ ${t('Payé')}` : `⏳ ${t('En attente')}`;
   const qrText = order.orderNumber || `#${order.id}`;
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Facture</title>
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${t('Facture')}</title>
 <style>${getPrintStyles(80)}</style></head><body>
 <div class="header">
   <h1>${escapeHtml(restaurant?.name || 'BarOrder')}</h1>
@@ -92,9 +121,9 @@ function buildCustomerReceipt(order, restaurant, paymentDetails) {
   ${restaurant?.phone ? `<div class="sub">📞 ${escapeHtml(restaurant.phone)}</div>` : ''}
 </div>
 <div class="divider-solid"></div>
-<div class="row"><span>Table</span><strong>${escapeHtml(order.table || '')}</strong></div>
-<div class="row"><span>Commande</span><strong>${escapeHtml(order.orderNumber || '#')}</strong></div>
-<div class="row"><span>Date</span>${formatDateTime(order.createdAt)}</div>
+<div class="row"><span>${t('Table')}</span><strong>${escapeHtml(order.table || '')}</strong></div>
+<div class="row"><span>${t('Commande')}</span><strong>${escapeHtml(order.orderNumber || '#')}</strong></div>
+<div class="row"><span>${t('Date')}</span>${formatDateTime(order.createdAt)}</div>
 <div class="divider"></div>
 ${items.map(i => `<div class="item-row">
   <span class="item-qty">x${i.qty || 1}</span>
@@ -102,32 +131,32 @@ ${items.map(i => `<div class="item-row">
   <span class="item-price">${(i.price || 0).toLocaleString('fr-FR')}</span>
 </div>`).join('')}
 <div class="divider"></div>
-<div class="total-row"><span>Total</span><strong>${formatCurrency(order.totalRaw || subtotal)}</strong></div>
+<div class="total-row"><span>${t('Total')}</span><strong>${formatCurrency(order.totalRaw || subtotal)}</strong></div>
 <div class="divider-solid"></div>
-<div class="row"><span>Paiement</span>${escapeHtml(order.payment || '')}</div>
-<div class="row"><span>Statut</span>${paidLabel}</div>
-${paymentDetails?.cashier ? `<div class="row"><span>Caissier</span>${escapeHtml(paymentDetails.cashier)}</div>` : ''}
-${paymentDetails?.paidAt ? `<div class="row"><span>Payé le</span>${formatDateTime(paymentDetails.paidAt)}</div>` : ''}
+<div class="row"><span>${t('Paiement')}</span>${escapeHtml(order.payment || '')}</div>
+<div class="row"><span>${t('Statut')}</span>${paidLabel}</div>
+${paymentDetails?.cashier ? `<div class="row"><span>${t('Caissier')}</span>${escapeHtml(paymentDetails.cashier)}</div>` : ''}
+${paymentDetails?.paidAt ? `<div class="row"><span>${t('Payé le')}</span>${formatDateTime(paymentDetails.paidAt)}</div>` : ''}
 <div class="divider-solid"></div>
 <div class="qr">🆔 ${qrText}</div>
-<div class="footer">Merci de votre visite ! À bientôt 😊</div>
+<div class="footer">${t('Merci de votre visite ! À bientôt 😊')}</div>
 </body></html>`;
 }
 
 function buildCashierInvoice(order, restaurant, cashierName) {
   const items = order.items || [];
   const subtotal = items.reduce((s, i) => s + (i.price || 0) * (i.qty || 1), 0);
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Facture Caissier</title>
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${t('Facture Caissier')}</title>
 <style>${getPrintStyles(80)}</style></head><body>
 <div class="header">
   <h1>${escapeHtml(restaurant?.name || 'BarOrder')}</h1>
-  <div class="sub">FACTURE</div>
+  <div class="sub">${t('FACTURE')}</div>
 </div>
-<div class="stamp-container"><span class="paid-stamp">PAYÉ</span></div>
+<div class="stamp-container"><span class="paid-stamp">${t('PAYÉ')}</span></div>
 <div class="divider-solid"></div>
-<div class="row"><span>Table</span><strong>${escapeHtml(order.table || '')}</strong></div>
-<div class="row"><span>Commande</span><strong>${escapeHtml(order.orderNumber || '#')}</strong></div>
-<div class="row"><span>Date</span>${formatDateTime(order.createdAt)}</div>
+<div class="row"><span>${t('Table')}</span><strong>${escapeHtml(order.table || '')}</strong></div>
+<div class="row"><span>${t('Commande')}</span><strong>${escapeHtml(order.orderNumber || '#')}</strong></div>
+<div class="row"><span>${t('Date')}</span>${formatDateTime(order.createdAt)}</div>
 <div class="divider"></div>
 ${items.map(i => `<div class="item-row">
   <span class="item-qty">x${i.qty || 1}</span>
@@ -135,13 +164,13 @@ ${items.map(i => `<div class="item-row">
   <span class="item-price">${(i.price || 0).toLocaleString('fr-FR')}</span>
 </div>`).join('')}
 <div class="divider"></div>
-<div class="total-row"><span>Total</span><strong>${formatCurrency(order.totalRaw || subtotal)}</strong></div>
+<div class="total-row"><span>${t('Total')}</span><strong>${formatCurrency(order.totalRaw || subtotal)}</strong></div>
 <div class="divider-solid"></div>
-<div class="row"><span>Paiement</span>${escapeHtml(order.payment || '')}</div>
-<div class="row"><span>Caissier</span>${escapeHtml(cashierName || '—')}</div>
-<div class="row"><span>Payé le</span>${formatDateTime()}</div>
+<div class="row"><span>${t('Paiement')}</span>${escapeHtml(order.payment || '')}</div>
+<div class="row"><span>${t('Caissier')}</span>${escapeHtml(cashierName || '—')}</div>
+<div class="row"><span>${t('Payé le')}</span>${formatDateTime()}</div>
 <div class="divider-solid"></div>
-<div class="footer">--- Facture acquittée ---</div>
+<div class="footer">${t('--- Facture acquittée ---')}</div>
 </body></html>`;
 }
 

@@ -134,7 +134,7 @@ export default function KitchenPage() {
               <Bell size={20} className="text-yellow-400" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-white">Appel serveur</p>
+              <p className="text-sm font-semibold text-white">{t('Server call')}</p>
               <p className="text-xs text-white/50">Table {call.table_number || call.table_id}</p>
             </div>
           </div>
@@ -279,9 +279,9 @@ export default function KitchenPage() {
                           <button
                             onClick={() => printKitchenTicket(order)}
                             className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/50 hover:text-wave-400 transition-all text-sm font-medium min-h-[44px]"
-                            title="Imprimer ticket"
+                            title={t('Print ticket')}
                           >
-                            <Printer size={16} /> Imprimer
+                            <Printer size={16} /> {t('Print')}
                           </button>
                           <span className="text-lg font-bold text-gold-500 sm:ml-auto text-center sm:text-right">{order.total}</span>
                           <div className="flex gap-2">
