@@ -1,50 +1,60 @@
-URGENT FIX: ReferenceError t is not defined after i18n refactor.
+URGENT FIX ONLY OrdersPage black screen.
 
 Problem:
-Admin pages become black.
-Console shows:
-ReferenceError: t is not defined
+- /admin/role-test works now.
+- /admin/orders is still black.
+- Do not touch role-test.
+- Do not touch other pages unless needed.
+- Fix OrdersPage only.
 
-Cause:
-Some components use t("...") but do not import or initialize the translation hook.
+Tasks:
+1. Inspect OrdersPage and every component used inside it:
+   - OrderCard
+   - OrderStatusTimeline
+   - OrderDetailsModal
+   - Receipt/Ticket buttons
+   - filter chips
+   - payment/status badges
 
-Fix:
+2. Search inside these files for:
+   t(
+   tStatus(
+   tPaymentMethod(
+   tRole(
+   tAction(
 
-1. Search all client/src for:
-t(
-tStatus(
-tPaymentMethod(
-tRole(
-tAction(
+3. For every usage, ensure:
+   const { t, tStatus, tPaymentMethod, tRole, tAction } = useT();
 
-2. For every component using t, add:
-import { useT } from "../i18n/useT";
-or correct relative path.
+4. Fix missing imports:
+   import { useT } from "../../i18n/useT";
+   or correct relative path.
 
-Inside component:
-const { t, tStatus, tPaymentMethod, tRole, tAction } = useT();
+5. Add safe fallback around OrdersPage:
+   - never render black screen
+   - if orders fetch fails, show visible error card
+   - if translation fails, fallback to plain text
 
-3. If component is outside normal path, fix import path correctly.
+6. Check console error after build.
+   Specifically remove:
+   ReferenceError: t is not defined
 
-4. Do not use global variable t.
-5. Do not leave any t(...) call without useT().
-6. Do not break existing translations.
+7. Do not change backend.
+8. Do not change socket logic.
+9. Do not remove features.
 
-7. Add safety:
-If t is missing, component must not crash.
-But preferred fix is proper useT import.
-
-8. Run:
+Run:
 npm run build
 
-9. Commit and push:
+Commit and push:
 git add .
-git commit -m "Fix missing i18n hook references"
+git commit -m "Fix OrdersPage black screen"
 git push origin main
 
 Acceptance:
-- no ReferenceError: t is not defined
 - /admin/orders opens normally
-- /admin/role-test opens or is hidden properly
-- /admin/kitchen opens normally
-- language switch still works
+- no black screen
+- no ReferenceError t is not defined
+- orders list or empty state is visible
+- filters visible
+- page remains responsive

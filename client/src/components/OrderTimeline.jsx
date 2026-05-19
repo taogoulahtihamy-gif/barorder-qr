@@ -1,3 +1,5 @@
+import { useApp } from '../context/AppContext';
+
 const STEPS = [
   { key: 'new', label: 'Nouvelle' },
   { key: 'accepted', label: 'Acceptée' },
@@ -22,6 +24,7 @@ function normalizeStatus(s) {
 }
 
 export default function OrderTimeline({ status }) {
+  const { t } = useApp();
   const current = normalizeStatus(status);
   const currentIdx = STEPS.findIndex((s) => s.key === current);
   if (currentIdx < 0) return null;
@@ -44,7 +47,7 @@ export default function OrderTimeline({ status }) {
             <span className={`text-[10px] mt-0.5 whitespace-nowrap transition-colors duration-300 ${
               done ? 'text-white/70' : 'text-white/20'
             }`}>
-              {step.label}
+              {t(step.label)}
             </span>
           </div>
         );

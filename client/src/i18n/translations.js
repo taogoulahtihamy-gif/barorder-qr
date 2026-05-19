@@ -437,6 +437,11 @@ export const fr = {
   'Kitchen ticket': 'Ticket cuisine',
   'Customer receipt': 'Facture client',
   'Paid invoice': 'Facture acquittée',
+  'Articles': 'Articles',
+  'PDF': 'PDF',
+  'Kitchen note': 'Note cuisine',
+  'Customer note': 'Note client',
+  'En prépa.': 'En prépa.',
 };
 
 export const en = {
@@ -878,6 +883,11 @@ export const en = {
   'Kitchen ticket': 'Kitchen ticket',
   'Customer receipt': 'Customer receipt',
   'Paid invoice': 'Paid invoice',
+  'Articles': 'Articles',
+  'PDF': 'PDF',
+  'Kitchen note': 'Kitchen note',
+  'Customer note': 'Customer note',
+  'En prépa.': 'Prep.',
 };
 
 export function tStatus(status, lang) {

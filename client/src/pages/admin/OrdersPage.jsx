@@ -49,7 +49,7 @@ function ElapsedTime({ createdAt }) {
       if (!createdAt) { setElapsed(''); return; }
       const diff = Date.now() - new Date(createdAt).getTime();
       const mins = Math.floor(diff / 60000);
-      if (mins < 1) setElapsed("à l'instant");
+      if (mins < 1) setElapsed('à l\'instant');
       else if (mins < 60) setElapsed(`${mins} min`);
       else setElapsed(`${Math.floor(mins / 60)}h ${mins % 60}min`);
     };
@@ -61,6 +61,7 @@ function ElapsedTime({ createdAt }) {
 }
 
 function PrintButtons({ order }) {
+  const { t } = useApp();
   return (
     <div className="flex items-center gap-1.5">
       <button
@@ -81,7 +82,7 @@ function PrintButtons({ order }) {
         <button
           onClick={(e) => { e.stopPropagation(); printCashierInvoice(order); }}
           className="text-emerald-400 hover:text-emerald-300 transition-colors"
-          title="Facture acquittée"
+          title={t('Paid invoice')}
         >
           <Printer size={14} className="opacity-70" />
         </button>

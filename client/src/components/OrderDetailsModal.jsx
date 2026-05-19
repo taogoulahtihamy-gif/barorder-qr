@@ -34,7 +34,7 @@ export default function OrderDetailsModal({ order, restaurant, userRole, cashier
             <div className="flex items-center gap-2 flex-wrap">
               <Badge variant={badgeVariant[order.status] || 'pending'}>{order.status}</Badge>
               <Badge variant={isPaid ? 'delivered' : 'pending'}>{order.payment}</Badge>
-              <span className="text-xs text-white/40">Table {order.table}</span>
+              <span className="text-xs text-white/40">{t('Table')} {order.table}</span>
             </div>
 
             <OrderTimeline status={order.status} />
@@ -47,7 +47,7 @@ export default function OrderDetailsModal({ order, restaurant, userRole, cashier
             )}
 
             <div>
-              <h3 className="text-sm font-medium text-white mb-2">Articles</h3>
+              <h3 className="text-sm font-medium text-white mb-2">{t('Articles')}</h3>
               <div className="space-y-1.5">
                 {(order.items || []).map((item, i) => (
                   <div key={i} className="flex items-center justify-between text-sm">
@@ -62,25 +62,25 @@ export default function OrderDetailsModal({ order, restaurant, userRole, cashier
             </div>
 
             <div className="border-t border-white/10 pt-3 flex items-center justify-between">
-              <span className="text-white font-medium">Total</span>
+              <span className="text-white font-medium">{t('Total')}</span>
               <span className="text-lg font-bold text-gold-500">{order.total}</span>
             </div>
 
             {order.kitchenNote && (
               <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-3">
-                <p className="text-xs text-yellow-400/80">🍳 Note cuisine: {order.kitchenNote}</p>
+                <p className="text-xs text-yellow-400/80">{t('Kitchen note')}: {order.kitchenNote}</p>
               </div>
             )}
 
             {order.note && (
               <div className="bg-white/5 rounded-xl p-3">
-                <p className="text-xs text-white/60">📝 Note client: {order.note}</p>
+                <p className="text-xs text-white/60">{t('Customer note')}: {order.note}</p>
               </div>
             )}
 
             <div className="border-t border-white/10 pt-3">
-              <p className="text-xs text-white/40 mb-1">Paiement: {order.payment}</p>
-              <p className="text-xs text-white/40">Statut: {order.paymentStatus === 'paid' ? 'Payé' : order.paymentStatus === 'pending' ? 'En attente' : order.paymentStatus}</p>
+              <p className="text-xs text-white/40 mb-1">{t('Payment')}: {order.payment}</p>
+              <p className="text-xs text-white/40">{t('Status')}: {order.paymentStatus === 'paid' ? t('Paid') : order.paymentStatus === 'pending' ? t('Pending') : order.paymentStatus}</p>
             </div>
           </div>
 
@@ -109,7 +109,7 @@ export default function OrderDetailsModal({ order, restaurant, userRole, cashier
               onClick={() => downloadPDF(order, 'receipt', restaurant)}
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-zinc-800 text-white/80 hover:bg-zinc-700 text-xs font-medium transition-colors"
             >
-              <Download size={14} /> PDF
+              <Download size={14} /> {t('PDF')}
             </button>
           </div>
         </div>
