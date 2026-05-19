@@ -30,7 +30,7 @@ const NAV_ITEMS = [
   { path: '/admin/stats', label: 'Statistics', icon: BarChart3, page: 'stats' },
   { path: '/admin/promotions', label: 'Promotions', icon: Percent, page: 'promotions' },
   { path: '/admin/users', label: 'Users', icon: Users, page: 'users' },
-  { path: '/admin/role-test', label: 'Test rôles', icon: ClipboardCheck, page: 'role-test' },
+  { path: '/admin/role-test', label: 'Roles', icon: ClipboardCheck, page: 'role-test' },
   { path: '/admin/settings', label: 'Settings', icon: Settings, page: 'settings' },
 ];
 

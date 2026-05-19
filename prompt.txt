@@ -1,60 +1,146 @@
-URGENT FIX ONLY OrdersPage black screen.
+FULL FIX role page bilingual support and rename page title.
 
 Problem:
-- /admin/role-test works now.
-- /admin/orders is still black.
-- Do not touch role-test.
-- Do not touch other pages unless needed.
-- Fix OrdersPage only.
+The page /admin/role-test does not translate correctly.
+Also the title must be “Rôles” in French and “Roles” in English, not “Test rôles” / “Role Test”.
+
+Do not break:
+- roles
+- permissions
+- route protection
+- sidebar
+- admin layout
+- mobile responsive
 
 Tasks:
-1. Inspect OrdersPage and every component used inside it:
-   - OrderCard
-   - OrderStatusTimeline
-   - OrderDetailsModal
-   - Receipt/Ticket buttons
-   - filter chips
-   - payment/status badges
 
-2. Search inside these files for:
-   t(
-   tStatus(
-   tPaymentMethod(
-   tRole(
-   tAction(
+1. Rename visible title
+Replace every visible label:
+- “Test rôles”
+- “Test des rôles”
+- “Role Test”
+- “Test roles”
 
-3. For every usage, ensure:
-   const { t, tStatus, tPaymentMethod, tRole, tAction } = useT();
+With:
+FR: “Rôles”
+EN: “Roles”
 
-4. Fix missing imports:
-   import { useT } from "../../i18n/useT";
-   or correct relative path.
+2. Sidebar label
+In the admin sidebar, show:
+FR: “Rôles”
+EN: “Roles”
 
-5. Add safe fallback around OrdersPage:
-   - never render black screen
-   - if orders fetch fails, show visible error card
-   - if translation fails, fallback to plain text
+Do not show “Test rôles”.
 
-6. Check console error after build.
-   Specifically remove:
-   ReferenceError: t is not defined
+3. Keep route unchanged
+Keep the route:
+ /admin/role-test
 
-7. Do not change backend.
-8. Do not change socket logic.
-9. Do not remove features.
+Do not rename the route for now.
 
-Run:
+4. Refactor all text in RoleTestPage
+Remove all hardcoded visible strings in:
+- page title
+- user info card
+- permission matrix
+- table headers
+- buttons
+- badges
+- role names
+- page names
+- empty states
+- alerts
+
+Everything must use the i18n system.
+
+Use:
+const { t, tRole } = useT();
+
+5. Add translation keys
+
+FR:
+rolesPage.title = "Rôles"
+rolesPage.connectedUser = "Utilisateur connecté"
+rolesPage.name = "Nom"
+rolesPage.email = "Email"
+rolesPage.role = "Rôle"
+rolesPage.restaurant = "Restaurant"
+rolesPage.permissionsMatrix = "Matrice des permissions"
+rolesPage.page = "Page"
+rolesPage.access = "Accès"
+rolesPage.allowedRoles = "Rôles autorisés"
+rolesPage.action = "Action"
+rolesPage.authorized = "Autorisé"
+rolesPage.denied = "Refusé"
+rolesPage.open = "Ouvrir"
+
+EN:
+rolesPage.title = "Roles"
+rolesPage.connectedUser = "Connected user"
+rolesPage.name = "Name"
+rolesPage.email = "Email"
+rolesPage.role = "Role"
+rolesPage.restaurant = "Restaurant"
+rolesPage.permissionsMatrix = "Permissions matrix"
+rolesPage.page = "Page"
+rolesPage.access = "Access"
+rolesPage.allowedRoles = "Allowed roles"
+rolesPage.action = "Action"
+rolesPage.authorized = "Authorized"
+rolesPage.denied = "Denied"
+rolesPage.open = "Open"
+
+6. Role translations
+Ensure:
+FR:
+admin = "Administrateur"
+super_admin = "Super administrateur"
+manager = "Manager"
+waiter = "Serveur"
+kitchen = "Cuisine"
+cashier = "Caissier"
+
+EN:
+admin = "Administrator"
+super_admin = "Super administrator"
+manager = "Manager"
+waiter = "Waiter"
+kitchen = "Kitchen"
+cashier = "Cashier"
+
+7. Page name translations
+Translate page names in permission matrix:
+Dashboard / Tableau de bord
+Orders / Commandes
+Kitchen / Cuisine
+Server calls / Appels serveur
+Products / Produits
+Categories / Catégories
+Tables / Tables
+Payments / Paiements
+Statistics / Statistiques
+Users / Utilisateurs
+Settings / Paramètres
+
+8. Instant language switching
+Changing EN/FR must update the entire roles page instantly without refresh.
+
+9. Safety
+No hardcoded “Test rôles” must remain.
+No hardcoded “Role Test” must remain.
+No “undefined” text.
+No raw translation keys.
+
+10. Build and push
 npm run build
-
-Commit and push:
 git add .
-git commit -m "Fix OrdersPage black screen"
+git commit -m "Rename role test page and complete bilingual support"
 git push origin main
 
 Acceptance:
-- /admin/orders opens normally
+- sidebar shows “Rôles” in French
+- sidebar shows “Roles” in English
+- page title shows only “Rôles” / “Roles”
+- the whole page translates
 - no black screen
-- no ReferenceError t is not defined
-- orders list or empty state is visible
-- filters visible
-- page remains responsive
+- build passes

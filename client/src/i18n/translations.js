@@ -409,10 +409,10 @@ export const fr = {
   'Annulée': 'Annulée',
   'Acceptée': 'Acceptée',
   'admin': 'Administrateur',
-  'super_admin': 'Super Admin',
+  'super_admin': 'Super administrateur',
   'manager': 'Manager',
   'waiter': 'Serveur',
-  'kitchen': 'Cuisinier',
+  'kitchen': 'Cuisine',
   'cashier': 'Caissier',
   'Prêt': 'Prêt',
   'Espèces': 'Espèces',
@@ -442,6 +442,19 @@ export const fr = {
   'Kitchen note': 'Note cuisine',
   'Customer note': 'Note client',
   'En prépa.': 'En prépa.',
+  'Roles': 'Rôles',
+  'Connected user': 'Utilisateur connecté',
+  'Restaurant': 'Restaurant',
+  'Permissions matrix': 'Matrice des permissions',
+  'Page': 'Page',
+  'Access': 'Accès',
+  'Allowed roles': 'Rôles autorisés',
+  'Action': 'Action',
+  'Authorized': 'Autorisé',
+  'Denied': 'Refusé',
+  'Open': 'Ouvrir',
+  'Access not authorized expected': 'Accès non autorisé attendu',
+  'Server calls': 'Appels serveur',
 };
 
 export const en = {
@@ -855,7 +868,7 @@ export const en = {
   'Annulée': 'Cancelled',
   'Acceptée': 'Accepted',
   'admin': 'Admin',
-  'super_admin': 'Super Admin',
+  'super_admin': 'Super administrator',
   'manager': 'Manager',
   'waiter': 'Waiter',
   'kitchen': 'Kitchen',
@@ -888,6 +901,19 @@ export const en = {
   'Kitchen note': 'Kitchen note',
   'Customer note': 'Customer note',
   'En prépa.': 'Prep.',
+  'Roles': 'Roles',
+  'Connected user': 'Connected user',
+  'Restaurant': 'Restaurant',
+  'Permissions matrix': 'Permissions matrix',
+  'Page': 'Page',
+  'Access': 'Access',
+  'Allowed roles': 'Allowed roles',
+  'Action': 'Action',
+  'Authorized': 'Authorized',
+  'Denied': 'Denied',
+  'Open': 'Open',
+  'Access not authorized expected': 'Access not authorized expected',
+  'Server calls': 'Server calls',
 };
 
 export function tStatus(status, lang) {
@@ -924,10 +950,10 @@ export function tPaymentMethod(method, lang) {
 export function tRole(role, lang) {
   const map = {
     'admin': { fr: 'Administrateur', en: 'Administrator' },
-    'super_admin': { fr: 'Super Admin', en: 'Super Admin' },
+    'super_admin': { fr: 'Super administrateur', en: 'Super administrator' },
     'manager': { fr: 'Manager', en: 'Manager' },
     'waiter': { fr: 'Serveur', en: 'Waiter' },
-    'kitchen': { fr: 'Cuisinier', en: 'Kitchen' },
+    'kitchen': { fr: 'Cuisine', en: 'Kitchen' },
     'cashier': { fr: 'Caissier', en: 'Cashier' },
   };
   if (!role) return '';
