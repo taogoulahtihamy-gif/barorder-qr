@@ -12,8 +12,8 @@ export default function Badge({ children, variant = 'default', className = '' })
   };
   return (
     <span
-      className={`inline-flex items-center justify-center whitespace-nowrap rounded-full px-3 py-1.5 font-medium flex-shrink-0 max-w-full min-h-[28px] ${colors[variant] || colors.default} ${className}`}
-      style={{ fontSize: 'clamp(12px, 3.2vw, 14px)' }}
+      className={`inline-flex items-center justify-center whitespace-nowrap rounded-full px-2 py-1 md:px-3 md:py-1.5 font-medium flex-shrink-0 max-w-full min-h-[24px] md:min-h-[28px] ${colors[variant] || colors.default} ${className}`}
+      style={{ fontSize: 'clamp(11px, 2.8vw, 14px)' }}
     >
       {children}
     </span>

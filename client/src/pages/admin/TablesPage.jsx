@@ -1,5 +1,6 @@
-import { useEffect, useState, useCallback } from 'react';
-import { Plus, QrCode, Download, Trash2, X, RefreshCw, Printer, ChevronDown } from 'lucide-react';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import { Plus, QrCode, Download, Trash2, X, RefreshCw, Printer, ChevronDown, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
@@ -31,8 +32,27 @@ export default function TablesPage() {
   const [newTableName, setNewTableName] = useState('');
   const [newCapacity, setNewCapacity] = useState(4);
   const [statusDropdown, setStatusDropdown] = useState(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 });
+  const [mobileStatusSheet, setMobileStatusSheet] = useState(null);
   const { t } = useApp();
   const navigate = useNavigate();
+
+  const openDropdown = (tableId, e) => {
+    if (window.innerWidth < 640) {
+      setMobileStatusSheet((prev) => (prev === tableId ? null : tableId));
+    } else {
+      if (statusDropdown === tableId) {
+        setStatusDropdown(null);
+        return;
+      }
+      const rect = e.currentTarget.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + 4,
+        right: window.innerWidth - rect.right,
+      });
+      setStatusDropdown(tableId);
+    }
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -105,6 +125,7 @@ export default function TablesPage() {
       toast.error(e?.response?.data?.error || t('Erreur de mise à jour'));
     }
     setStatusDropdown(null);
+    setMobileStatusSheet(null);
   };
 
   const absoluteUrl = (table) => {
@@ -187,7 +208,7 @@ export default function TablesPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {tables.map((table) => (
           <Card key={table.id}>
             <div className="flex items-start gap-3">
@@ -209,33 +230,17 @@ export default function TablesPage() {
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 sm:gap-2">
                   <h3 className="font-medium text-white truncate">{table.name}</h3>
-                  <div className="relative">
+                  <div className="relative flex-shrink-0 self-start sm:self-auto">
                     <button
-                      onClick={() => setStatusDropdown(statusDropdown === table.id ? null : table.id)}
+                      onClick={(e) => openDropdown(table.id, e)}
                       className="flex items-center gap-1"
                       title={t('Status change')}
                     >
                       <Badge variant={STATUS_VARIANTS[table.status] || 'default'}>{t(table.status)}</Badge>
-                      <ChevronDown size={12} className="text-white/30" />
+                      <ChevronDown size={12} className="text-white/30 flex-shrink-0" />
                     </button>
-                    {statusDropdown === table.id && (
-                      <div className="absolute right-0 top-full mt-1 z-50 bg-zinc-800 border border-white/10 rounded-xl py-1 shadow-2xl min-w-[160px]">
-                        {STATUS_OPTIONS.map((opt) => (
-                          <button
-                            key={opt}
-                            onClick={() => handleStatusChange(table.id, opt)}
-                            className={`w-full text-left px-3 py-2 text-sm transition-colors hover:bg-white/5 ${
-                              table.status === opt ? 'text-gold-500' : 'text-white/70'
-                            }`}
-                          >
-                            <span className="block">{t(opt)}</span>
-                            <span className="block text-[10px] text-white/30">{t(`tooltip.${opt}`)}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </div>
                 <p className="text-xs text-white/40 mt-0.5">{t('Capacity')}: {table.capacity} {t('people')}</p>
@@ -364,6 +369,77 @@ export default function TablesPage() {
             </Button>
           </div>
         </Modal>
+      )}
+
+      {statusDropdown && createPortal(
+        <div
+          className="fixed inset-0 z-[100]"
+          onClick={() => setStatusDropdown(null)}
+        >
+          <div
+            style={{ top: dropdownPosition.top, right: dropdownPosition.right }}
+            className="absolute bg-zinc-800 border border-white/10 rounded-xl py-1 shadow-2xl min-w-[160px] max-h-[320px] overflow-y-auto animate-fade-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {STATUS_OPTIONS.map((opt) => {
+              const table = tables.find(t => t.id === statusDropdown);
+              return (
+                <button
+                  key={opt}
+                  onClick={() => handleStatusChange(statusDropdown, opt)}
+                  className={`w-full text-left px-3 py-2 text-sm transition-colors hover:bg-white/5 flex items-center justify-between ${
+                    table?.status === opt ? 'text-gold-500' : 'text-white/70'
+                  }`}
+                >
+                  <span>{t(opt)}</span>
+                  {table?.status === opt && <Check size={14} className="text-gold-500 flex-shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {mobileStatusSheet && (
+        <div
+          className="fixed inset-0 z-[100] flex items-end sm:hidden"
+          onClick={() => setMobileStatusSheet(null)}
+        >
+          <div className="fixed inset-0 bg-black/60" onClick={() => setMobileStatusSheet(null)} />
+          <div
+            className="relative w-full bg-zinc-900 border-t border-white/10 rounded-t-2xl p-4 pb-safe animate-fade-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-4" />
+            <h3 className="text-white font-medium text-center mb-4">
+              {t('Status')} - {tables.find(t => t.id === mobileStatusSheet)?.name}
+            </h3>
+            <div className="space-y-1 max-h-[50vh] overflow-y-auto safe-bottom">
+              {STATUS_OPTIONS.map((opt) => {
+                const table = tables.find(t => t.id === mobileStatusSheet);
+                return (
+                  <button
+                    key={opt}
+                    onClick={() => handleStatusChange(mobileStatusSheet, opt)}
+                    className={`w-full text-left px-4 py-3 rounded-xl text-sm transition-colors hover:bg-white/5 flex items-center justify-between ${
+                      table?.status === opt ? 'text-gold-500 bg-gold-500/5' : 'text-white/70'
+                    }`}
+                  >
+                    <span>{t(opt)}</span>
+                    {table?.status === opt && <Check size={16} className="text-gold-500 flex-shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              onClick={() => setMobileStatusSheet(null)}
+              className="w-full mt-4 py-3 text-sm text-white/50 hover:text-white transition-colors bg-white/5 rounded-xl text-center"
+            >
+              {t('Cancel')}
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
