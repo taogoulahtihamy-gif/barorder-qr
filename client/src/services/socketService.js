@@ -123,6 +123,13 @@ export function onServerCallsUpdated(handler) {
   return () => socket.off('server_calls_updated', wrapped);
 }
 
+export function onTableStatusUpdated(handler) {
+  if (!socket) return () => {};
+  const wrapped = wrapHandler('table_status_updated', handler);
+  socket.on('table_status_updated', wrapped);
+  return () => socket.off('table_status_updated', wrapped);
+}
+
 export function emitOrderStatusUpdated(orderId, status) {
   if (socket) {
     socket.emit('order_status_updated', { orderId, status });

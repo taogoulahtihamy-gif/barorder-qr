@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Plus, QrCode, Download, Trash2, X, RefreshCw, Printer } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
+import { Plus, QrCode, Download, Trash2, X, RefreshCw, Printer, ChevronDown } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
@@ -7,8 +7,20 @@ import Badge from '../../components/Badge';
 import Modal from '../../components/Modal';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { useApp } from '../../context/AppContext';
-import { getTables, createTable, deleteTable, generateTableQR } from '../../services/adminService';
+import { getTables, createTable, deleteTable, generateTableQR, updateTableStatus } from '../../services/adminService';
+import { connectSocket, onTableStatusUpdated } from '../../services/socketService';
 import { useNavigate } from 'react-router-dom';
+
+const STATUS_OPTIONS = ['available', 'occupied', 'reserved', 'cleaning', 'inactive'];
+
+const STATUS_VARIANTS = {
+  available: 'delivered',
+  occupied: 'pending',
+  waiting_payment: 'accepted',
+  reserved: 'preparing',
+  cleaning: 'default',
+  inactive: 'cancelled',
+};
 
 export default function TablesPage() {
   const [tables, setTables] = useState([]);
@@ -18,6 +30,7 @@ export default function TablesPage() {
   const [generatingId, setGeneratingId] = useState(null);
   const [newTableName, setNewTableName] = useState('');
   const [newCapacity, setNewCapacity] = useState(4);
+  const [statusDropdown, setStatusDropdown] = useState(null);
   const { t } = useApp();
   const navigate = useNavigate();
 
@@ -29,9 +42,19 @@ export default function TablesPage() {
     });
   }, []);
 
-  const refreshList = () => {
+  useEffect(() => {
+    const socket = connectSocket();
+    const unsub = socket ? onTableStatusUpdated((data) => {
+      setTables((prev) => prev.map(t =>
+        t.id === data.tableId ? { ...t, status: data.status } : t
+      ));
+    }) : () => {};
+    return unsub;
+  }, []);
+
+  const refreshList = useCallback(() => {
     getTables().then((result) => setTables(result));
-  };
+  }, []);
 
   const handleAdd = async () => {
     if (!newTableName.trim()) return;
@@ -71,6 +94,17 @@ export default function TablesPage() {
       toast.error(e?.response?.data?.error || t("Erreur lors de la génération du QR"));
     }
     setGeneratingId(null);
+  };
+
+  const handleStatusChange = async (tableId, newStatus) => {
+    try {
+      await updateTableStatus(tableId, newStatus);
+      setTables(prev => prev.map(t => t.id === tableId ? { ...t, status: newStatus } : t));
+      toast.success(t('Statut mis à jour'));
+    } catch (e) {
+      toast.error(e?.response?.data?.error || t('Erreur de mise à jour'));
+    }
+    setStatusDropdown(null);
   };
 
   const absoluteUrl = (table) => {
@@ -177,7 +211,32 @@ export default function TablesPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="font-medium text-white truncate">{table.name}</h3>
-                  <Badge variant={table.status === 'free' ? 'delivered' : 'pending'}>{t(table.status)}</Badge>
+                  <div className="relative">
+                    <button
+                      onClick={() => setStatusDropdown(statusDropdown === table.id ? null : table.id)}
+                      className="flex items-center gap-1"
+                      title={t('Status change')}
+                    >
+                      <Badge variant={STATUS_VARIANTS[table.status] || 'default'}>{t(table.status)}</Badge>
+                      <ChevronDown size={12} className="text-white/30" />
+                    </button>
+                    {statusDropdown === table.id && (
+                      <div className="absolute right-0 top-full mt-1 z-50 bg-zinc-800 border border-white/10 rounded-xl py-1 shadow-2xl min-w-[160px]">
+                        {STATUS_OPTIONS.map((opt) => (
+                          <button
+                            key={opt}
+                            onClick={() => handleStatusChange(table.id, opt)}
+                            className={`w-full text-left px-3 py-2 text-sm transition-colors hover:bg-white/5 ${
+                              table.status === opt ? 'text-gold-500' : 'text-white/70'
+                            }`}
+                          >
+                            <span className="block">{t(opt)}</span>
+                            <span className="block text-[10px] text-white/30">{t(`tooltip.${opt}`)}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <p className="text-xs text-white/40 mt-0.5">{t('Capacity')}: {table.capacity} {t('people')}</p>
                 {table.qrUrl && (

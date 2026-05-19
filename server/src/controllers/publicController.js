@@ -218,6 +218,15 @@ export async function createOrder(req, res) {
       RETURNING *
     `, [rid, resolvedTableId, orderNumber, customerName || '', customerPhone || '', customerNote || '', kitchenNote || '', roundedTotal, paymentMethod, paymentStatus || 'pending']);
 
+    // Auto-set table to occupied
+    if (resolvedTableId) {
+      try {
+        await query(`UPDATE restaurant_tables SET status = 'occupied'::text WHERE id = $1`, [resolvedTableId]);
+      } catch (tableErr) {
+        console.warn('[createOrder] table status update failed:', tableErr.message);
+      }
+    }
+
     console.log('[createOrder] order created:', order.id, orderNumber);
 
     for (const item of items) {

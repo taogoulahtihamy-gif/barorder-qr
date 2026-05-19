@@ -75,6 +75,29 @@ export async function updateOrderStatus(req, res) {
       return res.status(404).json({ error: 'Commande non trouvée' });
     }
 
+    // Auto-update table status
+    if (order.table_id) {
+      try {
+        if (status === 'served') {
+          await query(`UPDATE restaurant_tables SET status = 'waiting_payment'::text WHERE id = $1`, [order.table_id]);
+          req.app.get('io').emit('table_status_updated', { tableId: order.table_id, status: 'waiting_payment' });
+        } else if (status === 'paid') {
+          await query(`UPDATE restaurant_tables SET status = 'available'::text WHERE id = $1`, [order.table_id]);
+          req.app.get('io').emit('table_status_updated', { tableId: order.table_id, status: 'available' });
+        } else if (status === 'cancelled') {
+          const activeOrders = await queryOne(`
+            SELECT COUNT(*) as count FROM orders WHERE table_id = $1 AND order_status NOT IN ('served', 'paid', 'cancelled')
+          `, [order.table_id]);
+          if (!activeOrders || parseInt(activeOrders.count) === 0) {
+            await query(`UPDATE restaurant_tables SET status = 'available'::text WHERE id = $1`, [order.table_id]);
+            req.app.get('io').emit('table_status_updated', { tableId: order.table_id, status: 'available' });
+          }
+        }
+      } catch (tableErr) {
+        console.warn('[updateOrderStatus] table status update failed:', tableErr.message);
+      }
+    }
+
     if (status === 'paid') {
       const existingPay = await queryOne('SELECT id FROM payments WHERE order_id = $1', [orderId]);
       if (existingPay) {

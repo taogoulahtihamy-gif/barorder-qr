@@ -157,6 +157,11 @@ export async function deleteTable(id) {
   return true;
 }
 
+export async function updateTableStatus(id, status) {
+  const { data } = await api.patch(`/api/admin/tables/${id}/status`, { status });
+  return data;
+}
+
 function mapPayment(p) {
   return {
     id: p.id,

@@ -1,146 +1,132 @@
-FULL FIX role page bilingual support and rename page title.
+Implement proper restaurant table status management.
 
-Problem:
-The page /admin/role-test does not translate correctly.
-Also the title must be “Rôles” in French and “Roles” in English, not “Test rôles” / “Role Test”.
+Goal:
+Make table statuses understandable, automatic, and manually editable.
+
+Current problem:
+Table statuses do not change automatically.
+Admin cannot clearly change table status manually.
+The meaning of “occupied/available” is unclear.
 
 Do not break:
+- QR codes
+- menu
+- orders
+- kitchen
+- payments
 - roles
-- permissions
-- route protection
-- sidebar
-- admin layout
-- mobile responsive
+- responsive UI
 
-Tasks:
+1. Table statuses
+Use these canonical statuses:
+- available
+- occupied
+- waiting_payment
+- reserved
+- cleaning
+- inactive
 
-1. Rename visible title
-Replace every visible label:
-- “Test rôles”
-- “Test des rôles”
-- “Role Test”
-- “Test roles”
+French labels:
+- available = Disponible
+- occupied = Occupée
+- waiting_payment = En attente paiement
+- reserved = Réservée
+- cleaning = Nettoyage
+- inactive = Inactive
 
-With:
-FR: “Rôles”
-EN: “Roles”
+English labels:
+- available = Available
+- occupied = Occupied
+- waiting_payment = Waiting payment
+- reserved = Reserved
+- cleaning = Cleaning
+- inactive = Inactive
 
-2. Sidebar label
-In the admin sidebar, show:
-FR: “Rôles”
-EN: “Roles”
+2. Automatic status changes
+When a new order is created for a table:
+- set table status = occupied
 
-Do not show “Test rôles”.
+When order status becomes served:
+- set table status = waiting_payment
 
-3. Keep route unchanged
-Keep the route:
- /admin/role-test
+When order status becomes paid:
+- set table status = available
 
-Do not rename the route for now.
+When order is cancelled:
+- if no other active order exists for same table, set table status = available
 
-4. Refactor all text in RoleTestPage
-Remove all hardcoded visible strings in:
-- page title
-- user info card
-- permission matrix
-- table headers
-- buttons
-- badges
-- role names
-- page names
-- empty states
-- alerts
+3. Manual admin status change
+In /admin/tables:
+Add a clear status dropdown/select for each table.
 
-Everything must use the i18n system.
+Admin/manager can manually set:
+- Disponible
+- Occupée
+- Réservée
+- Nettoyage
+- Inactive
 
-Use:
-const { t, tRole } = useT();
+When changed:
+- update database
+- update UI immediately
+- show success toast
 
-5. Add translation keys
+4. Backend
+Add or fix route:
+PATCH /api/admin/tables/:id/status
 
-FR:
-rolesPage.title = "Rôles"
-rolesPage.connectedUser = "Utilisateur connecté"
-rolesPage.name = "Nom"
-rolesPage.email = "Email"
-rolesPage.role = "Rôle"
-rolesPage.restaurant = "Restaurant"
-rolesPage.permissionsMatrix = "Matrice des permissions"
-rolesPage.page = "Page"
-rolesPage.access = "Accès"
-rolesPage.allowedRoles = "Rôles autorisés"
-rolesPage.action = "Action"
-rolesPage.authorized = "Autorisé"
-rolesPage.denied = "Refusé"
-rolesPage.open = "Ouvrir"
+Payload:
+{
+  "status": "available"
+}
 
-EN:
-rolesPage.title = "Roles"
-rolesPage.connectedUser = "Connected user"
-rolesPage.name = "Name"
-rolesPage.email = "Email"
-rolesPage.role = "Role"
-rolesPage.restaurant = "Restaurant"
-rolesPage.permissionsMatrix = "Permissions matrix"
-rolesPage.page = "Page"
-rolesPage.access = "Access"
-rolesPage.allowedRoles = "Allowed roles"
-rolesPage.action = "Action"
-rolesPage.authorized = "Authorized"
-rolesPage.denied = "Denied"
-rolesPage.open = "Open"
+Validate status values.
+Return updated table.
 
-6. Role translations
-Ensure:
-FR:
-admin = "Administrateur"
-super_admin = "Super administrateur"
-manager = "Manager"
-waiter = "Serveur"
-kitchen = "Cuisine"
-cashier = "Caissier"
+5. Frontend
+In Tables page:
+- show status badge with color
+- show dropdown/change button
+- show explanation tooltip:
+  Disponible = table libre
+  Occupée = client présent
+  En attente paiement = commande servie non payée
+  Réservée = table réservée
+  Nettoyage = table à nettoyer
+  Inactive = table non utilisée
 
-EN:
-admin = "Administrator"
-super_admin = "Super administrator"
-manager = "Manager"
-waiter = "Waiter"
-kitchen = "Kitchen"
-cashier = "Cashier"
+6. QR behavior
+If table status is inactive:
+- customer QR page must show:
+  “Cette table n’est pas disponible actuellement”
+- do not allow ordering
 
-7. Page name translations
-Translate page names in permission matrix:
-Dashboard / Tableau de bord
-Orders / Commandes
-Kitchen / Cuisine
-Server calls / Appels serveur
-Products / Produits
-Categories / Catégories
-Tables / Tables
-Payments / Paiements
-Statistics / Statistiques
-Users / Utilisateurs
-Settings / Paramètres
+If table is available/occupied/reserved/cleaning:
+- keep current behavior, but show table status if useful.
 
-8. Instant language switching
-Changing EN/FR must update the entire roles page instantly without refresh.
+7. Dashboard
+Update table counters:
+- available tables
+- occupied tables
+- waiting payment tables
 
-9. Safety
-No hardcoded “Test rôles” must remain.
-No hardcoded “Role Test” must remain.
-No “undefined” text.
-No raw translation keys.
+8. Realtime
+When table status changes:
+emit:
+- table_status_updated
 
-10. Build and push
-npm run build
-git add .
-git commit -m "Rename role test page and complete bilingual support"
-git push origin main
+Admin tables page and dashboard should update.
+
+9. Bilingual
+All labels must use i18n:
+FR/EN.
+
+10. Build and push.
 
 Acceptance:
-- sidebar shows “Rôles” in French
-- sidebar shows “Roles” in English
-- page title shows only “Rôles” / “Roles”
-- the whole page translates
-- no black screen
-- build passes
+- creating order changes table to Occupée
+- serving order changes table to En attente paiement
+- paying order changes table to Disponible
+- admin can manually change status
+- badges translate FR/EN
+- inactive table cannot accept orders

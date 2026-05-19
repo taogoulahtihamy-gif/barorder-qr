@@ -16,6 +16,9 @@ export async function getDashboard(req, res) {
       recentOrders,
       topProducts,
       serverAlerts,
+      availableTablesResult,
+      occupiedTablesResult,
+      waitingPaymentTablesResult,
     ] = await Promise.all([
       queryOne(`SELECT COALESCE(SUM(total_amount), 0) as total FROM orders WHERE (restaurant_id = $1 OR restaurant_id IS NULL) AND created_at >= CURRENT_DATE AND payment_status = 'paid'`, [rid]),
       queryOne(`SELECT COUNT(*) as count FROM orders WHERE (restaurant_id = $1 OR restaurant_id IS NULL) AND created_at >= CURRENT_DATE`, [rid]),
@@ -44,6 +47,9 @@ export async function getDashboard(req, res) {
         WHERE (rt.restaurant_id = $1 OR rt.restaurant_id IS NULL) AND sc.status = 'pending'
         ORDER BY sc.created_at DESC LIMIT 10
       `, [rid]),
+      queryOne(`SELECT COUNT(*) as count FROM restaurant_tables WHERE (restaurant_id = $1 OR restaurant_id IS NULL) AND (status = 'available' OR status = 'active' OR status = 'free')`, [rid]),
+      queryOne(`SELECT COUNT(*) as count FROM restaurant_tables WHERE (restaurant_id = $1 OR restaurant_id IS NULL) AND status = 'occupied'`, [rid]),
+      queryOne(`SELECT COUNT(*) as count FROM restaurant_tables WHERE (restaurant_id = $1 OR restaurant_id IS NULL) AND status = 'waiting_payment'`, [rid]),
     ]);
 
     const recentItems = await Promise.all(
@@ -65,12 +71,15 @@ export async function getDashboard(req, res) {
       avgOrderFormatted: `${avgOrder.toLocaleString('fr-FR')} FCFA`,
       activeTables: parseInt(activeTablesResult.count) || 0,
       availableProducts: parseInt(productsResult.count) || 0,
+      availableTables: parseInt(availableTablesResult.count) || 0,
+      occupiedTables: parseInt(occupiedTablesResult.count) || 0,
+      waitingPaymentTables: parseInt(waitingPaymentTablesResult.count) || 0,
       recentOrders: recentOrders.map((o, i) => ({
         id: o.order_number,
         table: o.table_number,
         items: recentItems[i] || [],
         total: o.total_amount,
-        status: o.order_status,
+        status: o.status,
         time: o.created_at,
       })),
       topProducts: topProducts.map(p => ({

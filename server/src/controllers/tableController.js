@@ -3,6 +3,14 @@ import { query, queryOne } from '../config/database.js';
 import config from '../config/index.js';
 import { getRestaurantId } from '../utils/restaurantId.js';
 
+const VALID_STATUSES = ['available', 'occupied', 'waiting_payment', 'reserved', 'cleaning', 'inactive'];
+
+function mapStatus(dbStatus) {
+  if (!dbStatus || dbStatus === 'active' || dbStatus === 'free') return 'available';
+  if (VALID_STATUSES.includes(dbStatus)) return dbStatus;
+  return 'available';
+}
+
 export async function getTables(req, res) {
   try {
     const rid = Number(getRestaurantId(req));
@@ -22,7 +30,7 @@ export async function getTables(req, res) {
       name: t.table_number,
       table_number: t.table_number,
       capacity: t.capacity || 4,
-      status: t.order_number ? 'occupied' : 'free',
+      status: mapStatus(t.status),
       qr_url: t.qr_code_url,
       qrUrl: `/r/${slug}/table/${t.id}`,
       slug,
@@ -153,6 +161,38 @@ export async function deleteTable(req, res) {
     res.json({ message: 'Table supprimée' });
   } catch (err) {
     console.error('[deleteTable] error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+}
+
+export async function updateTableStatus(req, res) {
+  try {
+    const tableId = Number(req.params.id);
+    if (isNaN(tableId)) return res.status(400).json({ error: 'ID de table invalide' });
+
+    const rid = Number(getRestaurantId(req));
+    const { status } = req.body;
+
+    if (!VALID_STATUSES.includes(status)) {
+      return res.status(400).json({ error: 'Statut invalide', validStatuses: VALID_STATUSES });
+    }
+
+    const updated = await queryOne(`
+      UPDATE restaurant_tables SET status = $1::text WHERE id = $2 AND (restaurant_id = $3 OR restaurant_id IS NULL) RETURNING *
+    `, [status, tableId, rid]);
+
+    if (!updated) return res.status(404).json({ error: 'Table non trouvée' });
+
+    try {
+      req.app.get('io').emit('table_status_updated', { tableId: updated.id, status: updated.status, table_number: updated.table_number });
+      console.log('[SOCKET EMIT] table_status_updated', updated.id, status);
+    } catch (socketErr) {
+      console.warn('[updateTableStatus] socket emit failed:', socketErr.message);
+    }
+
+    res.json({ id: updated.id, name: updated.table_number, table_number: updated.table_number, status: mapStatus(updated.status) });
+  } catch (err) {
+    console.error('[updateTableStatus] error:', err.message);
     res.status(500).json({ error: err.message });
   }
 }
