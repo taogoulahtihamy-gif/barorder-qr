@@ -48,11 +48,13 @@ async function seed() {
 
   const catData = [
     { name: 'Boissons', sort_order: 1 },
-    { name: 'Cocktails', sort_order: 2 },
-    { name: 'Plats', sort_order: 3 },
-    { name: 'Grillades', sort_order: 4 },
-    { name: 'Desserts', sort_order: 5 },
-    { name: 'Promotions', sort_order: 6 },
+    { name: 'Boissons diverses', sort_order: 2 },
+    { name: 'Bières', sort_order: 3 },
+    { name: 'Cocktails', sort_order: 4 },
+    { name: 'Plats', sort_order: 5 },
+    { name: 'Grillades', sort_order: 6 },
+    { name: 'Desserts', sort_order: 7 },
+    { name: 'Promotions', sort_order: 8 },
   ];
 
   const catIds = {};
@@ -60,6 +62,7 @@ async function seed() {
     const result = await pool.query(`
       INSERT INTO categories (restaurant_id, name, sort_order, is_active)
       VALUES ($1, $2, $3, true)
+      ON CONFLICT (restaurant_id, name) DO UPDATE SET sort_order = $3
       RETURNING id;
     `, [restaurantId, cat.name, cat.sort_order]);
     catIds[cat.name] = result.rows[0].id;
@@ -69,6 +72,14 @@ async function seed() {
     { name: 'Eau minérale', description: 'Bouteille 50cl', price: 500, category: 'Boissons' },
     { name: 'Jus d\'orange frais', description: 'Jus pressé maison', price: 1500, category: 'Boissons' },
     { name: 'Coca-Cola', description: 'Canette 33cl', price: 800, category: 'Boissons' },
+    { name: 'Jus de bissap', description: 'Jus de fleur d\'hibiscus', price: 1000, category: 'Boissons diverses', featured: true },
+    { name: 'Jus de gingembre', description: 'Boisson rafraîchissante au gingembre frais', price: 1000, category: 'Boissons diverses' },
+    { name: 'Lait caillé', description: 'Lait fermenté traditionnel', price: 1200, category: 'Boissons diverses' },
+    { name: 'Thé glacé', description: 'Thé glacé à la menthe', price: 800, category: 'Boissons diverses' },
+    { name: 'Gazelle', description: 'Bière blonde légère 33cl', price: 1500, category: 'Bières', featured: true },
+    { name: 'Flag', description: 'Bière lager 33cl', price: 1500, category: 'Bières' },
+    { name: 'Mamba', description: 'Bière brune 33cl', price: 1500, category: 'Bières' },
+    { name: 'Heineken', description: 'Bière importée 33cl', price: 2000, category: 'Bières' },
     { name: 'Mojito', description: 'Menthe fraîche, citron vert, rhum', price: 2500, category: 'Cocktails' },
     { name: 'Margarita', description: 'Tequila, citron, triple sec', price: 3000, category: 'Cocktails' },
     { name: 'Mocktail tropical', description: 'Jus de fruits sans alcool', price: 2000, category: 'Cocktails', featured: true },
