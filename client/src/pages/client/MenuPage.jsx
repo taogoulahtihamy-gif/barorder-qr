@@ -1,15 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Plus, Search, ShoppingCart, Minus, RefreshCw, AlertTriangle, Phone, CheckCircle, Percent, Globe, ChefHat, Star, X, Eye } from 'lucide-react';
+import { Plus, Search, ShoppingCart, Minus, RefreshCw, AlertTriangle, Percent, Star, X } from 'lucide-react';
 import toast from 'react-hot-toast';
-import Card from '../../components/Card';
-import Button from '../../components/Button';
 import Badge from '../../components/Badge';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import CartDrawer from '../../components/CartDrawer';
 import { useApp } from '../../context/AppContext';
 import { formatPrice } from '../../utils/formatters';
-import { callServer } from '../../services/serverCallService';
 import { getMenuBySlug, getPromotions } from '../../services/menuService';
 import api from '../../services/api';
 
@@ -27,10 +24,16 @@ function ProductDetailModal({ item, onClose, onAdd, onRemove, onUpdateQty, qty }
           <X size={20} />
         </button>
         <div className="flex items-start gap-4 mb-6">
-          <div className="w-20 h-20 rounded-2xl bg-zinc-800 flex-shrink-0 flex items-center justify-center text-3xl overflow-hidden">
+          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-zinc-800 to-zinc-900 flex-shrink-0 flex items-center justify-center overflow-hidden">
             {item.image_url ? (
               <img src={item.image_url} alt="" className="w-full h-full object-cover" />
-            ) : '🍽️'}
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-zinc-700/50 to-zinc-900">
+                <svg className="w-8 h-8 text-white/10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-lg font-bold text-white">{item.name}</h3>
@@ -73,7 +76,7 @@ function ProductDetailModal({ item, onClose, onAdd, onRemove, onUpdateQty, qty }
 export default function MenuPage() {
   const { restaurantId, restaurantSlug, slug: slugParam, tableId } = useParams();
   const navigate = useNavigate();
-  const { addToCart, removeFromCart, updateQuantity, cart, cartTotal, cartCount, t, locale, toggleLanguage, setTableId, setRestaurantId, setRestaurantSlug, setRestaurant, restaurant } = useApp();
+  const { addToCart, removeFromCart, updateQuantity, cart, cartTotal, cartCount, t, setTableId, setRestaurantId, setRestaurantSlug, setRestaurant, restaurant } = useApp();
   const [items, setItems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [promotions, setPromotions] = useState([]);
@@ -82,18 +85,9 @@ export default function MenuPage() {
   const [activeCategory, setActiveCategory] = useState('Tout');
   const [search, setSearch] = useState('');
   const [cartOpen, setCartOpen] = useState(false);
-  const [calling, setCalling] = useState(false);
-  const [callCooldown, setCallCooldown] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const cooldownTimer = useRef(null);
 
   const effectiveSlug = slugParam || restaurantSlug || '';
-
-  useEffect(() => {
-    return () => {
-      if (cooldownTimer.current) clearTimeout(cooldownTimer.current);
-    };
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -185,22 +179,6 @@ export default function MenuPage() {
     return () => { cancelled = true; };
   }, [restaurantId, restaurantSlug, slugParam, tableId, effectiveSlug, setTableId, setRestaurantId, setRestaurantSlug, setRestaurant]);
 
-  const handleCallServer = async () => {
-    if (callCooldown || calling) return;
-    setCalling(true);
-    try {
-      const rid = restaurant?.id || restaurantId || '1';
-      await callServer(tableId, rid);
-      toast.success(t('Un serveur arrive bientôt'));
-      setCallCooldown(true);
-      cooldownTimer.current = setTimeout(() => setCallCooldown(false), 30000);
-    } catch (e) {
-      toast.error(t('Erreur lors de l\'appel'));
-    } finally {
-      setCalling(false);
-    }
-  };
-
   if (loading) return <LoadingSpinner size="lg" />;
 
   if (error) {
@@ -211,9 +189,9 @@ export default function MenuPage() {
         </div>
         <h2 className="text-lg font-bold text-white mb-2">{t('Erreur de chargement')}</h2>
         <p className="text-sm text-white/50 mb-6 max-w-xs">{error}</p>
-        <Button onClick={() => window.location.reload()} className="flex items-center gap-2">
+        <button onClick={() => window.location.reload()} className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm bg-wave-500 text-black hover:bg-wave-600 transition-all min-h-[44px]">
           <RefreshCw size={16} /> {t('Réessayer')}
-        </Button>
+        </button>
       </div>
     );
   }
@@ -229,41 +207,10 @@ export default function MenuPage() {
     return found ? found.quantity : 0;
   };
 
-  const restaurantName = restaurant?.name || t('Our Menu');
-
   return (
     <div className="min-h-screen bg-black pb-32">
-      <div className="sticky top-0 z-30 bg-gradient-to-b from-black via-black to-transparent">
-        <div className="flex items-center justify-between px-4 pt-4 pb-2">
-          <div>
-            <h1 className="text-lg font-bold text-white">{restaurantName}</h1>
-            <p className="text-xs text-white/40">{t('Table')} {tableId}</p>
-          </div>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={handleCallServer}
-              disabled={callCooldown}
-              className={`p-2 rounded-xl transition-colors ${
-                callCooldown ? 'text-wave-500/50' : 'text-white/60 hover:text-wave-500 hover:bg-white/5'
-              }`}
-              title={callCooldown ? t('Serveur appelé') : t('Appeler un serveur')}
-            >
-              {callCooldown ? <CheckCircle size={20} /> : <Phone size={20} />}
-            </button>
-            <button onClick={toggleLanguage} className="p-2 text-white/40 hover:text-gold-500 transition-colors text-xs font-medium" title={t('Language')}>
-              <Globe size={18} className="inline" />
-              <span className="ml-0.5">{locale === 'fr' ? 'EN' : 'FR'}</span>
-            </button>
-            <button onClick={() => setCartOpen(true)} className="relative p-2 text-white/60 hover:text-gold-500 transition-colors" title={t('View Cart')}>
-              <ShoppingCart size={20} />
-              {cartCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-gold-500 text-black text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                  {cartCount > 9 ? '9+' : cartCount}
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
+      <div className="px-4 pt-3 pb-1">
+        <p className="text-xs text-white/40">{t('Table')} {tableId}</p>
       </div>
 
       <div className="px-4 space-y-4">
@@ -320,7 +267,7 @@ export default function MenuPage() {
           </div>
         )}
 
-        <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1 scrollbar-none">
+        <div className="filter-scroll">
           {categories.map((cat) => (
             <button
               key={cat}
@@ -351,12 +298,18 @@ export default function MenuPage() {
                 className="flex items-center gap-3 bg-zinc-900/60 border border-white/5 rounded-2xl p-3 transition-all duration-200 hover:border-gold-500/20 active:scale-[0.99]"
               >
                 <div
-                  className="w-16 h-16 rounded-xl bg-zinc-800 flex-shrink-0 flex items-center justify-center text-2xl overflow-hidden cursor-pointer"
+                  className="w-16 h-16 rounded-xl bg-gradient-to-br from-zinc-800 to-zinc-900 flex-shrink-0 flex items-center justify-center overflow-hidden cursor-pointer"
                   onClick={() => setSelectedProduct(item)}
                 >
                   {item.image_url ? (
                     <img src={item.image_url} alt="" className="w-full h-full object-cover" />
-                  ) : '🍽️'}
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-zinc-700/50 to-zinc-900">
+                      <svg className="w-6 h-6 text-white/10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">

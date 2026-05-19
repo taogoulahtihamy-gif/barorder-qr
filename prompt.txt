@@ -1,132 +1,107 @@
-Implement proper restaurant table status management.
+Corrige sérieusement l’interface client.
 
-Goal:
-Make table statuses understandable, automatic, and manually editable.
+PROBLÈMES À RÉGLER OBLIGATOIREMENT :
 
-Current problem:
-Table statuses do not change automatically.
-Admin cannot clearly change table status manually.
-The meaning of “occupied/available” is unclear.
+1. Supprimer le header en double
+Actuellement “Le Palais” apparaît deux fois avec les icônes téléphone/langue/panier.
+Il ne doit y avoir qu’un seul header sticky en haut.
 
-Do not break:
-- QR codes
-- menu
-- orders
-- kitchen
-- payments
-- roles
-- responsive UI
+Structure attendue :
+- Header unique :
+  - Logo/Nom restaurant à gauche : Le Palais
+  - Icônes à droite : téléphone, langue FR/EN, panier
+- En dessous :
+  - Nom restaurant
+  - Table actuelle
+  - Barre de recherche
+  - Catégories
+  - Liste produits
 
-1. Table statuses
-Use these canonical statuses:
-- available
-- occupied
-- waiting_payment
-- reserved
-- cleaning
-- inactive
+2. Corriger le comportement du QR code
+Quand un client scanne le QR code d’une table, il doit arriver sur l’accueil client, pas directement sur le menu.
 
-French labels:
-- available = Disponible
-- occupied = Occupée
-- waiting_payment = En attente paiement
-- reserved = Réservée
-- cleaning = Nettoyage
-- inactive = Inactive
+Route attendue :
+/?table=11
 
-English labels:
-- available = Available
-- occupied = Occupied
-- waiting_payment = Waiting payment
-- reserved = Reserved
-- cleaning = Cleaning
-- inactive = Inactive
+ou
 
-2. Automatic status changes
-When a new order is created for a table:
-- set table status = occupied
+/client?table=11
 
-When order status becomes served:
-- set table status = waiting_payment
+L’accueil client doit afficher :
+- Bienvenue chez Le Palais
+- Table 11
+- Bouton “Voir le menu”
+- Bouton “Appeler un serveur”
+- Bouton “Voir mon panier”
+- Design premium restaurant
 
-When order status becomes paid:
-- set table status = available
+Le menu ne doit s’ouvrir qu’après clic sur “Voir le menu”.
 
-When order is cancelled:
-- if no other active order exists for same table, set table status = available
+3. Corriger la navigation
+Créer clairement :
+- Page AccueilClient
+- Page MenuClient
+- Page PanierClient
+- Page ConfirmationCommande
 
-3. Manual admin status change
-In /admin/tables:
-Add a clear status dropdown/select for each table.
+Ne pas mélanger accueil et menu dans la même page.
 
-Admin/manager can manually set:
-- Disponible
-- Occupée
-- Réservée
-- Nettoyage
-- Inactive
+4. Corriger les catégories
+Les catégories doivent être propres et scrollables horizontalement sans casser l’écran :
+- Tout
+- Plats
+- Grillades
+- Boissons
+- Bières
+- Divers
+- Desserts
 
-When changed:
-- update database
-- update UI immediately
-- show success toast
+Le bouton actif doit être doré.
+Les autres boutons doivent être sombres avec bordure légère.
 
-4. Backend
-Add or fix route:
-PATCH /api/admin/tables/:id/status
+5. Corriger le design mobile
+Le site doit être parfaitement adapté téléphone :
+- pas de débordement horizontal
+- pas de contenu coupé à droite
+- padding régulier
+- cartes produits modernes
+- boutons + bien alignés
+- images bien cadrées
+- texte lisible
 
-Payload:
-{
-  "status": "available"
-}
+6. Corriger les doublons produits
+La liste affiche actuellement des produits en double.
+Chaque produit doit apparaître une seule fois sauf si c’est volontaire dans la base de données.
+Vérifie le tableau/array des produits et supprime les doublons.
 
-Validate status values.
-Return updated table.
+7. Corriger les images manquantes
+Quand un produit n’a pas d’image, afficher une image placeholder propre, mais éviter l’icône assiette répétée partout.
+Utilise une vraie image par défaut plus élégante ou une carte sombre premium.
 
-5. Frontend
-In Tables page:
-- show status badge with color
-- show dropdown/change button
-- show explanation tooltip:
-  Disponible = table libre
-  Occupée = client présent
-  En attente paiement = commande servie non payée
-  Réservée = table réservée
-  Nettoyage = table à nettoyer
-  Inactive = table non utilisée
+8. Corriger le bouton langue
+Le bouton FR/EN doit fonctionner partout :
+- Accueil client
+- Menu
+- Panier
+- Confirmation
+- Admin si concerné
 
-6. QR behavior
-If table status is inactive:
-- customer QR page must show:
-  “Cette table n’est pas disponible actuellement”
-- do not allow ordering
+9. Corriger le panier
+Quand on clique sur + :
+- Ajouter le produit au panier
+- Afficher un petit badge avec le nombre d’articles
+- Le panier doit rester accessible depuis le header
 
-If table is available/occupied/reserved/cleaning:
-- keep current behavior, but show table status if useful.
+10. Résultat attendu
+Je veux une interface client premium, propre, mobile-first, sans doublon, avec :
+- Accueil client après scan QR
+- Menu uniquement après clic
+- Header unique
+- Catégories propres
+- Produits non dupliqués
+- Panier fonctionnel
+- Langue fonctionnelle
 
-7. Dashboard
-Update table counters:
-- available tables
-- occupied tables
-- waiting payment tables
-
-8. Realtime
-When table status changes:
-emit:
-- table_status_updated
-
-Admin tables page and dashboard should update.
-
-9. Bilingual
-All labels must use i18n:
-FR/EN.
-
-10. Build and push.
-
-Acceptance:
-- creating order changes table to Occupée
-- serving order changes table to En attente paiement
-- paying order changes table to Disponible
-- admin can manually change status
-- badges translate FR/EN
-- inactive table cannot accept orders
+Ne fais pas de petites corrections partielles.
+Refactorise proprement les composants React si nécessaire.
+Vérifie toutes les routes, tous les imports, et donne-moi le code complet corrigé.

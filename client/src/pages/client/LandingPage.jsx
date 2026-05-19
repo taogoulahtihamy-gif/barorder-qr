@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Star, Clock, MapPin, Smartphone } from 'lucide-react';
 import Button from '../../components/Button';
 import Card from '../../components/Card';
@@ -10,13 +10,20 @@ import { useApp } from '../../context/AppContext';
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const { t } = useApp();
+  const { t, setTableId } = useApp();
+  const [searchParams] = useSearchParams();
   const [restaurant, setRestaurant] = useState(null);
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const tableParam = searchParams.get('table');
+    if (tableParam) {
+      setTableId(tableParam);
+      navigate(`/table/${tableParam}`, { replace: true });
+      return;
+    }
     let cancelled = false;
     async function load() {
       const restaurants = await getRestaurants();
