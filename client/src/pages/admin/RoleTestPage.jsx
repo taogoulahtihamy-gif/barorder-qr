@@ -20,7 +20,7 @@ const PERMISSION_MATRIX = {
 
 export default function RoleTestPage() {
   const navigate = useNavigate();
-  const { user } = useApp();
+  const { t, user } = useApp();
 
   return (
     <div className="space-y-6">

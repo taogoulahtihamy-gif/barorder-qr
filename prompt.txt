@@ -1,145 +1,50 @@
-Refactor BarOrder bilingual system radically and completely.
+URGENT FIX: ReferenceError t is not defined after i18n refactor.
 
 Problem:
-Only some titles change language. Many old texts remain hardcoded in French/English.
+Admin pages become black.
+Console shows:
+ReferenceError: t is not defined
 
-Goal:
-When language = EN, absolutely every visible text must be English.
-When language = FR, absolutely every visible text must be French.
-No mixed language anywhere.
+Cause:
+Some components use t("...") but do not import or initialize the translation hook.
 
-Method:
-1. Create one central translation system:
-client/src/i18n/translations.js
-client/src/i18n/I18nProvider.jsx
-client/src/i18n/useT.js
+Fix:
 
-2. Translation hook:
-const { t, lang, setLang } = useT()
+1. Search all client/src for:
+t(
+tStatus(
+tPaymentMethod(
+tRole(
+tAction(
 
-3. Every visible string must use t("key").
-Forbidden:
-- hardcoded button labels
-- hardcoded titles
-- hardcoded toasts
-- hardcoded placeholders
-- hardcoded status labels
-- hardcoded modal text
-- hardcoded sidebar labels
-- hardcoded empty states
+2. For every component using t, add:
+import { useT } from "../i18n/useT";
+or correct relative path.
 
-4. Search entire client/src for visible strings and replace all of them:
-- Dashboard
-- Orders
-- Kitchen
-- Server calls
-- Products
-- Categories
-- Tables
-- Payments
-- Promotions
-- Users
-- Role test
-- Settings
-- Client welcome
-- Menu
-- Cart
-- Checkout
-- Order tracking
-- Toasts
-- Modals
-- Errors
-- Print labels
-- QR labels
+Inside component:
+const { t, tStatus, tPaymentMethod, tRole, tAction } = useT();
 
-5. Add complete dictionaries:
-fr: { ... }
-en: { ... }
+3. If component is outside normal path, fix import path correctly.
 
-6. Add helpers:
-tStatus(status)
-tPaymentMethod(method)
-tRole(role)
-tAction(action)
+4. Do not use global variable t.
+5. Do not leave any t(...) call without useT().
+6. Do not break existing translations.
 
-Examples:
-pending:
-FR = Nouvelle
-EN = New
+7. Add safety:
+If t is missing, component must not crash.
+But preferred fix is proper useT import.
 
-preparing:
-FR = En préparation
-EN = Preparing
-
-ready:
-FR = Prête
-EN = Ready
-
-paid:
-FR = Payée
-EN = Paid
-
-cash:
-FR = Espèces
-EN = Cash
-
-wave:
-FR = Wave
-EN = Wave
-
-orange_money:
-FR = Orange Money
-EN = Orange Money
-
-admin:
-FR = Administrateur
-EN = Administrator
-
-manager:
-FR = Manager
-EN = Manager
-
-7. Language switch:
-- must update instantly without page refresh
-- must persist in localStorage
-- must affect admin and client pages
-- same language state everywhere
-
-8. Missing translation protection:
-If key is missing:
-- console.warn missing key
-- show English fallback
-- never show undefined
-- never show raw key in production UI
-
-9. Add audit script:
-Create:
-client/scripts/i18n-audit.js
-
-It must scan client/src and report hardcoded visible French/English strings in JSX:
-- text between tags
-- placeholder
-- title
-- aria-label
-- toast messages
-- button labels
-
-Add npm script:
-"i18n:audit": "node scripts/i18n-audit.js"
-
-10. Acceptance:
-Run:
-npm run i18n:audit
+8. Run:
 npm run build
 
-The audit must show no critical hardcoded UI strings.
-
-Manual test:
-- switch to EN: no French text visible anywhere
-- switch to FR: no English text visible anywhere
-- test especially kitchen, orders, users, checkout, menu, modals, toasts
-
-11. Commit and push:
+9. Commit and push:
 git add .
-git commit -m "Refactor complete bilingual translation system"
+git commit -m "Fix missing i18n hook references"
 git push origin main
+
+Acceptance:
+- no ReferenceError: t is not defined
+- /admin/orders opens normally
+- /admin/role-test opens or is hidden properly
+- /admin/kitchen opens normally
+- language switch still works
