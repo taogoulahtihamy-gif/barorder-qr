@@ -513,6 +513,9 @@ export const fr = {
   'Please enter your phone number': 'Veuillez entrer votre numéro de téléphone',
   'Back to menu': 'Retour au menu',
   'Our Menu': 'Notre Menu',
+  'Show password': 'Afficher le mot de passe',
+  'Hide password': 'Masquer le mot de passe',
+  'Adresse email': 'Adresse email',
 };
 
 export const en = {
@@ -1030,6 +1033,9 @@ export const en = {
   'Please enter your phone number': 'Please enter your phone number',
   'Back to menu': 'Back to menu',
   'Our Menu': 'Our Menu',
+  'Show password': 'Show password',
+  'Hide password': 'Hide password',
+  'Adresse email': 'Email address',
 };
 
 export function tStatus(status, lang) {

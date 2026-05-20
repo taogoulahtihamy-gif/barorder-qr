@@ -1,63 +1,92 @@
-URGENT FIX customer QR routing and bottom navigation.
+Improve admin login and user password fields without breaking anything.
 
-Current problems:
-1. When scanning QR, it sometimes opens menu directly instead of welcome/home page.
-2. On customer welcome page, clicking cart icon sends user to welcome/home instead of cart.
-3. Bottom navigation routes are wrong/confused.
+Scope:
+- admin login page only
+- admin users page password fields only
+- do not touch backend logic
+- do not touch roles/permissions
+- do not touch orders, kitchen, payments, QR, menu, checkout
 
-Correct routing:
+Tasks:
 
-QR scan URL:
- /r/:slug/table/:tableId
-
-This route MUST always render TableWelcome / customer home page.
-
-Customer welcome page:
-- “Voir le menu” button => /r/:slug/table/:tableId/menu
-- cart icon => /r/:slug/table/:tableId/cart
-- assistance icon/button => /r/:slug/table/:tableId/assistance
-
-Customer menu page:
-- cart icon => /r/:slug/table/:tableId/cart
-- bottom nav Menu => /r/:slug/table/:tableId/menu
-- bottom nav Cart => /r/:slug/table/:tableId/cart
-- bottom nav Assistance => /r/:slug/table/:tableId/assistance
-
-Customer cart page:
-- bottom nav Menu => menu
-- Cart => cart
-- Assistance => assistance
-
-Do NOT redirect automatically from welcome to menu.
-Remove any useEffect or navigate() that sends /r/:slug/table/:tableId directly to menu.
+1. Admin login page
+Improve /admin/login into a cleaner premium version:
+- dark luxury BarOrder style
+- centered login card
+- better spacing
+- better typography
+- gold/emerald accents
+- mobile responsive
+- no horizontal overflow
+- no demo credentials displayed
+- no text already written inside the email input
 
 Important:
-- Keep tableId preserved everywhere.
-- Keep slug preserved everywhere.
-- No NaN tableId.
-- Cart route must never point to welcome.
-- Menu route must never replace welcome route.
+- Email input must be empty by default.
+- Password input must be empty by default.
+- Do not prefill admin@barorder.sn or any demo email.
+- Keep placeholders only:
+  FR: "Adresse email"
+  EN: "Email address"
+  FR: "Mot de passe"
+  EN: "Password"
 
-Files to inspect:
-- router/index.jsx
-- App.jsx
-- TableWelcome.jsx
-- MenuPage.jsx
-- CustomerLayout.jsx
-- BottomNav.jsx
-- CartPage.jsx
-- CheckoutPage.jsx
+2. Password visibility icon on login
+Add an eye icon inside the password field:
+- click eye => show password
+- click again => hide password
+- icon changes between Eye and EyeOff if lucide-react is available
+- button must be accessible with aria-label
+- must not submit the form accidentally
+- must work on mobile and desktop
 
-Acceptance:
-- scanning QR opens welcome page
-- clicking Voir le menu opens menu
-- clicking cart opens cart
-- bottom nav works correctly
-- no automatic redirect to menu
-- build passes
+3. Users page password fields
+On /admin/users:
+Add eye icon only to password fields:
+- create user password field
+- reset password field
+- edit password field if it exists
 
+Rules:
+- Do NOT add eye icon to email fields.
+- Do NOT add eye icon to name/role fields.
+- Only password inputs.
+
+4. Security/UX
+- Default password state remains hidden.
+- Showing password only changes the input type locally.
+- Do not store visible password anywhere.
+- Do not log password in console.
+- Do not change API payload structure.
+
+5. Bilingual
+All new labels/tooltips must use existing i18n system:
+FR:
+- Afficher le mot de passe
+- Masquer le mot de passe
+EN:
+- Show password
+- Hide password
+
+6. Technical
+Use existing icon library if present:
+lucide-react Eye / EyeOff
+If not available, use simple text/icon fallback.
+
+7. Build and push
 Run:
 npm run build
+
+Then:
 git add .
-git commit -m "Fix customer QR routing and bottom navigation"
+git commit -m "Improve admin login and password visibility controls"
 git push origin main
+
+Acceptance:
+- /admin/login looks more premium
+- email field is empty by default
+- password field has working eye icon
+- /admin/users password fields have working eye icon
+- no backend broken
+- no role system broken
+- build passes

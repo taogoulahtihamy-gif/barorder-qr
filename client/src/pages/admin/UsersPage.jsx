@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Shield, UserCheck, UserX, Calendar, Key, Trash2, Mail } from 'lucide-react';
+import { Plus, Shield, UserCheck, UserX, Calendar, Key, Trash2, Mail, Eye, EyeOff } from 'lucide-react';
 import Button from '../../components/Button';
 import Card from '../../components/Card';
 import Input from '../../components/Input';
@@ -30,6 +30,8 @@ export default function UsersPage() {
   const [pwValue, setPwValue] = useState('');
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'waiter' });
+  const [showFormPassword, setShowFormPassword] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
 
   const isSuper = user?.role === 'super_admin';
   const availableRoles = isSuper ? ALL_ROLES : ALL_ROLES.filter(r => r !== 'super_admin');
@@ -283,13 +285,26 @@ export default function UsersPage() {
         <form onSubmit={handleSave} className="space-y-4">
           <Input label={t('Nom')} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
           <Input label={t('Email')} type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
-          <Input
-            label={editing ? t('Nouveau mot de passe (laisser vide pour conserver)') : t('Mot de passe')}
-            type="password"
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-            required={!editing}
-          />
+          <div className="space-y-1.5">
+            <label className="text-sm text-white/60">{editing ? t('Nouveau mot de passe (laisser vide pour conserver)') : t('Mot de passe')}</label>
+            <div className="relative">
+              <input
+                type={showFormPassword ? 'text' : 'password'}
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                required={!editing}
+                className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-2.5 pr-10 text-white placeholder:text-white/20 focus:outline-none focus:border-gold-500/50"
+              />
+              <button
+                type="button"
+                onClick={() => setShowFormPassword(!showFormPassword)}
+                aria-label={showFormPassword ? t('Masquer le mot de passe') : t('Afficher le mot de passe')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white"
+              >
+                {showFormPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </div>
           <div className="space-y-1.5">
             <label className="text-sm text-white/60">{t('Rôle')}</label>
             <select
@@ -312,13 +327,26 @@ export default function UsersPage() {
       <Modal open={pwModalOpen} onClose={() => setPwModalOpen(false)} title={t('Réinitialiser le mot de passe')}>
         <form onSubmit={handlePasswordReset} className="space-y-4">
           <p className="text-sm text-white/60">{t('Nouveau mot de passe pour')} <span className="text-white font-medium">{pwTarget?.email}</span></p>
-          <Input
-            label={t('Nouveau mot de passe')}
-            type="password"
-            value={pwValue}
-            onChange={(e) => setPwValue(e.target.value)}
-            required
-          />
+          <div className="space-y-1.5">
+            <label className="text-sm text-white/60">{t('Nouveau mot de passe')}</label>
+            <div className="relative">
+              <input
+                type={showResetPassword ? 'text' : 'password'}
+                value={pwValue}
+                onChange={(e) => setPwValue(e.target.value)}
+                required
+                className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-2.5 pr-10 text-white placeholder:text-white/20 focus:outline-none focus:border-gold-500/50"
+              />
+              <button
+                type="button"
+                onClick={() => setShowResetPassword(!showResetPassword)}
+                aria-label={showResetPassword ? t('Masquer le mot de passe') : t('Afficher le mot de passe')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white"
+              >
+                {showResetPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </div>
           <div className="flex justify-end gap-3 pt-2">
             <Button type="button" variant="outline" onClick={() => setPwModalOpen(false)}>{t('Annuler')}</Button>
             <Button type="submit" variant="gold">{t('Réinitialiser')}</Button>
