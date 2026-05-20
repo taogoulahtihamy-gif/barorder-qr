@@ -1,250 +1,87 @@
-Implement multi-restaurant management for BarOrder QR progressively and safely.
+URGENT FIX customer black screen after order creation.
 
-Goal:
-Transform BarOrder into a real multi-restaurant SaaS platform.
+Problem:
+After a customer creates an order from QR/client checkout, the client side becomes black/blank.
+The order may be created, but the confirmation/tracking page crashes.
 
-IMPORTANT:
-Do NOT break the existing restaurant “Le Palais”.
-Do NOT delete existing data.
-Do NOT break:
-- login
-- roles
-- orders
-- kitchen
-- products
-- categories
-- tables
-- QR
-- payments
-- promotions
-- server calls
-- dashboard
-- client menu
+Do NOT modify admin.
+Do NOT modify backend unless strictly necessary.
+Do NOT break order creation, checkout, cart, menu, QR, multi-restaurant.
 
-==================================================
-1. CREATE RESTAURANTS ADMIN PAGE
-==================================================
+Fix only customer post-order flow.
 
-Create page:
- /admin/restaurants
+1. Inspect customer flow after confirm order:
+- CheckoutPage
+- OrderConfirmationPage
+- OrderTrackingPage
+- CustomerLayout
+- router/index.jsx
+- orderService
+- cart store
 
-Visible only to:
-- super_admin
+2. Find the crash source:
+Search for:
+- undefined order
+- order.items.map without fallback
+- order.customer.name
+- order.table.number
+- t(...) without useT()
+- tStatus(...) without useT()
+- navigate to wrong route
+- invalid orderId
+- missing restaurant slug/tableId
+- Response/null handling
+- localStorage parse error
 
-Sidebar label:
-FR: Restaurants
-EN: Restaurants
+3. Add safe guards:
+- if order is loading: show premium loader
+- if order not found: show clean error with button “Retour au menu”
+- if order.items missing: use []
+- if customer missing: use fallback
+- if table missing: use tableId from route
+- if total missing: calculate from items or show 0
 
-Features:
-- list restaurants
-- add restaurant
-- edit restaurant
-- activate/deactivate restaurant
-- view restaurant details
+4. Routing after order creation:
+After successful checkout, navigate to:
+ /r/:slug/table/:tableId/order/:orderId
 
-Restaurant fields:
-- name
-- slug
-- address
-- phone
-- currency
-- primary_color
-- logo_url
-- is_active
+Do NOT navigate to a route that does not exist.
+Keep slug and tableId.
 
-Design:
-- premium admin style
-- mobile responsive cards
-- desktop table/list
-- no horizontal overflow
+5. Customer order tracking page:
+Must render safely even if backend response is partial.
 
-==================================================
-2. BACKEND RESTAURANT CRUD
-==================================================
+Display:
+- order number
+- status
+- table
+- items
+- total
+- payment status
+- estimated time
+- button “Retour au menu”
 
-Create admin endpoints:
+6. Error boundary:
+Add CustomerErrorBoundary around customer routes.
+If a customer page crashes:
+- show clean message instead of black screen
+- button to return to menu
+- no blank page
 
-GET /api/admin/restaurants
-POST /api/admin/restaurants
-PATCH /api/admin/restaurants/:id
-PATCH /api/admin/restaurants/:id/status
+7. Bilingual:
+All new labels use i18n.
+No hardcoded visible text if possible.
 
-Validation:
-- name required
-- slug unique
-- currency default FCFA
-- primary_color default #d4a843
-- is_active default true
-
-Do not allow non-super_admin to create restaurants.
-
-==================================================
-3. DATABASE SAFETY
-==================================================
-
-Ensure restaurants table exists.
-
-Use safe migration only:
-CREATE TABLE IF NOT EXISTS restaurants ...
-
-Do not drop existing table.
-
-Ensure Le Palais exists:
-- name = Le Palais
-- slug = le-palais
-- currency = FCFA
-- is_active = true
-
-==================================================
-4. RESTAURANT_ID ISOLATION
-==================================================
-
-Audit and ensure restaurant_id exists on:
-- users
-- products
-- categories
-- tables
-- orders
-- order_items if needed
-- payments
-- promotions
-- server_calls
-
-Use:
-ALTER TABLE ... ADD COLUMN IF NOT EXISTS restaurant_id INTEGER REFERENCES restaurants(id)
-
-Do not delete data.
-
-For existing data:
-- set restaurant_id to Le Palais id when null.
-
-==================================================
-5. ROLE-BASED ACCESS
-==================================================
-
-super_admin:
-- sees all restaurants
-- can create/edit restaurants
-- can create admins for any restaurant
-
-admin/manager:
-- sees only their restaurant data
-
-waiter/kitchen/cashier:
-- sees only their restaurant data
-
-Do not expose other restaurants’ data.
-
-==================================================
-6. USERS RESTAURANT ASSIGNMENT
-==================================================
-
-In /admin/users:
-- super_admin can choose restaurant when creating/editing user
-- admin can only create users for their own restaurant
-- non-super_admin cannot assign another restaurant
-
-Add restaurant column/display:
-- restaurant name
-
-==================================================
-7. CLIENT ROUTING
-==================================================
-
-Keep existing route:
- /r/:slug/table/:tableId
-
-It must load restaurant by slug.
-
-If restaurant inactive:
-show:
-FR: Ce restaurant n’est pas disponible actuellement
-EN: This restaurant is currently unavailable
-
-If slug not found:
-show clean 404.
-
-==================================================
-8. PUBLIC RESTAURANTS PAGE
-==================================================
-
-Improve /restaurants:
-- show all active restaurants
-- logo
-- name
-- address
-- phone
-- button “Voir le menu” / “View menu”
-- premium responsive design
-
-For now, if no table selected, button can open:
- /r/:slug/table/1
-
-==================================================
-9. QR TABLES
-==================================================
-
-/admin/tables must generate QR using current restaurant slug:
- /r/:slug/table/:tableId
-
-Super_admin can filter by restaurant.
-Admin sees only own restaurant tables.
-
-==================================================
-10. DASHBOARD/STATS FILTERING
-==================================================
-
-Every dashboard/statistic query must filter by restaurant_id.
-
-super_admin:
-- can optionally filter by restaurant
-- default can show selected/current restaurant
-
-admin:
-- only own restaurant
-
-==================================================
-11. BILINGUAL
-==================================================
-
-All new texts must use existing i18n:
-FR/EN.
-
-No hardcoded visible text.
-
-==================================================
-12. SAFETY / PERFORMANCE
-==================================================
-
-- no localhost hardcoded
-- no black screen
-- clean error messages
-- keep old Le Palais data working
-- no massive refactor if not needed
-
-==================================================
-13. BUILD AND PUSH
-==================================================
-
-Run:
+8. Build and push:
 npm run build
-
-Then:
 git add .
-git commit -m "Add multi restaurant management foundation"
+git commit -m "Fix customer black screen after order creation"
 git push origin main
 
-==================================================
-ACCEPTANCE TEST
-==================================================
-
-1. Login as super_admin.
-2. Sidebar shows Restaurants.
-3. Create a second restaurant.
-4. Restaurant appears in /admin/restaurants.
-5. Le Palais still works.
-6. /restaurants shows active restaurants.
-7. /r/le-palais/table/1 still works.
-8. Orders/products/tables remain scoped by restaurant.
-9. Admin users do not see other restaurants’ data.
-10. Build passes.
+Acceptance:
+- create order from QR
+- no black screen
+- confirmation/tracking page opens
+- order details visible
+- menu/cart still work
+- admin still receives order

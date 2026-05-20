@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { CheckCircle, Clock, ChevronLeft, User, Phone } from 'lucide-react';
+import { CheckCircle, Clock, ChevronLeft, User, Phone, Loader } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Button from '../../components/Button';
 import Card from '../../components/Card';
 import Badge from '../../components/Badge';
+import LoadingSpinner from '../../components/LoadingSpinner';
 import { useApp } from '../../context/AppContext';
 import { formatPrice } from '../../utils/formatters';
 import { getOrder } from '../../services/orderService';
@@ -24,6 +25,7 @@ const badgeVariant = {
 };
 
 function ElapsedTime({ createdAt }) {
+  const { t } = useApp();
   const [elapsed, setElapsed] = useState('');
   useEffect(() => {
     const update = () => {
@@ -36,7 +38,7 @@ function ElapsedTime({ createdAt }) {
     update();
     const iv = setInterval(update, 30000);
     return () => clearInterval(iv);
-  }, [createdAt]);
+  }, [createdAt, t]);
   return <span>{elapsed}</span>;
 }
 
@@ -45,14 +47,30 @@ export default function OrderPage() {
   const navigate = useNavigate();
   const { t, tStatus, setRestaurantSlug } = useApp();
   const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (slug) setRestaurantSlug(slug);
-    getOrder(orderNumber).then(setOrder);
+    setLoading(true);
+    setError(null);
+    getOrder(orderNumber).then((data) => {
+      if (data) setOrder(data);
+      else setError('Order not found');
+    }).catch((err) => {
+      console.error('[OrderPage] fetch error:', err);
+      setError(err?.response?.data?.error || t('Order not found'));
+    }).finally(() => {
+      setLoading(false);
+    });
 
     const interval = setInterval(async () => {
-      const updated = await getOrder(orderNumber);
-      if (updated) setOrder(updated);
+      try {
+        const updated = await getOrder(orderNumber);
+        if (updated) setOrder(updated);
+      } catch (err) {
+        console.error('[OrderPage] poll error:', err);
+      }
     }, 5000);
 
     const socket = connectSocket();
@@ -66,10 +84,10 @@ export default function OrderPage() {
         }
         return prev;
       });
-      getOrder(orderNumber).then(setOrder);
+      getOrder(orderNumber).then(setOrder).catch(() => {});
     }) : () => {};
     const unsubPay = socket ? onPaymentUpdated(() => {
-      getOrder(orderNumber).then(setOrder);
+      getOrder(orderNumber).then(setOrder).catch(() => {});
     }) : () => {};
 
     return () => {
@@ -77,10 +95,42 @@ export default function OrderPage() {
       unsubStatus();
       unsubPay();
     };
-  }, [orderNumber, slug, setRestaurantSlug]);
+  }, [orderNumber, slug, setRestaurantSlug, t]);
+
+  if (loading) {
+    return (
+      <div className="p-4 pb-8">
+        <div className="flex flex-col items-center justify-center min-h-[60vh]">
+          <Loader size={40} className="text-gold-500 animate-spin mb-4" />
+          <p className="text-white/50">{t('Loading...')}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && !order) {
+    return (
+      <div className="p-4 pb-8">
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+          <div className="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center mb-6">
+            <CheckCircle size={40} className="text-red-400" />
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">{t('Order not found')}</h2>
+          <p className="text-white/50 mb-6">{error}</p>
+          <Button variant="outline" onClick={() => navigate(slug ? `/r/${slug}/table/1` : '/')}>
+            {t('Back to Menu')}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const currentStep = order ? statusSteps.indexOf(order.status === 'pending' ? 'new' : order.status) : 0;
   const effectiveSlug = slug || order?.restaurantSlug || '';
+  const orderItems = order?.items || [];
+  const customerName = order?.customerName || '';
+  const customerPhone = order?.customerPhone || '';
+  const totalAmount = order?.totalAmount != null ? order.totalAmount : 0;
 
   return (
     <div className="p-4 pb-8">
@@ -98,19 +148,20 @@ export default function OrderPage() {
             <div className="flex items-center gap-3 mb-3">
               <Clock size={20} className="text-gold-500" />
               <span className="text-sm text-white/70">
-                <ElapsedTime createdAt={order.createdAt} /> &middot; {t('Estimated time: 20-30 min')}
+                {order.createdAt ? <><ElapsedTime createdAt={order.createdAt} /> &middot; </> : ''}
+                {t('Estimated time: 20-30 min')}
               </span>
             </div>
-            {(order.customerName || order.customerPhone) && (
+            {(customerName || customerPhone) && (
               <div className="flex flex-wrap gap-3 mb-3 p-2 bg-white/5 rounded-xl">
-                {order.customerName && (
+                {customerName && (
                   <div className="flex items-center gap-1.5 text-xs text-white/60">
-                    <User size={12} /> {order.customerName}
+                    <User size={12} /> {customerName}
                   </div>
                 )}
-                {order.customerPhone && (
+                {customerPhone && (
                   <div className="flex items-center gap-1.5 text-xs text-white/60">
-                    <Phone size={12} /> {order.customerPhone}
+                    <Phone size={12} /> {customerPhone}
                   </div>
                 )}
               </div>
@@ -127,10 +178,10 @@ export default function OrderPage() {
                 {order.paymentStatus === 'paid' ? t('Paid') : t('Unpaid')}
               </span>
             </div>
-            {order.totalAmount > 0 && (
+            {totalAmount > 0 && (
               <div className="border-t border-white/10 mt-3 pt-3 flex items-center justify-between">
                 <span className="text-sm text-white/60">{t('Total')}</span>
-                <span className="text-lg font-bold text-gold-500">{formatPrice(order.totalAmount)}</span>
+                <span className="text-lg font-bold text-gold-500">{formatPrice(totalAmount)}</span>
               </div>
             )}
           </Card>

@@ -31,33 +31,35 @@ import RoleTestPage from '../pages/admin/RoleTestPage';
 import AdminRestaurantsPage from '../pages/admin/RestaurantsPage';
 import PromotionsPage from '../pages/admin/PromotionsPage';
 
+import ErrorBoundary from '../components/ErrorBoundary';
+
 export default function AppRouter() {
   return (
     <Routes>
-      <Route path="/" element={<ClientLayout><LandingPage /></ClientLayout>} />
-      <Route path="/restaurants" element={<ClientLayout><RestaurantsPage /></ClientLayout>} />
+      <Route path="/" element={<ClientLayout><ErrorBoundary><LandingPage /></ErrorBoundary></ClientLayout>} />
+      <Route path="/restaurants" element={<ClientLayout><ErrorBoundary><RestaurantsPage /></ErrorBoundary></ClientLayout>} />
 
       {/* Customer sub-routes under /r/:slug/table/:tableId */}
-      <Route path="/r/:slug/table/:tableId" element={<ClientLayout><TableWelcome /></ClientLayout>} />
-      <Route path="/r/:slug/table/:tableId/menu" element={<ClientLayout><MenuPage /></ClientLayout>} />
-      <Route path="/r/:slug/table/:tableId/cart" element={<ClientLayout><CartPage /></ClientLayout>} />
-      <Route path="/r/:slug/table/:tableId/assistance" element={<ClientLayout><ServerCallPage /></ClientLayout>} />
+      <Route path="/r/:slug/table/:tableId" element={<ClientLayout><ErrorBoundary><TableWelcome /></ErrorBoundary></ClientLayout>} />
+      <Route path="/r/:slug/table/:tableId/menu" element={<ClientLayout><ErrorBoundary><MenuPage /></ErrorBoundary></ClientLayout>} />
+      <Route path="/r/:slug/table/:tableId/cart" element={<ClientLayout><ErrorBoundary><CartPage /></ErrorBoundary></ClientLayout>} />
+      <Route path="/r/:slug/table/:tableId/assistance" element={<ClientLayout><ErrorBoundary><ServerCallPage /></ErrorBoundary></ClientLayout>} />
 
       {/* Old QR routes - redirect to welcome page */}
       <Route path="/r/:slug/menu/:tableId" element={<Navigate to="../table/:tableId" replace />} />
       <Route path="/r/:restaurantSlug/table/:tableId" element={<ClientLayout><TableSlugPage /></ClientLayout>} />
 
       {/* Legacy routes - keep working */}
-      <Route path="/menu/:restaurantSlug/:tableId" element={<ClientLayout><MenuPage /></ClientLayout>} />
-      <Route path="/menu/:tableId" element={<ClientLayout><MenuPage /></ClientLayout>} />
-      <Route path="/table/:tableId" element={<ClientLayout><TablePage /></ClientLayout>} />
+      <Route path="/menu/:restaurantSlug/:tableId" element={<ClientLayout><ErrorBoundary><MenuPage /></ErrorBoundary></ClientLayout>} />
+      <Route path="/menu/:tableId" element={<ClientLayout><ErrorBoundary><MenuPage /></ErrorBoundary></ClientLayout>} />
+      <Route path="/table/:tableId" element={<ClientLayout><ErrorBoundary><TablePage /></ErrorBoundary></ClientLayout>} />
 
       {/* Global client routes */}
-      <Route path="/cart" element={<ClientLayout><CartPage /></ClientLayout>} />
-      <Route path="/checkout" element={<ClientLayout><CheckoutPage /></ClientLayout>} />
-      <Route path="/order/:orderNumber" element={<ClientLayout><OrderPage /></ClientLayout>} />
-      <Route path="/r/:slug/order/:orderNumber" element={<ClientLayout><OrderPage /></ClientLayout>} />
-      <Route path="/server-call" element={<ClientLayout><ServerCallPage /></ClientLayout>} />
+      <Route path="/cart" element={<ClientLayout><ErrorBoundary><CartPage /></ErrorBoundary></ClientLayout>} />
+      <Route path="/checkout" element={<ClientLayout><ErrorBoundary><CheckoutPage /></ErrorBoundary></ClientLayout>} />
+      <Route path="/order/:orderNumber" element={<ClientLayout><ErrorBoundary><OrderPage /></ErrorBoundary></ClientLayout>} />
+      <Route path="/r/:slug/order/:orderNumber" element={<ClientLayout><ErrorBoundary><OrderPage /></ErrorBoundary></ClientLayout>} />
+      <Route path="/server-call" element={<ClientLayout><ErrorBoundary><ServerCallPage /></ErrorBoundary></ClientLayout>} />
 
       <Route path="/admin/login" element={<LoginPage />} />
       <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>

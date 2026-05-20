@@ -1,6 +1,7 @@
 import api from './api';
 
 function mapOrder(o) {
+  if (!o) return null;
   return {
     id: o.id,
     orderNumber: o.order_number || o.orderNumber,
