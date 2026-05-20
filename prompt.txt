@@ -1,54 +1,69 @@
-Fix dashboard daily revenue statistics.
+Improve admin dashboard card layout to match statistics page style.
 
-Current issue:
-“Chiffre d’affaires du jour” is incorrect or not updating properly.
+Problem:
+The dashboard cards are stacked one under another, making the page too long on mobile.
+The statistics page looks better because cards are arranged side by side in a compact grid.
 
-Implement REAL revenue calculations.
+Goal:
+Make /admin/dashboard layout more compact and premium, like /admin/statistics.
 
-Requirements:
+Do not change backend logic.
+Do not change statistics calculations.
+Do not break dashboard data.
 
-1. Daily revenue must calculate:
-SUM(total_amount)
-ONLY for:
-- orders with status = paid OR served
-- current day only
-- current restaurant only
+Tasks:
 
-2. Exclude:
-- cancelled orders
-- pending carts
-- test/demo orders
-- deleted orders
+1. Dashboard KPI grid
+Change dashboard KPI cards layout:
+- mobile: 2 cards per row when screen width allows
+- very small mobile: 1 card per row if needed
+- tablet: 2 or 3 cards per row
+- desktop: 4 cards per row
 
-3. Revenue updates instantly:
-- when payment validated
-- when order marked served
-- without page refresh if websocket/realtime exists
+2. Card size
+Reduce excessive height:
+- smaller padding on mobile
+- compact icons
+- keep numbers readable
+- keep labels visible
+- no text cut
 
-4. Add proper metrics:
-- todayRevenue
-- totalOrdersToday
-- averageBasket
-- topSellingItems
+3. Layout style
+Use same visual rhythm as Statistics page:
+- clean grid
+- equal card heights
+- balanced spacing
+- premium dark cards
+- gold/emerald accent icons
 
-5. Add fallback:
-if no orders today:
-display:
-0 FCFA
-and “Aucune vente aujourd’hui”
+4. Dashboard sections
+Keep important sections but arrange better:
+- CA du jour
+- Commandes aujourd’hui
+- Commandes en attente
+- Panier moyen
+- Tables actives
 
-6. Use backend calculation.
-Do NOT hardcode frontend numbers.
+They should not create a very long vertical page.
 
-7. Add proper timezone handling:
-Africa/Dakar
+5. Mobile responsive
+On iPhone:
+- cards aligned cleanly
+- no overflow
+- no text clipping
+- bottom safe-area respected
 
-8. Optimize:
-- avoid recalculating every render
-- use aggregation query
+6. Bilingual
+Keep labels translated FR/EN.
 
-9. Mobile responsive dashboard cards.
+7. Build and push
+npm run build
+git add .
+git commit -m "Improve dashboard compact KPI layout"
+git push origin main
 
-10. Do not break existing dashboard pages.
-
-Build and push.
+Acceptance:
+- dashboard looks compact like statistics
+- cards are not all stacked vertically
+- mobile page is shorter and cleaner
+- desktop still looks premium

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { DollarSign, ShoppingBag, Clock, TrendingUp, Users, Package, Bell, BarChart3, Timer, CreditCard } from 'lucide-react';
+import { DollarSign, ShoppingBag, Clock, TrendingUp, Users, Package, Bell, BarChart3, Timer } from 'lucide-react';
 import Card from '../../components/Card';
 import Badge from '../../components/Badge';
 import Button from '../../components/Button';
@@ -23,20 +23,11 @@ function MiniBar({ values, height = 60, color = 'from-gold-500 to-amber-500' }) 
   );
 }
 
-function StatCard({ icon: Icon, label, value, sub, color, trend }) {
+function StatCard({ icon: Icon, label, value, sub, color }) {
   return (
-    <Card className="transition-all duration-200 hover:border-gold-500/20 hover:shadow-lg hover:shadow-gold-500/5">
-      <div className="flex items-start justify-between mb-3">
-        <div className={`w-10 h-10 rounded-xl ${color.replace('text-', 'bg-')}/10 flex items-center justify-center`}>
-          <Icon size={20} className={color} />
-        </div>
-        {trend != null && (
-          <span className={`text-xs font-bold ${trend >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-            {trend >= 0 ? '+' : ''}{trend}%
-          </span>
-        )}
-      </div>
-      <p className="text-2xl lg:text-3xl font-bold text-white">{value}</p>
+    <Card>
+      <Icon size={18} className={`${color} mb-2`} />
+      <p className="text-xl sm:text-2xl font-bold text-white leading-tight">{value}</p>
       <p className="text-xs text-white/40 mt-1">{label}</p>
       {sub && <p className="text-[10px] text-white/20 mt-0.5">{sub}</p>}
     </Card>
@@ -92,14 +83,14 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-white">{t('Dashboard')}</h1>
-        <span className="text-xs text-white/30">
+      <div className="flex items-center justify-between mb-5">
+        <h1 className="text-xl sm:text-2xl font-bold text-white">{t('Dashboard')}</h1>
+        <span className="text-[11px] text-white/30">
           {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
         </span>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-6">
         <StatCard icon={DollarSign} label={t("Chiffre d'affaires du jour")} value={data.revenueFormatted} color="text-gold-500" sub={data.revenue === 0 ? t("Aucune vente aujourd'hui") : undefined} />
         <StatCard icon={ShoppingBag} label={t("Commandes aujourd'hui")} value={data.ordersCount} color="text-wave-500" />
         <StatCard icon={Clock} label={t('Commandes en attente')} value={data.pendingOrders} color="text-yellow-400" />
@@ -108,72 +99,31 @@ export default function DashboardPage() {
         <StatCard icon={Package} label={t('Produits disponibles')} value={data.availableProducts} color="text-purple-400" />
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6 mb-8">
-        <div className="lg:col-span-2">
-          <Card>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                <BarChart3 size={18} className="text-gold-500" /> {t('Daily Revenue')}
-              </h2>
-              <span className="text-xs text-white/30">{t('Cette semaine')}</span>
-            </div>
-            <MiniBar values={weekdayRevenue} height={120} color="from-gold-500 to-amber-500" />
-            <div className="flex justify-between mt-2">
-              {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(d => (
-                <span key={d} className="text-[10px] text-white/30">{d}</span>
-              ))}
-            </div>
-          </Card>
-        </div>
-
-        <div>
-          <Card>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                <CreditCard size={18} className="text-gold-500" /> {t('Payments')}
-              </h2>
-            </div>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-white/70">{t('Wave')}</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-24 h-2 rounded-full bg-white/10 overflow-hidden">
-                    <div className="h-full rounded-full bg-wave-500" style={{ width: `${data.paymentSplit?.wave || 40}%` }} />
-                  </div>
-                  <span className="text-xs text-white/50 font-mono">{data.paymentSplit?.wave || 40}%</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-white/70">{t('Orange Money')}</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-24 h-2 rounded-full bg-white/10 overflow-hidden">
-                    <div className="h-full rounded-full bg-orange-500" style={{ width: `${data.paymentSplit?.orange || 35}%` }} />
-                  </div>
-                  <span className="text-xs text-white/50 font-mono">{data.paymentSplit?.orange || 35}%</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-white/70">{t('Cash')}</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-24 h-2 rounded-full bg-white/10 overflow-hidden">
-                    <div className="h-full rounded-full bg-emerald-500" style={{ width: `${data.paymentSplit?.cash || 25}%` }} />
-                  </div>
-                  <span className="text-xs text-white/50 font-mono">{data.paymentSplit?.cash || 25}%</span>
-                </div>
-              </div>
-            </div>
-          </Card>
-        </div>
+      <div className="space-y-4 mb-6">
+        <Card>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm sm:text-base font-semibold text-white flex items-center gap-2">
+              <BarChart3 size={16} className="text-gold-500" /> {t('Daily Revenue')}
+            </h2>
+            <span className="text-[11px] text-white/30">{t('Cette semaine')}</span>
+          </div>
+          <MiniBar values={weekdayRevenue} height={80} color="from-gold-500 to-amber-500" />
+          <div className="flex justify-between mt-1.5">
+            {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(d => (
+              <span key={d} className="text-[10px] text-white/30">{d}</span>
+            ))}
+          </div>
+        </Card>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-              <Timer size={18} className="text-gold-500" /> {t('Last orders')}
+      <div className="grid lg:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="lg:col-span-1 xl:col-span-2">
+          <div className="flex items-center justify-between mb-2.5">
+            <h2 className="text-sm sm:text-base font-semibold text-white flex items-center gap-2">
+              <Timer size={16} className="text-gold-500" /> {t('Last orders')}
             </h2>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {data.recentOrders.map((order) => {
               const status = order.status || 'new';
               const badgeVariant = {
@@ -182,30 +132,34 @@ export default function DashboardPage() {
                 paid: 'delivered', cancelled: 'cancelled',
               };
               return (
-                <Card key={order.id} className="flex flex-col gap-1.5 min-w-0 transition-all duration-200 hover:border-gold-500/20">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-sm font-medium text-white truncate min-w-0">{order.id}</span>
-                    <Badge variant={badgeVariant[status] || 'default'} className="flex-shrink-0">{t(status)}</Badge>
+                <Card key={order.id} className="flex items-center gap-3 min-w-0 !p-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-white truncate">{order.id}</span>
+                      <Badge variant={badgeVariant[status] || 'default'} className="flex-shrink-0 text-[10px]">{t(status)}</Badge>
+                    </div>
+                    <p className="text-xs text-white/40 truncate mt-0.5">{t('Table')} {order.table} &middot; {(order.items || []).slice(0, 3).join(', ')}{order.items?.length > 3 ? '...' : ''}</p>
                   </div>
-                  <p className="text-xs text-white/40 min-w-0">{t('Table')} {order.table} &middot; {(order.items || []).slice(0, 3).join(', ')}{order.items?.length > 3 ? '...' : ''}</p>
-                  <p className="text-xs text-white/30 min-w-0">{order.time}</p>
-                  <p className="text-sm font-semibold text-gold-500 text-right min-w-0">{order.total}</p>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-sm font-semibold text-gold-500">{order.total}</p>
+                    <p className="text-[10px] text-white/30">{order.time}</p>
+                  </div>
                 </Card>
               );
             })}
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           <div>
-            <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-              <TrendingUp size={18} className="text-gold-500" /> {t('Top selling products')}
+            <h2 className="text-sm sm:text-base font-semibold text-white mb-2.5 flex items-center gap-2">
+              <TrendingUp size={16} className="text-gold-500" /> {t('Top selling products')}
             </h2>
             <Card>
               {data.topProducts.length === 0 ? (
-                <p className="text-sm text-white/30 text-center py-4">{t('Aucun produit')}</p>
+                <p className="text-sm text-white/30 text-center py-3">{t('Aucun produit')}</p>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   {data.topProducts.map((product, i) => {
                     const maxCount = Math.max(...data.topProducts.map(p => p.count), 1);
                     const barWidth = (product.count / maxCount) * 100;
@@ -216,10 +170,7 @@ export default function DashboardPage() {
                             <span className={`text-xs font-bold ${i === 0 ? 'text-gold-500' : 'text-white/40'}`}>#{i + 1}</span>
                             <span className="text-sm text-white truncate">{product.name}</span>
                           </div>
-                          <div className="text-right flex-shrink-0 ml-2">
-                            <span className="text-xs text-white/60">{product.count}</span>
-                            <span className="text-xs font-medium text-gold-500 ml-2">{product.revenue}</span>
-                          </div>
+                          <span className="text-xs text-white/60 flex-shrink-0 ml-2">{product.count}</span>
                         </div>
                         <div className="w-full h-1.5 rounded-full bg-white/5 overflow-hidden">
                           <div className="h-full rounded-full bg-gradient-to-r from-gold-500 to-amber-400 transition-all" style={{ width: `${barWidth}%` }} />
@@ -233,22 +184,21 @@ export default function DashboardPage() {
           </div>
 
           <div>
-            <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-              <Bell size={18} className="text-gold-500" /> {t('Server alerts')}
+            <h2 className="text-sm sm:text-base font-semibold text-white mb-2.5 flex items-center gap-2">
+              <Bell size={16} className="text-gold-500" /> {t('Server alerts')}
             </h2>
             <Card>
               {data.serverAlerts.length === 0 ? (
-                <p className="text-sm text-white/30 text-center py-4">{t('No alerts')}</p>
+                <p className="text-sm text-white/30 text-center py-3">{t('No alerts')}</p>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {data.serverAlerts.map((alert, i) => (
                     <div key={alert.id || i} className="flex items-center justify-between p-2 rounded-lg hover:bg-white/5 transition-colors">
                       <div className="flex items-center gap-2 min-w-0">
                         <Bell size={14} className="text-yellow-400 flex-shrink-0" />
                         <span className="text-sm text-white/80 truncate">{t('Table')} {alert.table}</span>
-                        <span className="text-xs text-white/30 hidden sm:inline">{alert.time}</span>
                       </div>
-                      <Button variant="ghost" className="text-xs px-2 py-1 flex-shrink-0" onClick={() => markAlertHandled(alert.id).then(refresh)}>
+                      <Button variant="ghost" className="text-[11px] px-2 py-0.5 flex-shrink-0 h-auto min-h-0" onClick={() => markAlertHandled(alert.id).then(refresh)}>
                         {t('Mark as handled')}
                       </Button>
                     </div>
