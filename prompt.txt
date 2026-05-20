@@ -1,92 +1,123 @@
-Improve admin login and user password fields without breaking anything.
+Upgrade the admin login page into a REAL premium restaurant SaaS login experience.
 
-Scope:
-- admin login page only
-- admin users page password fields only
-- do not touch backend logic
-- do not touch roles/permissions
-- do not touch orders, kitchen, payments, QR, menu, checkout
+Current version is too basic.
+Keep existing authentication logic working exactly the same.
+Do not touch backend/auth API.
 
-Tasks:
+GOAL:
+Luxury modern restaurant management login page like:
+Stripe + Linear + Toast POS + Square + Notion dark UI.
 
-1. Admin login page
-Improve /admin/login into a cleaner premium version:
-- dark luxury BarOrder style
-- centered login card
-- better spacing
-- better typography
-- gold/emerald accents
-- mobile responsive
-- no horizontal overflow
-- no demo credentials displayed
-- no text already written inside the email input
+REQUIREMENTS
 
-Important:
-- Email input must be empty by default.
-- Password input must be empty by default.
-- Do not prefill admin@barorder.sn or any demo email.
-- Keep placeholders only:
-  FR: "Adresse email"
-  EN: "Email address"
-  FR: "Mot de passe"
-  EN: "Password"
+1. Dynamic restaurant branding
+If restaurant settings/logo exists:
+- show restaurant logo automatically
+- show restaurant name automatically
+- fallback to BarOrder branding if no logo exists
 
-2. Password visibility icon on login
-Add an eye icon inside the password field:
-- click eye => show password
-- click again => hide password
-- icon changes between Eye and EyeOff if lucide-react is available
-- button must be accessible with aria-label
-- must not submit the form accidentally
-- must work on mobile and desktop
+Logo rules:
+- circular or rounded-xl container
+- soft glow around logo
+- max-height responsive
+- support PNG/JPG/WebP
 
-3. Users page password fields
-On /admin/users:
-Add eye icon only to password fields:
-- create user password field
-- reset password field
-- edit password field if it exists
+2. Premium layout
+Create:
+- full-screen premium dark background
+- subtle gradients
+- soft blur/glass effects
+- elegant shadows
+- smooth transitions
+- centered auth card
+- responsive mobile/tablet/desktop
 
-Rules:
-- Do NOT add eye icon to email fields.
-- Do NOT add eye icon to name/role fields.
-- Only password inputs.
+3. Visual quality
+Add:
+- animated ambient glow
+- gold + emerald luxury accents
+- premium typography
+- hover animations
+- input focus animations
+- smooth button states
 
-4. Security/UX
-- Default password state remains hidden.
-- Showing password only changes the input type locally.
-- Do not store visible password anywhere.
-- Do not log password in console.
-- Do not change API payload structure.
+4. Login card
+Card should include:
+- restaurant logo
+- restaurant name
+- subtitle
+- premium email/password inputs
+- password visibility eye
+- animated submit button
+- loading state
+- login error animation
 
-5. Bilingual
-All new labels/tooltips must use existing i18n system:
-FR:
-- Afficher le mot de passe
-- Masquer le mot de passe
-EN:
-- Show password
-- Hide password
+5. Inputs
+Improve UX:
+- floating labels
+- better placeholders
+- premium borders
+- glow on focus
+- mobile optimized
+- autocomplete support
 
-6. Technical
-Use existing icon library if present:
-lucide-react Eye / EyeOff
-If not available, use simple text/icon fallback.
+6. Password visibility
+Keep eye toggle working:
+- Eye / EyeOff icons
+- accessible aria-label
+- no form submit bug
 
-7. Build and push
+7. Background
+Create premium animated background:
+- dark luxury gradients
+- subtle moving blur circles
+- no lag
+- GPU friendly
+- elegant and minimal
+
+8. Responsiveness
+Must look premium on:
+- iPhone Safari
+- Android Chrome
+- tablets
+- desktop ultrawide
+
+No overflow.
+No cropped card.
+No tiny UI.
+
+9. Branding support
+Use restaurant settings if available:
+- restaurant.name
+- restaurant.logo
+- restaurant.primaryColor
+
+If no settings exist:
+fallback to BarOrder default branding.
+
+10. Do NOT break
+- auth logic
+- routing
+- token storage
+- language system
+- theme
+- roles
+- API calls
+
+11. Performance
+Keep page lightweight.
+No heavy libraries.
+No lag.
+
+12. Final result
+The login page must feel like:
+a real premium SaaS restaurant platform,
+not a basic admin panel.
+
 Run:
 npm run build
 
 Then:
 git add .
-git commit -m "Improve admin login and password visibility controls"
+git commit -m "Premium restaurant SaaS login redesign"
 git push origin main
-
-Acceptance:
-- /admin/login looks more premium
-- email field is empty by default
-- password field has working eye icon
-- /admin/users password fields have working eye icon
-- no backend broken
-- no role system broken
-- build passes
