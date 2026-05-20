@@ -1,60 +1,54 @@
-URGENT FIX admin login premium inputs.
+Fix dashboard daily revenue statistics.
 
-Current problem:
-- email is prefilled with administrateur1@barorder.com
-- inputs become pale yellow/white when typing
-- floating labels overlap the input border
-- password eye is almost invisible
-- UI looks broken
+Current issue:
+“Chiffre d’affaires du jour” is incorrect or not updating properly.
 
-Fix only /admin/login.
+Implement REAL revenue calculations.
 
-Rules:
-1. Email and password must be empty by default.
-2. Remove any hardcoded defaultValue/value:
-   administrateur1@barorder.com
-   admin@barorder.sn
-   admin123
-   or any demo credential.
-3. Disable browser autofill yellow background visually.
-4. Inputs must stay dark premium even when focused, typed, or autofilled.
+Requirements:
 
-CSS required:
-- input background remains #0f0f12 / dark
-- text white
-- border subtle
-- focus border gold
-- autofill override:
-  input:-webkit-autofill {
-    -webkit-box-shadow: 0 0 0 1000px #0f0f12 inset !important;
-    -webkit-text-fill-color: #ffffff !important;
-  }
+1. Daily revenue must calculate:
+SUM(total_amount)
+ONLY for:
+- orders with status = paid OR served
+- current day only
+- current restaurant only
 
-5. Remove broken floating labels OR make them clean.
-Preferred:
-- use simple labels above inputs
-- no overlapping labels.
+2. Exclude:
+- cancelled orders
+- pending carts
+- test/demo orders
+- deleted orders
 
-6. Eye icon:
-- visible grey/white
-- centered vertically
-- clickable
-- does not submit form
+3. Revenue updates instantly:
+- when payment validated
+- when order marked served
+- without page refresh if websocket/realtime exists
 
-7. Keep design premium:
-- dark glass card
-- gold button
-- restaurant name
-- logo/monogram
-- responsive mobile
+4. Add proper metrics:
+- todayRevenue
+- totalOrdersToday
+- averageBasket
+- topSellingItems
 
-8. Do not change auth logic.
-9. Build and push.
+5. Add fallback:
+if no orders today:
+display:
+0 FCFA
+and “Aucune vente aujourd’hui”
 
-Acceptance:
-- login opens with empty email/password
-- fields stay dark when typing
-- no yellow input background
-- labels aligned cleanly
-- eye icon visible
-- login still works
+6. Use backend calculation.
+Do NOT hardcode frontend numbers.
+
+7. Add proper timezone handling:
+Africa/Dakar
+
+8. Optimize:
+- avoid recalculating every render
+- use aggregation query
+
+9. Mobile responsive dashboard cards.
+
+10. Do not break existing dashboard pages.
+
+Build and push.

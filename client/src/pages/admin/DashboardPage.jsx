@@ -99,8 +99,8 @@ export default function DashboardPage() {
         </span>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
-        <StatCard icon={DollarSign} label={t("Chiffre d'affaires du jour")} value={data.revenueFormatted} color="text-gold-500" trend={8} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4 mb-8">
+        <StatCard icon={DollarSign} label={t("Chiffre d'affaires du jour")} value={data.revenueFormatted} color="text-gold-500" sub={data.revenue === 0 ? t("Aucune vente aujourd'hui") : undefined} />
         <StatCard icon={ShoppingBag} label={t("Commandes aujourd'hui")} value={data.ordersCount} color="text-wave-500" />
         <StatCard icon={Clock} label={t('Commandes en attente')} value={data.pendingOrders} color="text-yellow-400" />
         <StatCard icon={TrendingUp} label={t('Panier moyen')} value={data.avgOrderFormatted} color="text-blue-400" />
