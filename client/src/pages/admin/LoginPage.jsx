@@ -5,37 +5,6 @@ import { useApp } from '../../context/AppContext';
 import { login } from '../../services/authService';
 import api from '../../services/api';
 
-function FloatingInput({ id, label, type, value, onChange, autoComplete }) {
-  const [focused, setFocused] = useState(false);
-  const float = focused || value?.length > 0;
-
-  return (
-    <div className="relative">
-      <input
-        id={id}
-        type={type}
-        value={value}
-        onChange={onChange}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        placeholder={label}
-        autoComplete={autoComplete}
-        className="peer w-full bg-transparent border border-white/10 rounded-xl px-4 pt-5 pb-2 text-white placeholder-transparent focus:outline-none focus:border-gold-500/50 focus:ring-1 focus:ring-gold-500/20 transition-all duration-200"
-      />
-      <label
-        htmlFor={id}
-        className={`absolute left-4 transition-all duration-200 cursor-text pointer-events-none ${
-          float
-            ? '-top-2.5 text-xs text-gold-400'
-            : 'top-4 text-sm text-white/40'
-        }`}
-      >
-        {label}
-      </label>
-    </div>
-  );
-}
-
 export default function LoginPage() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
@@ -127,45 +96,40 @@ export default function LoginPage() {
           </div>
 
           <form onSubmit={handleLogin} className="space-y-5">
-            <FloatingInput
-              id="login-email"
-              label={t('Email')}
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
-            />
-
-            <div className="relative">
+            <div className="space-y-1.5">
+              <label htmlFor="login-email" className="text-sm text-white/50">{t('Email')}</label>
               <input
-                id="login-password"
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onFocus={() => {}}
-                onBlur={() => {}}
-                placeholder={t('Password')}
-                autoComplete="current-password"
-                className="peer w-full bg-transparent border border-white/10 rounded-xl px-4 pt-5 pb-2 pr-12 text-white placeholder-transparent focus:outline-none focus:border-gold-500/50 focus:ring-1 focus:ring-gold-500/20 transition-all duration-200"
+                id="login-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={t('Adresse email')}
+                autoComplete="email"
+                className="login-input w-full bg-[#0f0f12] border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-gold-500/50 focus:ring-1 focus:ring-gold-500/20 transition-all duration-200"
               />
-              <label
-                htmlFor="login-password"
-                className={`absolute left-4 transition-all duration-200 cursor-text pointer-events-none ${
-                  showPassword || password?.length > 0
-                    ? '-top-2.5 text-xs text-gold-400'
-                    : 'top-4 text-sm text-white/40'
-                }`}
-              >
-                {t('Password')}
-              </label>
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                aria-label={showPassword ? t('Masquer le mot de passe') : t('Afficher le mot de passe')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-gold-400 transition-colors z-10"
-              >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
+            </div>
+
+            <div className="space-y-1.5">
+              <label htmlFor="login-password" className="text-sm text-white/50">{t('Password')}</label>
+              <div className="relative">
+                <input
+                  id="login-password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={t('Mot de passe')}
+                  autoComplete="current-password"
+                  className="login-input w-full bg-[#0f0f12] border border-white/10 rounded-xl px-4 py-3 pr-12 text-white placeholder:text-white/20 focus:outline-none focus:border-gold-500/50 focus:ring-1 focus:ring-gold-500/20 transition-all duration-200"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? t('Masquer le mot de passe') : t('Afficher le mot de passe')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-gold-400 transition-colors"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
 
             <div
@@ -183,17 +147,13 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="relative w-full py-3.5 rounded-xl font-medium text-base transition-all duration-200 overflow-hidden group active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="relative w-full py-3.5 rounded-xl font-medium text-base transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 background: `linear-gradient(135deg, ${color}, ${color}dd)`,
                 color: '#000',
               }}
-              onMouseEnter={(e) => {
-                if (!loading) e.target.style.filter = 'brightness(1.15)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.filter = 'brightness(1)';
-              }}
+              onMouseEnter={(e) => { if (!loading) e.target.style.filter = 'brightness(1.15)'; }}
+              onMouseLeave={(e) => { e.target.style.filter = 'brightness(1)'; }}
             >
               <span className="relative z-10 flex items-center justify-center gap-2">
                 {loading ? (
@@ -232,6 +192,18 @@ export default function LoginPage() {
           0%, 100% { transform: translateX(0); }
           10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
           20%, 40%, 60%, 80% { transform: translateX(4px); }
+        }
+        input.login-input:-webkit-autofill,
+        input.login-input:-webkit-autofill:hover,
+        input.login-input:-webkit-autofill:focus,
+        input.login-input:-webkit-autofill:active {
+          -webkit-box-shadow: 0 0 0 1000px #0f0f12 inset !important;
+          -webkit-text-fill-color: #ffffff !important;
+          caret-color: #ffffff !important;
+          border-color: rgba(255,255,255,0.1);
+        }
+        input.login-input:-webkit-autofill:focus {
+          border-color: rgba(201,149,46,0.5);
         }
       `}</style>
     </div>

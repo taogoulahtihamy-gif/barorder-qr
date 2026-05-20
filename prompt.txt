@@ -1,123 +1,60 @@
-Upgrade the admin login page into a REAL premium restaurant SaaS login experience.
+URGENT FIX admin login premium inputs.
 
-Current version is too basic.
-Keep existing authentication logic working exactly the same.
-Do not touch backend/auth API.
+Current problem:
+- email is prefilled with administrateur1@barorder.com
+- inputs become pale yellow/white when typing
+- floating labels overlap the input border
+- password eye is almost invisible
+- UI looks broken
 
-GOAL:
-Luxury modern restaurant management login page like:
-Stripe + Linear + Toast POS + Square + Notion dark UI.
+Fix only /admin/login.
 
-REQUIREMENTS
+Rules:
+1. Email and password must be empty by default.
+2. Remove any hardcoded defaultValue/value:
+   administrateur1@barorder.com
+   admin@barorder.sn
+   admin123
+   or any demo credential.
+3. Disable browser autofill yellow background visually.
+4. Inputs must stay dark premium even when focused, typed, or autofilled.
 
-1. Dynamic restaurant branding
-If restaurant settings/logo exists:
-- show restaurant logo automatically
-- show restaurant name automatically
-- fallback to BarOrder branding if no logo exists
+CSS required:
+- input background remains #0f0f12 / dark
+- text white
+- border subtle
+- focus border gold
+- autofill override:
+  input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px #0f0f12 inset !important;
+    -webkit-text-fill-color: #ffffff !important;
+  }
 
-Logo rules:
-- circular or rounded-xl container
-- soft glow around logo
-- max-height responsive
-- support PNG/JPG/WebP
+5. Remove broken floating labels OR make them clean.
+Preferred:
+- use simple labels above inputs
+- no overlapping labels.
 
-2. Premium layout
-Create:
-- full-screen premium dark background
-- subtle gradients
-- soft blur/glass effects
-- elegant shadows
-- smooth transitions
-- centered auth card
-- responsive mobile/tablet/desktop
+6. Eye icon:
+- visible grey/white
+- centered vertically
+- clickable
+- does not submit form
 
-3. Visual quality
-Add:
-- animated ambient glow
-- gold + emerald luxury accents
-- premium typography
-- hover animations
-- input focus animations
-- smooth button states
-
-4. Login card
-Card should include:
-- restaurant logo
+7. Keep design premium:
+- dark glass card
+- gold button
 - restaurant name
-- subtitle
-- premium email/password inputs
-- password visibility eye
-- animated submit button
-- loading state
-- login error animation
+- logo/monogram
+- responsive mobile
 
-5. Inputs
-Improve UX:
-- floating labels
-- better placeholders
-- premium borders
-- glow on focus
-- mobile optimized
-- autocomplete support
+8. Do not change auth logic.
+9. Build and push.
 
-6. Password visibility
-Keep eye toggle working:
-- Eye / EyeOff icons
-- accessible aria-label
-- no form submit bug
-
-7. Background
-Create premium animated background:
-- dark luxury gradients
-- subtle moving blur circles
-- no lag
-- GPU friendly
-- elegant and minimal
-
-8. Responsiveness
-Must look premium on:
-- iPhone Safari
-- Android Chrome
-- tablets
-- desktop ultrawide
-
-No overflow.
-No cropped card.
-No tiny UI.
-
-9. Branding support
-Use restaurant settings if available:
-- restaurant.name
-- restaurant.logo
-- restaurant.primaryColor
-
-If no settings exist:
-fallback to BarOrder default branding.
-
-10. Do NOT break
-- auth logic
-- routing
-- token storage
-- language system
-- theme
-- roles
-- API calls
-
-11. Performance
-Keep page lightweight.
-No heavy libraries.
-No lag.
-
-12. Final result
-The login page must feel like:
-a real premium SaaS restaurant platform,
-not a basic admin panel.
-
-Run:
-npm run build
-
-Then:
-git add .
-git commit -m "Premium restaurant SaaS login redesign"
-git push origin main
+Acceptance:
+- login opens with empty email/password
+- fields stay dark when typing
+- no yellow input background
+- labels aligned cleanly
+- eye icon visible
+- login still works
