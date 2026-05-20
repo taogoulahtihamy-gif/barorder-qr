@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Shield, UserCheck, UserX, Calendar, Key, Trash2, Mail, Eye, EyeOff } from 'lucide-react';
+import { Plus, Shield, UserCheck, UserX, Calendar, Key, Trash2, Mail, Eye, EyeOff, Store } from 'lucide-react';
 import Button from '../../components/Button';
 import Card from '../../components/Card';
 import Input from '../../components/Input';
@@ -8,6 +8,7 @@ import Modal from '../../components/Modal';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import api from '../../services/api';
 import { useApp } from '../../context/AppContext';
+import { getRestaurants } from '../../services/adminService';
 
 const ALL_ROLES = ['admin', 'super_admin', 'manager', 'waiter', 'kitchen', 'cashier'];
 
@@ -29,9 +30,10 @@ export default function UsersPage() {
   const [pwTarget, setPwTarget] = useState(null);
   const [pwValue, setPwValue] = useState('');
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'waiter' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'waiter', restaurant_id: '' });
   const [showFormPassword, setShowFormPassword] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
+  const [restaurants, setRestaurants] = useState([]);
 
   const isSuper = user?.role === 'super_admin';
   const availableRoles = isSuper ? ALL_ROLES : ALL_ROLES.filter(r => r !== 'super_admin');
@@ -49,15 +51,21 @@ export default function UsersPage() {
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
+  useEffect(() => {
+    if (isSuper) {
+      getRestaurants().then(setRestaurants).catch(console.error);
+    }
+  }, [isSuper]);
+
   const openCreate = () => {
     setEditing(null);
-    setForm({ name: '', email: '', password: '', role: 'waiter' });
+    setForm({ name: '', email: '', password: '', role: 'waiter', restaurant_id: isSuper ? String(restaurants[0]?.id || '') : '' });
     setModalOpen(true);
   };
 
   const openEdit = (u) => {
     setEditing(u);
-    setForm({ name: u.name, email: u.email, password: '', role: u.role });
+    setForm({ name: u.name, email: u.email, password: '', role: u.role, restaurant_id: String(u.restaurant_id || '') });
     setModalOpen(true);
   };
 
@@ -67,10 +75,13 @@ export default function UsersPage() {
       if (editing) {
         const payload = { name: form.name, email: form.email, role: form.role };
         if (form.password) payload.password = form.password;
+        if (isSuper && form.restaurant_id) payload.restaurant_id = Number(form.restaurant_id);
         await api.put(`/api/admin/users/${editing.id}`, payload);
         toast.success(t('Utilisateur mis à jour'));
       } else {
-        await api.post('/api/admin/users', form);
+        const payload = { ...form };
+        if (payload.restaurant_id) payload.restaurant_id = Number(payload.restaurant_id);
+        await api.post('/api/admin/users', payload);
         toast.success(t('Utilisateur créé'));
       }
       setModalOpen(false);
@@ -138,6 +149,7 @@ export default function UsersPage() {
                 <th className="pb-3 pt-3 px-4 font-medium">{t('Nom')}</th>
                 <th className="pb-3 pt-3 px-4 font-medium">{t('Email')}</th>
                 <th className="pb-3 pt-3 px-4 font-medium">{t('Rôle')}</th>
+                {isSuper && <th className="pb-3 pt-3 px-4 font-medium">{t('Restaurant')}</th>}
                 <th className="pb-3 pt-3 px-4 font-medium">{t('Statut')}</th>
                 <th className="pb-3 pt-3 px-4 font-medium hidden md:table-cell">{t('Créé le')}</th>
                 <th className="pb-3 pt-3 px-4 font-medium text-right">{t('Actions')}</th>
@@ -154,6 +166,7 @@ export default function UsersPage() {
                       {u.role}
                     </span>
                   </td>
+                  {isSuper && <td className="py-3 px-4 text-white/60 text-sm overflow-safe max-w-[120px]">{u.restaurant_name || '-'}</td>}
                   <td className="py-3 px-4">
                     <span className={`inline-flex items-center gap-1 text-sm ${u.is_active ? 'text-emerald-400' : 'text-red-400'}`}>
                       {u.is_active ? <UserCheck size={16} /> : <UserX size={16} />}
@@ -221,6 +234,11 @@ export default function UsersPage() {
                     <Mail size={12} className="flex-shrink-0" />
                     {u.email}
                   </p>
+                  {isSuper && u.restaurant_name && (
+                    <p className="text-xs text-white/30 flex items-center gap-1 mt-0.5">
+                      <Store size={11} />{u.restaurant_name}
+                    </p>
+                  )}
                 </div>
                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${ROLE_COLORS[u.role] || 'text-white/40 bg-white/5'}`}>
                   <Shield size={12} />
@@ -317,6 +335,21 @@ export default function UsersPage() {
               ))}
             </select>
           </div>
+          {isSuper && (
+            <div className="space-y-1.5">
+              <label className="text-sm text-white/60">{t('Restaurant')}</label>
+              <select
+                value={form.restaurant_id}
+                onChange={(e) => setForm({ ...form, restaurant_id: e.target.value })}
+                className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-gold-500/50"
+              >
+                <option value="">{t('Sélectionner un restaurant')}</option>
+                {restaurants.map((r) => (
+                  <option key={r.id} value={String(r.id)}>{r.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="flex justify-end gap-3 pt-2">
             <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>{t('Annuler')}</Button>
             <Button type="submit" variant="gold">{editing ? t('Enregistrer') : t('Créer')}</Button>

@@ -272,4 +272,30 @@ export async function getPrintableQR() {
   return data;
 }
 
+export async function getRestaurants() {
+  const { data } = await api.get('/api/admin/restaurants');
+  if (!Array.isArray(data)) throw new Error('Restaurants API returned invalid data');
+  return data;
+}
+
+export async function getRestaurant(id) {
+  const { data } = await api.get(`/api/admin/restaurants/${id}`);
+  return data;
+}
+
+export async function createRestaurant(restaurant) {
+  const { data } = await api.post('/api/admin/restaurants', restaurant);
+  return data;
+}
+
+export async function updateRestaurant(id, restaurant) {
+  const { data } = await api.put(`/api/admin/restaurants/${id}`, restaurant);
+  return data;
+}
+
+export async function updateRestaurantStatus(id, is_active) {
+  const { data } = await api.patch(`/api/admin/restaurants/${id}/status`, { is_active });
+  return data;
+}
+
 export { mapOrder };

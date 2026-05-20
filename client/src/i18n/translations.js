@@ -516,6 +516,21 @@ export const fr = {
   'Show password': 'Afficher le mot de passe',
   'Hide password': 'Masquer le mot de passe',
   'Adresse email': 'Adresse email',
+  'Restaurants': 'Restaurants',
+  'Restaurant': 'Restaurant',
+  'Restaurant créé': 'Restaurant créé',
+  'Restaurant modifié': 'Restaurant modifié',
+  'Restaurant activé': 'Restaurant activé',
+  'Restaurant désactivé': 'Restaurant désactivé',
+  'Ajouter un restaurant': 'Ajouter un restaurant',
+  'Modifier le restaurant': 'Modifier le restaurant',
+  'Aucun restaurant': 'Aucun restaurant',
+  'Les restaurants': 'Restaurants',
+  'Nos restaurants': 'Nos restaurants',
+  'Choisissez un restaurant pour voir son menu': 'Choisissez un restaurant pour voir son menu',
+  'Aucun restaurant trouvé': 'Aucun restaurant trouvé',
+  'Voir le menu': 'Voir le menu',
+  'Sélectionner un restaurant': 'Sélectionner un restaurant',
 };
 
 export const en = {
@@ -1036,6 +1051,21 @@ export const en = {
   'Show password': 'Show password',
   'Hide password': 'Hide password',
   'Adresse email': 'Email address',
+  'Restaurants': 'Restaurants',
+  'Restaurant': 'Restaurant',
+  'Restaurant créé': 'Restaurant created',
+  'Restaurant modifié': 'Restaurant updated',
+  'Restaurant activé': 'Restaurant activated',
+  'Restaurant désactivé': 'Restaurant deactivated',
+  'Ajouter un restaurant': 'Add restaurant',
+  'Modifier le restaurant': 'Edit restaurant',
+  'Aucun restaurant': 'No restaurants',
+  'Les restaurants': 'Restaurants',
+  'Nos restaurants': 'Our restaurants',
+  'Choisissez un restaurant pour voir son menu': 'Choose a restaurant to view its menu',
+  'Aucun restaurant trouvé': 'No restaurants found',
+  'Voir le menu': 'View menu',
+  'Sélectionner un restaurant': 'Select a restaurant',
 };
 
 export function tStatus(status, lang) {

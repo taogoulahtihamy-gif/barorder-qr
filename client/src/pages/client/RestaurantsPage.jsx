@@ -15,7 +15,7 @@ export default function RestaurantsPage() {
 
   useEffect(() => {
     getRestaurants().then(data => {
-      setRestaurants(data);
+      setRestaurants(Array.isArray(data) ? data.filter(r => r.is_active !== false) : []);
       setLoading(false);
     });
   }, []);
@@ -24,12 +24,12 @@ export default function RestaurantsPage() {
 
   return (
     <div className="p-4 pb-12">
-      <h1 className="text-2xl font-bold text-white mb-1">Nos restaurants</h1>
-      <p className="text-sm text-white/40 mb-6">Choisissez un restaurant pour voir son menu</p>
+      <h1 className="text-2xl font-bold text-white mb-1">{t('Nos restaurants')}</h1>
+      <p className="text-sm text-white/40 mb-6">{t('Choisissez un restaurant pour voir son menu')}</p>
 
       {restaurants.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-white/40">
-          <p className="text-lg">Aucun restaurant trouvé</p>
+          <p className="text-lg">{t('Aucun restaurant trouvé')}</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -52,10 +52,10 @@ export default function RestaurantsPage() {
                     </div>
                   )}
                   <Button
-                    onClick={() => navigate(`/menu/${r.slug || r.id}/1`)}
+                    onClick={() => navigate(`/r/${r.slug}/table/1`)}
                     className="mt-3 flex items-center gap-2 text-sm"
                   >
-                    Voir le menu <ArrowRight size={14} />
+                    {t('Voir le menu')} <ArrowRight size={14} />
                   </Button>
                 </div>
               </div>

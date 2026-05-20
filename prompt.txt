@@ -1,69 +1,250 @@
-Improve admin dashboard card layout to match statistics page style.
-
-Problem:
-The dashboard cards are stacked one under another, making the page too long on mobile.
-The statistics page looks better because cards are arranged side by side in a compact grid.
+Implement multi-restaurant management for BarOrder QR progressively and safely.
 
 Goal:
-Make /admin/dashboard layout more compact and premium, like /admin/statistics.
+Transform BarOrder into a real multi-restaurant SaaS platform.
 
-Do not change backend logic.
-Do not change statistics calculations.
-Do not break dashboard data.
+IMPORTANT:
+Do NOT break the existing restaurant “Le Palais”.
+Do NOT delete existing data.
+Do NOT break:
+- login
+- roles
+- orders
+- kitchen
+- products
+- categories
+- tables
+- QR
+- payments
+- promotions
+- server calls
+- dashboard
+- client menu
 
-Tasks:
+==================================================
+1. CREATE RESTAURANTS ADMIN PAGE
+==================================================
 
-1. Dashboard KPI grid
-Change dashboard KPI cards layout:
-- mobile: 2 cards per row when screen width allows
-- very small mobile: 1 card per row if needed
-- tablet: 2 or 3 cards per row
-- desktop: 4 cards per row
+Create page:
+ /admin/restaurants
 
-2. Card size
-Reduce excessive height:
-- smaller padding on mobile
-- compact icons
-- keep numbers readable
-- keep labels visible
-- no text cut
+Visible only to:
+- super_admin
 
-3. Layout style
-Use same visual rhythm as Statistics page:
-- clean grid
-- equal card heights
-- balanced spacing
-- premium dark cards
-- gold/emerald accent icons
+Sidebar label:
+FR: Restaurants
+EN: Restaurants
 
-4. Dashboard sections
-Keep important sections but arrange better:
-- CA du jour
-- Commandes aujourd’hui
-- Commandes en attente
-- Panier moyen
-- Tables actives
+Features:
+- list restaurants
+- add restaurant
+- edit restaurant
+- activate/deactivate restaurant
+- view restaurant details
 
-They should not create a very long vertical page.
+Restaurant fields:
+- name
+- slug
+- address
+- phone
+- currency
+- primary_color
+- logo_url
+- is_active
 
-5. Mobile responsive
-On iPhone:
-- cards aligned cleanly
-- no overflow
-- no text clipping
-- bottom safe-area respected
+Design:
+- premium admin style
+- mobile responsive cards
+- desktop table/list
+- no horizontal overflow
 
-6. Bilingual
-Keep labels translated FR/EN.
+==================================================
+2. BACKEND RESTAURANT CRUD
+==================================================
 
-7. Build and push
+Create admin endpoints:
+
+GET /api/admin/restaurants
+POST /api/admin/restaurants
+PATCH /api/admin/restaurants/:id
+PATCH /api/admin/restaurants/:id/status
+
+Validation:
+- name required
+- slug unique
+- currency default FCFA
+- primary_color default #d4a843
+- is_active default true
+
+Do not allow non-super_admin to create restaurants.
+
+==================================================
+3. DATABASE SAFETY
+==================================================
+
+Ensure restaurants table exists.
+
+Use safe migration only:
+CREATE TABLE IF NOT EXISTS restaurants ...
+
+Do not drop existing table.
+
+Ensure Le Palais exists:
+- name = Le Palais
+- slug = le-palais
+- currency = FCFA
+- is_active = true
+
+==================================================
+4. RESTAURANT_ID ISOLATION
+==================================================
+
+Audit and ensure restaurant_id exists on:
+- users
+- products
+- categories
+- tables
+- orders
+- order_items if needed
+- payments
+- promotions
+- server_calls
+
+Use:
+ALTER TABLE ... ADD COLUMN IF NOT EXISTS restaurant_id INTEGER REFERENCES restaurants(id)
+
+Do not delete data.
+
+For existing data:
+- set restaurant_id to Le Palais id when null.
+
+==================================================
+5. ROLE-BASED ACCESS
+==================================================
+
+super_admin:
+- sees all restaurants
+- can create/edit restaurants
+- can create admins for any restaurant
+
+admin/manager:
+- sees only their restaurant data
+
+waiter/kitchen/cashier:
+- sees only their restaurant data
+
+Do not expose other restaurants’ data.
+
+==================================================
+6. USERS RESTAURANT ASSIGNMENT
+==================================================
+
+In /admin/users:
+- super_admin can choose restaurant when creating/editing user
+- admin can only create users for their own restaurant
+- non-super_admin cannot assign another restaurant
+
+Add restaurant column/display:
+- restaurant name
+
+==================================================
+7. CLIENT ROUTING
+==================================================
+
+Keep existing route:
+ /r/:slug/table/:tableId
+
+It must load restaurant by slug.
+
+If restaurant inactive:
+show:
+FR: Ce restaurant n’est pas disponible actuellement
+EN: This restaurant is currently unavailable
+
+If slug not found:
+show clean 404.
+
+==================================================
+8. PUBLIC RESTAURANTS PAGE
+==================================================
+
+Improve /restaurants:
+- show all active restaurants
+- logo
+- name
+- address
+- phone
+- button “Voir le menu” / “View menu”
+- premium responsive design
+
+For now, if no table selected, button can open:
+ /r/:slug/table/1
+
+==================================================
+9. QR TABLES
+==================================================
+
+/admin/tables must generate QR using current restaurant slug:
+ /r/:slug/table/:tableId
+
+Super_admin can filter by restaurant.
+Admin sees only own restaurant tables.
+
+==================================================
+10. DASHBOARD/STATS FILTERING
+==================================================
+
+Every dashboard/statistic query must filter by restaurant_id.
+
+super_admin:
+- can optionally filter by restaurant
+- default can show selected/current restaurant
+
+admin:
+- only own restaurant
+
+==================================================
+11. BILINGUAL
+==================================================
+
+All new texts must use existing i18n:
+FR/EN.
+
+No hardcoded visible text.
+
+==================================================
+12. SAFETY / PERFORMANCE
+==================================================
+
+- no localhost hardcoded
+- no black screen
+- clean error messages
+- keep old Le Palais data working
+- no massive refactor if not needed
+
+==================================================
+13. BUILD AND PUSH
+==================================================
+
+Run:
 npm run build
+
+Then:
 git add .
-git commit -m "Improve dashboard compact KPI layout"
+git commit -m "Add multi restaurant management foundation"
 git push origin main
 
-Acceptance:
-- dashboard looks compact like statistics
-- cards are not all stacked vertically
-- mobile page is shorter and cleaner
-- desktop still looks premium
+==================================================
+ACCEPTANCE TEST
+==================================================
+
+1. Login as super_admin.
+2. Sidebar shows Restaurants.
+3. Create a second restaurant.
+4. Restaurant appears in /admin/restaurants.
+5. Le Palais still works.
+6. /restaurants shows active restaurants.
+7. /r/le-palais/table/1 still works.
+8. Orders/products/tables remain scoped by restaurant.
+9. Admin users do not see other restaurants’ data.
+10. Build passes.

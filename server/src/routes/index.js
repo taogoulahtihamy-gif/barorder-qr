@@ -12,6 +12,7 @@ import settingsRoutes from './settings.js';
 import statsRoutes from './stats.js';
 import userRoutes from './users.js';
 import promotionRoutes from './promotions.js';
+import restaurantRoutes from './restaurants.js';
 import waveRoutes from './wave.js';
 import orangeMoneyRoutes from './orangeMoney.js';
 import { query } from '../config/database.js';
@@ -34,6 +35,7 @@ router.use('/admin/settings', settingsRoutes);
 router.use('/admin/stats', statsRoutes);
 router.use('/admin/users', userRoutes);
 router.use('/admin/promotions', promotionRoutes);
+router.use('/admin/restaurants', restaurantRoutes);
 
 router.get('/restaurants', async (req, res) => {
   try {
