@@ -1,118 +1,31 @@
-Final production stabilization fixes for BarOrder QR.
+Final cleanup before production validation.
 
-Context:
-The project was reviewed and is mostly stable now.
-Only a few technical issues remain before continuing features.
+1. Stop tracking client/dist:
+git rm -r --cached client/dist
 
-Do NOT redesign.
-Do NOT add new features.
-Do NOT break existing functionality.
-
-Fix only these points:
-
-1. Fix frontend API URL configuration
-
-Current issue:
-client/.env contains:
-VITE_API_URL=https://barorder-qr.onrender.com/api
-
-But the code already appends /api/... in requests.
-This may create:
-https://barorder-qr.onrender.com/api/api/...
-
-Required:
-Set API base URL to:
-VITE_API_URL=https://barorder-qr.onrender.com
-
-Ensure code uses:
-${API_URL}/api/...
-
-Do not double-prefix /api.
-
-Search and fix any:
-- /api/api
-- localhost:5000
-- hardcoded Render URL duplicated with /api
-
-2. Environment security
-
-Ensure .gitignore contains:
+2. Ensure .gitignore contains:
+dist
+client/dist
+node_modules
 .env
 client/.env
 server/.env
-node_modules
-dist
-build
 
-If .env files are tracked by git, stop tracking them safely:
-git rm --cached .env
-git rm --cached client/.env
-git rm --cached server/.env
+3. Do not delete local files, only untrack generated files.
 
-Do NOT delete local .env files.
-
-Create/update:
-.env.example
-client/.env.example
-server/.env.example
-
-with safe placeholder values only.
-
-3. Clean build
-
-For client:
-- do not commit node_modules
-- if Rollup optional dependency issue exists, document clean install:
-  rm -rf node_modules package-lock.json
-  npm install
-  npm run build
-
-Run:
+4. Clean client install:
 cd client
+rm -rf node_modules
 npm install
 npm run build
 
-For server:
-Run:
-cd server
-npm install
-node --check src/server.js
-
-4. Commit pending files
-
-Check:
-git status
-
-Commit useful pending files:
-- .gitignore
-- client/vercel.json
-- env examples
-- API config fixes
-
-Do not commit:
-- .env
-- node_modules
-- dist
-
-5. Final verification
-
-Verify:
-- no localhost in client production code
-- no /api/api
-- Vercel SPA rewrite remains in client/vercel.json
-- backend starts
-- frontend builds
-
-6. Push
-
-Run:
+5. Commit:
 git add .
-git commit -m "Final production stabilization fixes"
+git commit -m "Final cleanup generated files and build config"
 git push origin main
 
-Final response must include:
-- files modified
-- build result
-- env security result
-- confirmation no /api/api remains
-- confirmation no localhost remains in production client code
+Acceptance:
+- client/dist is not tracked anymore
+- .env files are not tracked
+- npm run build passes
+- git status clean
