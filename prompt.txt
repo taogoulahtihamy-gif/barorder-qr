@@ -1,227 +1,118 @@
-Clean and stabilize BarOrder QR technically without adding new features.
+Final production stabilization fixes for BarOrder QR.
 
 Context:
-Project is already advanced. Do not rebuild everything.
-Goal is to clean, stabilize, and prepare production.
+The project was reviewed and is mostly stable now.
+Only a few technical issues remain before continuing features.
 
-Do NOT break:
-- admin login
-- roles/users
-- restaurants
-- QR table flow
-- client menu/cart/checkout
-- orders
-- kitchen
-- payments simulated
-- promotions
-- tables
-- statistics
-- socket sync
+Do NOT redesign.
+Do NOT add new features.
+Do NOT break existing functionality.
 
-==================================================
-1. CLEAN CUSTOMER ROUTES
-==================================================
+Fix only these points:
 
-Audit router/index.jsx and customer routes.
+1. Fix frontend API URL configuration
 
-Problem:
-There are old/duplicate routes like:
-- /r/:slug/table/:tableId
-- /r/:restaurantSlug/table/:tableId
-- /menu/:restaurantSlug/:tableId
-- /table/:tableId
+Current issue:
+client/.env contains:
+VITE_API_URL=https://barorder-qr.onrender.com/api
 
-Keep canonical routes:
+But the code already appends /api/... in requests.
+This may create:
+https://barorder-qr.onrender.com/api/api/...
 
-Public restaurant:
-- /r/:slug
-- /r/:slug/menu
+Required:
+Set API base URL to:
+VITE_API_URL=https://barorder-qr.onrender.com
 
-QR table:
-- /r/:slug/table/:tableId
-- /r/:slug/table/:tableId/menu
-- /r/:slug/table/:tableId/cart
-- /r/:slug/table/:tableId/checkout
-- /r/:slug/table/:tableId/order/:orderId
-- /r/:slug/table/:tableId/assistance
+Ensure code uses:
+${API_URL}/api/...
 
-Admin:
-- /admin/*
-- /admin/login
+Do not double-prefix /api.
 
-Rules:
-- no automatic redirect from QR table to wrong route
-- preserve slug and tableId everywhere
-- no literal “:tableId” visible
-- old routes can redirect safely to canonical routes
+Search and fix any:
+- /api/api
+- localhost:5000
+- hardcoded Render URL duplicated with /api
 
-==================================================
-2. MULTI-RESTAURANT ISOLATION CHECK
-==================================================
+2. Environment security
 
-Verify all data queries are scoped by restaurant_id.
+Ensure .gitignore contains:
+.env
+client/.env
+server/.env
+node_modules
+dist
+build
 
-Tables requiring restaurant_id:
-- users
-- products
-- categories
-- tables
-- orders
-- order_items if useful
-- payments
-- promotions
-- server_calls
+If .env files are tracked by git, stop tracking them safely:
+git rm --cached .env
+git rm --cached client/.env
+git rm --cached server/.env
 
-Rules:
-- super_admin can see all or selected restaurant
-- admin/manager/waiter/kitchen/cashier see only their restaurant
-- public client routes load restaurant by slug
-- no data leakage between restaurants
+Do NOT delete local .env files.
 
-If restaurant_id is null on old data:
-- assign it to Le Palais safely
-- never delete data
+Create/update:
+.env.example
+client/.env.example
+server/.env.example
 
-==================================================
-3. API BASE CLEANUP
-==================================================
+with safe placeholder values only.
 
-Search entire client/src for:
-- localhost
-- 127.0.0.1
-- hardcoded Render URLs
-- hardcoded Vercel URLs
+3. Clean build
 
-Use central API config only.
-
-Production API:
-- use VITE_API_URL
-
-Development:
-- fallback to localhost only in dev mode
-
-No production code should call localhost.
-
-==================================================
-4. REMOVE DEBUG NOISE
-==================================================
-
-Remove or guard debug logs:
-- [REFETCH TRIGGERED]
-- [SOCKET EVENT RECEIVED]
-- [CUSTOMER PARAMS]
-- [CUSTOMER RESTAURANT]
-- excessive console.log
-
-Keep console.error for real errors.
-Debug logs only in development.
-
-==================================================
-5. ENV SECURITY
-==================================================
-
-Check .gitignore:
-Must ignore:
-- .env
-- client/.env
-- server/.env
-- node_modules
-- dist
-- build
-
-Keep:
-- .env.example
-
-Do not commit real secrets.
-
-If real .env exists in repo tracking:
-- stop tracking it safely with git rm --cached
-- do not delete local file
-
-==================================================
-6. BUILD STABILITY
-==================================================
-
-Do not rely on broken local node_modules.
-
-Clean install guidance:
-- if build fails because Rollup optional dependency missing, fix package lock/install cleanly
+For client:
 - do not commit node_modules
+- if Rollup optional dependency issue exists, document clean install:
+  rm -rf node_modules package-lock.json
+  npm install
+  npm run build
 
 Run:
-cd client && npm install && npm run build
-cd server && npm install && npm run start-check if available
+cd client
+npm install
+npm run build
 
-If no start-check exists, at least run:
+For server:
+Run:
+cd server
+npm install
 node --check src/server.js
 
-==================================================
-7. ERROR BOUNDARIES
-==================================================
+4. Commit pending files
 
-Ensure customer and admin routes have error boundaries:
-- no black screen
-- clean fallback page
-- button back to menu/admin dashboard
+Check:
+git status
 
-Do not hide real errors silently.
-Show readable user message.
+Commit useful pending files:
+- .gitignore
+- client/vercel.json
+- env examples
+- API config fixes
 
-==================================================
-8. RESPONSIVE QUICK CHECK
-==================================================
+Do not commit:
+- .env
+- node_modules
+- dist
 
-Do not redesign.
-Only fix obvious layout regressions:
-- no horizontal overflow
-- bottom nav does not cover content
-- modal buttons visible
-- table cards not clipped
-
-==================================================
-9. ACCEPTANCE TESTS
-==================================================
+5. Final verification
 
 Verify:
+- no localhost in client production code
+- no /api/api
+- Vercel SPA rewrite remains in client/vercel.json
+- backend starts
+- frontend builds
 
-Customer QR:
-- /r/le-palais/table/3 opens correctly
-- logo/name visible
-- Table 3 visible
-- Voir le menu opens correct menu
-- cart/checkout/order tracking work
-
-Admin:
-- login works
-- restaurants page works
-- users page works
-- orders page works
-- kitchen works
-- tables QR works
-- statistics/dashboard work
-
-Multi-restaurant:
-- create second restaurant
-- admin scoped data remains isolated
-- Le Palais still works
-
-Console:
-- no critical ReferenceError
-- no black screen
-- no timeout 3000ms remaining
-
-==================================================
-10. COMMIT
-==================================================
+6. Push
 
 Run:
-git status
 git add .
-git commit -m "Clean routes and stabilize multi restaurant foundation"
+git commit -m "Final production stabilization fixes"
 git push origin main
 
 Final response must include:
-- files changed
-- what was cleaned
+- files modified
 - build result
-- any remaining risk
+- env security result
+- confirmation no /api/api remains
+- confirmation no localhost remains in production client code
