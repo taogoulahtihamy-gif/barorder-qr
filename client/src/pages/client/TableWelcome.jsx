@@ -46,15 +46,30 @@ export default function TableWelcome() {
     });
   }, [tableId, slugParam, setTableId, setRestaurantId, setRestaurantSlug, setRestaurant]);
 
+  if (!tableId || isNaN(Number(tableId))) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center mb-6 mx-auto">
+            <span className="text-red-400 text-3xl">!</span>
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">{t('Table introuvable')}</h2>
+          <p className="text-white/50">{t('Table not found')}</p>
+        </div>
+      </div>
+    );
+  }
   if (loading || !data?.table) return <LoadingSpinner size="lg" />;
 
-  const restaurantName = data?.restaurant?.name || 'BarOrder Restaurant';
-  const tableName = data?.table?.table_number || `Table ${tableId}`;
+  const restaurantName = data?.restaurant?.name || 'BarOrder';
+  const tableName = data?.table?.table_number || tableId;
   const slug = data?.restaurant?.slug || slugParam;
   const logoUrl = data?.restaurant?.logo_url || '';
+  const primaryColor = data?.restaurant?.primary_color || '#D4AF37';
   const phone = data?.restaurant?.phone || '';
   const address = data?.restaurant?.address || '';
   const base = slug && tableId ? `/r/${slug}/table/${tableId}` : '';
+  const monogram = restaurantName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
 
   return (
     <div className="relative min-h-screen bg-black overflow-hidden pb-32">
@@ -77,15 +92,19 @@ export default function TableWelcome() {
 
       <div className="relative z-10 pb-24">
         <div className={`px-4 pt-12 pb-8 text-center ${visible ? 'animate-fade-in-up' : 'opacity-0'}`}>
-          <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-gold-500/20 to-gold-500/5 border border-gold-500/20 mb-6 animate-float">
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-gold-500/20 to-gold-500/5 border border-gold-500/20 mb-6 animate-float" style={{ borderColor: primaryColor + '33' }}>
             {logoUrl ? (
               <img src={logoUrl} alt={restaurantName} className="w-16 h-16 rounded-full object-cover" />
             ) : (
-              <ChefHat size={36} className="text-gold-500" />
+              <span className="text-3xl font-bold" style={{ color: primaryColor }}>{monogram}</span>
             )}
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2 tracking-tight">{restaurantName}</h1>
-          <p className="text-xl sm:text-2xl text-gold-500 font-medium">{t('Bienvenue à la')} <span className="text-white">{tableName}</span></p>
+          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2 tracking-tight">
+            {t('Bienvenue chez')} {restaurantName}
+          </h1>
+          <p className="text-xl sm:text-2xl font-medium" style={{ color: primaryColor }}>
+            {t('Table')} <span className="text-white">{tableName}</span>
+          </p>
         </div>
 
         {recentOrder && (

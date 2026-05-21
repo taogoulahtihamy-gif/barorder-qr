@@ -24,15 +24,15 @@ export async function getRestaurant(req, res) {
 
 export async function createRestaurant(req, res) {
   try {
-    const { name, slug, address, phone, currency, primary_color, logo_url } = req.body;
+    const { name, slug, address, phone, currency, primary_color, logo_url, is_active } = req.body;
     if (!name) return res.status(400).json({ error: 'name required' });
     const existing = await queryOne('SELECT id FROM restaurants WHERE slug = $1', [slug || '']);
     if (existing) return res.status(400).json({ error: 'Ce slug est déjà utilisé' });
     const restaurant = await queryOne(`
       INSERT INTO restaurants (name, slug, address, phone, currency, primary_color, logo_url, is_active)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, true)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING *
-    `, [name, slug || null, address || null, phone || null, currency || 'FCFA', primary_color || '#d4a843', logo_url || null]);
+    `, [name, slug || null, address || null, phone || null, currency || 'FCFA', primary_color || '#d4a843', logo_url || null, is_active !== false]);
     res.status(201).json(restaurant);
   } catch (err) {
     console.error('[createRestaurant] error:', err.message);
@@ -43,7 +43,7 @@ export async function createRestaurant(req, res) {
 export async function updateRestaurant(req, res) {
   try {
     const id = Number(req.params.id);
-    const { name, slug, address, phone, currency, primary_color, logo_url } = req.body;
+    const { name, slug, address, phone, currency, primary_color, logo_url, is_active } = req.body;
     const existing = await queryOne('SELECT id FROM restaurants WHERE id = $1', [id]);
     if (!existing) return res.status(404).json({ error: 'Restaurant non trouvé' });
     if (slug) {
@@ -60,6 +60,7 @@ export async function updateRestaurant(req, res) {
     if (currency !== undefined) { sets.push(`currency = $${i++}`); vals.push(currency); }
     if (primary_color !== undefined) { sets.push(`primary_color = $${i++}`); vals.push(primary_color); }
     if (logo_url !== undefined) { sets.push(`logo_url = $${i++}`); vals.push(logo_url); }
+    if (is_active !== undefined) { sets.push(`is_active = $${i++}`); vals.push(Boolean(is_active)); }
     if (!sets.length) return res.status(400).json({ error: 'No fields to update' });
     vals.push(id);
     const restaurant = await queryOne(

@@ -1,87 +1,194 @@
-URGENT FIX customer black screen after order creation.
+URGENT FIX multi-restaurant bugs and restore premium client welcome page.
 
-Problem:
-After a customer creates an order from QR/client checkout, the client side becomes black/blank.
-The order may be created, but the confirmation/tracking page crashes.
+Problems:
+1. Customer welcome page is degraded:
+- no real restaurant logo
+- shows generic BarOrder
+- shows “Table :tableId”
+- design is worse than before
 
-Do NOT modify admin.
-Do NOT modify backend unless strictly necessary.
-Do NOT break order creation, checkout, cart, menu, QR, multi-restaurant.
+2. Creating restaurant fails:
+column "is_active" of relation "restaurants" does not exist
 
-Fix only customer post-order flow.
+3. Add restaurant form has only logo URL.
+Need an “Importer logo” button like admin settings.
 
-1. Inspect customer flow after confirm order:
-- CheckoutPage
-- OrderConfirmationPage
-- OrderTrackingPage
-- CustomerLayout
-- router/index.jsx
-- orderService
-- cart store
+Do NOT break:
+- existing Le Palais data
+- QR routes
+- admin login
+- orders
+- kitchen
+- users
+- roles
+- products
+- menu
+- checkout
 
-2. Find the crash source:
-Search for:
-- undefined order
-- order.items.map without fallback
-- order.customer.name
-- order.table.number
-- t(...) without useT()
-- tStatus(...) without useT()
-- navigate to wrong route
-- invalid orderId
-- missing restaurant slug/tableId
-- Response/null handling
-- localStorage parse error
+==================================================
+1. FIX DATABASE RESTAURANTS COLUMN
+==================================================
 
-3. Add safe guards:
-- if order is loading: show premium loader
-- if order not found: show clean error with button “Retour au menu”
-- if order.items missing: use []
-- if customer missing: use fallback
-- if table missing: use tableId from route
-- if total missing: calculate from items or show 0
+Add safe migration on backend startup or migration file:
 
-4. Routing after order creation:
-After successful checkout, navigate to:
- /r/:slug/table/:tableId/order/:orderId
+ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
+ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS logo_url TEXT;
+ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS primary_color TEXT DEFAULT '#d4a843';
+ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'FCFA';
+ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS address TEXT;
+ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS phone TEXT;
 
-Do NOT navigate to a route that does not exist.
-Keep slug and tableId.
+Do not drop data.
 
-5. Customer order tracking page:
-Must render safely even if backend response is partial.
+Ensure restaurant CRUD uses is_active only after column exists.
 
-Display:
-- order number
-- status
-- table
-- items
-- total
-- payment status
-- estimated time
-- button “Retour au menu”
+==================================================
+2. RESTORE PREMIUM CLIENT WELCOME PAGE
+==================================================
 
-6. Error boundary:
-Add CustomerErrorBoundary around customer routes.
-If a customer page crashes:
-- show clean message instead of black screen
-- button to return to menu
-- no blank page
+For route:
+/r/:slug/table/:tableId
 
-7. Bilingual:
-All new labels use i18n.
-No hardcoded visible text if possible.
+It must show:
+- real restaurant name from backend
+- real restaurant logo if logo_url exists
+- table number from route param
+- not “Table :tableId”
+- not generic BarOrder unless restaurant not loaded
 
-8. Build and push:
+Correct display:
+FR: Bienvenue chez Le Palais
+EN: Welcome to Le Palais
+
+FR: Table 3
+EN: Table 3
+
+Buttons:
+FR: Voir le menu
+EN: View menu
+
+FR: Appeler un serveur
+EN: Call a server
+
+Use restaurant.primary_color if available.
+Use restaurant.logo_url if available.
+
+If logo is missing:
+- show premium fallback monogram using first letters of restaurant name
+- not generic QR icon only
+
+==================================================
+3. FIX ROUTE PARAM TABLE ID
+==================================================
+
+Find where “Table :tableId” is displayed.
+Fix:
+- use params.tableId value
+- not literal string ":tableId"
+
+If tableId missing:
+show clean error:
+FR: Table introuvable
+EN: Table not found
+
+==================================================
+4. RESTAURANT LOGO UPLOAD
+==================================================
+
+In /admin/restaurants add/edit modal:
+Add button:
+FR: Importer logo
+EN: Upload logo
+
+Like admin settings.
+
+Options:
+- file input accept image/png,image/jpeg,image/webp
+- preview uploaded logo
+- store logo URL in logo_url
+
+If project already has upload service/storage:
+reuse it.
+
+If no upload backend exists:
+implement base64/local preview only OR create simple backend upload endpoint:
+POST /api/admin/uploads/logo
+
+Return:
+{ url: "..." }
+
+But do not break if upload service unavailable.
+Keep manual logo_url input as fallback.
+
+==================================================
+5. RESTAURANT FORM UX
+==================================================
+
+Restaurant modal must include:
+- Nom
+- Slug
+- Adresse
+- Téléphone
+- Devise
+- Couleur principale
+- Logo URL
+- Importer logo
+- Preview logo
+- Actif/Inactif toggle
+
+Creating restaurant must work without error.
+
+==================================================
+6. PUBLIC /RESTAURANTS PAGE
+==================================================
+
+Restaurant cards must show:
+- logo
+- name
+- address
+- phone
+- active status
+- button Voir le menu
+
+Use logo_url if present.
+
+==================================================
+7. CLIENT BRANDING EVERYWHERE
+==================================================
+
+Use restaurant branding on:
+- welcome page
+- menu page header
+- cart page header
+- checkout page
+- order tracking
+
+Do not show generic BarOrder if restaurant data is loaded.
+
+==================================================
+8. BILINGUAL
+==================================================
+
+All new labels use i18n FR/EN.
+No hardcoded visible text.
+
+==================================================
+9. BUILD AND PUSH
+==================================================
+
+Run:
 npm run build
+
+Then:
 git add .
-git commit -m "Fix customer black screen after order creation"
+git commit -m "Fix restaurant creation logo upload and client branding"
 git push origin main
 
 Acceptance:
-- create order from QR
-- no black screen
-- confirmation/tracking page opens
-- order details visible
-- menu/cart still work
-- admin still receives order
+- create restaurant works, no is_active error
+- add restaurant modal has Importer logo button
+- logo preview works
+- /r/le-palais/table/3 shows Le Palais logo/name
+- table shows “Table 3”, not “Table :tableId”
+- client welcome page looks premium again
+- BarOrder generic only appears as fallback

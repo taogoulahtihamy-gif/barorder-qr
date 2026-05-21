@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Store, Globe, MapPin, Phone as PhoneIcon, Palette, RefreshCw, DollarSign, Eye, EyeOff } from 'lucide-react';
+import { Plus, Store, Globe, MapPin, Phone as PhoneIcon, Palette, DollarSign, Upload } from 'lucide-react';
 import Button from '../../components/Button';
 import Card from '../../components/Card';
 import Input from '../../components/Input';
@@ -15,7 +15,7 @@ export default function RestaurantsPage() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ name: '', slug: '', address: '', phone: '', currency: 'FCFA', primary_color: '#d4a843', logo_url: '' });
+  const [form, setForm] = useState({ name: '', slug: '', address: '', phone: '', currency: 'FCFA', primary_color: '#d4a843', logo_url: '', is_active: true });
 
   const fetch = useCallback(async () => {
     try {
@@ -32,13 +32,13 @@ export default function RestaurantsPage() {
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ name: '', slug: '', address: '', phone: '', currency: 'FCFA', primary_color: '#d4a843', logo_url: '' });
+    setForm({ name: '', slug: '', address: '', phone: '', currency: 'FCFA', primary_color: '#d4a843', logo_url: '', is_active: true });
     setModalOpen(true);
   };
 
   const openEdit = (r) => {
     setEditing(r);
-    setForm({ name: r.name, slug: r.slug || '', address: r.address || '', phone: r.phone || '', currency: r.currency || 'FCFA', primary_color: r.primary_color || '#d4a843', logo_url: r.logo_url || '' });
+    setForm({ name: r.name, slug: r.slug || '', address: r.address || '', phone: r.phone || '', currency: r.currency || 'FCFA', primary_color: r.primary_color || '#d4a843', logo_url: r.logo_url || '', is_active: r.is_active !== false });
     setModalOpen(true);
   };
 
@@ -67,6 +67,19 @@ export default function RestaurantsPage() {
     } catch (err) {
       toast.error(err.response?.data?.error || t('Erreur'));
     }
+  };
+
+  const handleLogoUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error(t('Image trop lourde. Choisissez une image de moins de 2 Mo.'));
+      e.target.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => setForm((prev) => ({ ...prev, logo_url: ev.target.result }));
+    reader.readAsDataURL(file);
   };
 
   if (loading) return <LoadingSpinner size="lg" />;
@@ -162,7 +175,35 @@ export default function RestaurantsPage() {
               />
             </div>
           </div>
-          <Input label={t('URL du logo')} value={form.logo_url} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} />
+          <div className="space-y-1.5">
+            <label className="text-sm text-white/60">{t('Logo')}</label>
+            <div className="flex gap-2">
+              <input
+                placeholder={t('URL du logo')}
+                value={form.logo_url}
+                onChange={(e) => setForm({ ...form, logo_url: e.target.value })}
+                className="flex-1 bg-zinc-900 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-gold-500/50"
+              />
+              <label className="flex items-center gap-1.5 px-3 bg-zinc-800 border border-white/10 rounded-xl cursor-pointer hover:bg-zinc-700 transition-colors text-xs text-white/70 whitespace-nowrap">
+                <input type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handleLogoUpload} />
+                <Upload size={14} />
+                {t('Importer logo')}
+              </label>
+            </div>
+            {form.logo_url && (
+              <img src={form.logo_url} alt="logo preview" className="w-20 h-20 rounded-lg object-cover border border-white/10 mt-2" onError={(e) => { e.target.style.display = 'none'; }} />
+            )}
+          </div>
+          <div className="flex items-center gap-3 pt-2">
+            <span className="text-sm text-white/60">{t('Actif')}</span>
+            <button
+              type="button"
+              onClick={() => setForm({ ...form, is_active: !form.is_active })}
+              className={`relative w-10 h-5 rounded-full transition-colors ${form.is_active ? 'bg-emerald-500' : 'bg-white/20'}`}
+            >
+              <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${form.is_active ? 'translate-x-5' : 'translate-x-0.5'}`} />
+            </button>
+          </div>
           <div className="flex justify-end gap-3 pt-2">
             <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>{t('Annuler')}</Button>
             <Button type="submit" variant="gold">{editing ? t('Enregistrer') : t('Créer')}</Button>

@@ -531,6 +531,9 @@ export const fr = {
   'Aucun restaurant trouvé': 'Aucun restaurant trouvé',
   'Voir le menu': 'Voir le menu',
   'Sélectionner un restaurant': 'Sélectionner un restaurant',
+  'Bienvenue chez': 'Bienvenue chez',
+  'Importer logo': 'Importer logo',
+  'Table introuvable': 'Table introuvable',
 };
 
 export const en = {
@@ -1066,6 +1069,9 @@ export const en = {
   'Aucun restaurant trouvé': 'No restaurants found',
   'Voir le menu': 'View menu',
   'Sélectionner un restaurant': 'Select a restaurant',
+  'Bienvenue chez': 'Welcome to',
+  'Importer logo': 'Upload logo',
+  'Table introuvable': 'Table not found',
 };
 
 export function tStatus(status, lang) {
