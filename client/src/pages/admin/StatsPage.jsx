@@ -30,7 +30,7 @@ export default function StatsPage() {
     if (isFetchingRef.current || now - lastFetchAtRef.current < 2000) return;
     isFetchingRef.current = true;
     lastFetchAtRef.current = now;
-    console.log('[REFETCH TRIGGERED] stats');
+    if (import.meta.env.DEV) console.log('[REFETCH TRIGGERED] stats');
     try {
       const result = await getStats();
       if (result) setStats(result);

@@ -1,81 +1,227 @@
-URGENT FIX QR scan customer welcome error.
+Clean and stabilize BarOrder QR technically without adding new features.
 
-Current state:
-- Header correctly shows Le Palais and logo.
-- But when scanning QR route /r/le-palais/table/:tableId, page shows:
-“Une erreur est survenue”
-- So restaurant loading works, but customer table welcome content crashes.
+Context:
+Project is already advanced. Do not rebuild everything.
+Goal is to clean, stabilize, and prepare production.
 
-Fix only customer QR table welcome page.
-
-Do NOT touch:
-- admin
-- restaurants CRUD
+Do NOT break:
+- admin login
+- roles/users
+- restaurants
+- QR table flow
+- client menu/cart/checkout
 - orders
 - kitchen
-- users
-- roles
+- payments simulated
+- promotions
+- tables
+- statistics
+- socket sync
 
-Tasks:
+==================================================
+1. CLEAN CUSTOMER ROUTES
+==================================================
 
-1. Inspect customer table route:
+Audit router/index.jsx and customer routes.
+
+Problem:
+There are old/duplicate routes like:
 - /r/:slug/table/:tableId
-- TableWelcome
-- CustomerWelcome
-- CustomerLayout
-- restaurant loading hook
-- table loading hook
-- server call button
+- /r/:restaurantSlug/table/:tableId
+- /menu/:restaurantSlug/:tableId
+- /table/:tableId
 
-2. Find crash source:
-Search for unsafe access:
-- table.id
-- table.number
-- restaurant.logo_url
-- restaurant.primary_color
-- restaurant.name
-- t(...)
-- tStatus(...)
-- useParams tableId
-- Number(tableId)
-- tableId.map or undefined.map
+Keep canonical routes:
 
-3. Add safe fallbacks:
-- if restaurant exists but table is not fetched, use tableId from route
-- show “Table 3” from params
-- do not crash if table object is null
-- do not require table database record to render welcome page
+Public restaurant:
+- /r/:slug
+- /r/:slug/menu
 
-4. Correct table display:
-Never display literal “:tableId”.
-Always display:
-FR: Table 3
-EN: Table 3
+QR table:
+- /r/:slug/table/:tableId
+- /r/:slug/table/:tableId/menu
+- /r/:slug/table/:tableId/cart
+- /r/:slug/table/:tableId/checkout
+- /r/:slug/table/:tableId/order/:orderId
+- /r/:slug/table/:tableId/assistance
 
-5. Button routing:
-Voir le menu must navigate to:
- /r/:slug/table/:tableId/menu
+Admin:
+- /admin/*
+- /admin/login
 
-Appeler un serveur must use same slug/tableId.
+Rules:
+- no automatic redirect from QR table to wrong route
+- preserve slug and tableId everywhere
+- no literal “:tableId” visible
+- old routes can redirect safely to canonical routes
 
-6. If table does not exist in database:
-show clean message:
-“Cette table n’existe pas”
-But do not crash.
+==================================================
+2. MULTI-RESTAURANT ISOLATION CHECK
+==================================================
 
-7. Add console error detail in development only:
-console.error("[CUSTOMER WELCOME ERROR]", error)
+Verify all data queries are scoped by restaurant_id.
 
-8. Build and push:
-npm run build
+Tables requiring restaurant_id:
+- users
+- products
+- categories
+- tables
+- orders
+- order_items if useful
+- payments
+- promotions
+- server_calls
+
+Rules:
+- super_admin can see all or selected restaurant
+- admin/manager/waiter/kitchen/cashier see only their restaurant
+- public client routes load restaurant by slug
+- no data leakage between restaurants
+
+If restaurant_id is null on old data:
+- assign it to Le Palais safely
+- never delete data
+
+==================================================
+3. API BASE CLEANUP
+==================================================
+
+Search entire client/src for:
+- localhost
+- 127.0.0.1
+- hardcoded Render URLs
+- hardcoded Vercel URLs
+
+Use central API config only.
+
+Production API:
+- use VITE_API_URL
+
+Development:
+- fallback to localhost only in dev mode
+
+No production code should call localhost.
+
+==================================================
+4. REMOVE DEBUG NOISE
+==================================================
+
+Remove or guard debug logs:
+- [REFETCH TRIGGERED]
+- [SOCKET EVENT RECEIVED]
+- [CUSTOMER PARAMS]
+- [CUSTOMER RESTAURANT]
+- excessive console.log
+
+Keep console.error for real errors.
+Debug logs only in development.
+
+==================================================
+5. ENV SECURITY
+==================================================
+
+Check .gitignore:
+Must ignore:
+- .env
+- client/.env
+- server/.env
+- node_modules
+- dist
+- build
+
+Keep:
+- .env.example
+
+Do not commit real secrets.
+
+If real .env exists in repo tracking:
+- stop tracking it safely with git rm --cached
+- do not delete local file
+
+==================================================
+6. BUILD STABILITY
+==================================================
+
+Do not rely on broken local node_modules.
+
+Clean install guidance:
+- if build fails because Rollup optional dependency missing, fix package lock/install cleanly
+- do not commit node_modules
+
+Run:
+cd client && npm install && npm run build
+cd server && npm install && npm run start-check if available
+
+If no start-check exists, at least run:
+node --check src/server.js
+
+==================================================
+7. ERROR BOUNDARIES
+==================================================
+
+Ensure customer and admin routes have error boundaries:
+- no black screen
+- clean fallback page
+- button back to menu/admin dashboard
+
+Do not hide real errors silently.
+Show readable user message.
+
+==================================================
+8. RESPONSIVE QUICK CHECK
+==================================================
+
+Do not redesign.
+Only fix obvious layout regressions:
+- no horizontal overflow
+- bottom nav does not cover content
+- modal buttons visible
+- table cards not clipped
+
+==================================================
+9. ACCEPTANCE TESTS
+==================================================
+
+Verify:
+
+Customer QR:
+- /r/le-palais/table/3 opens correctly
+- logo/name visible
+- Table 3 visible
+- Voir le menu opens correct menu
+- cart/checkout/order tracking work
+
+Admin:
+- login works
+- restaurants page works
+- users page works
+- orders page works
+- kitchen works
+- tables QR works
+- statistics/dashboard work
+
+Multi-restaurant:
+- create second restaurant
+- admin scoped data remains isolated
+- Le Palais still works
+
+Console:
+- no critical ReferenceError
+- no black screen
+- no timeout 3000ms remaining
+
+==================================================
+10. COMMIT
+==================================================
+
+Run:
+git status
 git add .
-git commit -m "Fix QR table welcome crash"
+git commit -m "Clean routes and stabilize multi restaurant foundation"
 git push origin main
 
-Acceptance:
-- scanning QR opens welcome page
-- Le Palais logo/name visible
-- Table number visible
-- no error screen
-- Voir le menu works
-- Appeler serveur works
+Final response must include:
+- files changed
+- what was cleaned
+- build result
+- any remaining risk

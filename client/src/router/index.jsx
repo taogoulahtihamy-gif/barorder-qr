@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import ClientLayout from '../layouts/ClientLayout';
 import AdminLayout from '../layouts/AdminLayout';
 import ProtectedRoute from '../components/ProtectedRoute';
@@ -12,7 +12,6 @@ import CartPage from '../pages/client/CartPage';
 import CheckoutPage from '../pages/client/CheckoutPage';
 import OrderPage from '../pages/client/OrderPage';
 import ServerCallPage from '../pages/client/ServerCallPage';
-import TableSlugPage from '../pages/client/TableSlugPage';
 
 import LoginPage from '../pages/admin/LoginPage';
 import DashboardPage from '../pages/admin/DashboardPage';
@@ -33,21 +32,33 @@ import PromotionsPage from '../pages/admin/PromotionsPage';
 
 import ErrorBoundary from '../components/ErrorBoundary';
 
+function OldMenuRedirect() {
+  const { slug, tableId } = useParams();
+  return <Navigate to={`/r/${slug}/table/${tableId}`} replace />;
+}
+
+function OldSlugRedirect() {
+  const { restaurantSlug, tableId } = useParams();
+  return <Navigate to={`/r/${restaurantSlug}/table/${tableId}`} replace />;
+}
+
 export default function AppRouter() {
   return (
     <Routes>
       <Route path="/" element={<ClientLayout><ErrorBoundary><LandingPage /></ErrorBoundary></ClientLayout>} />
       <Route path="/restaurants" element={<ClientLayout><ErrorBoundary><RestaurantsPage /></ErrorBoundary></ClientLayout>} />
 
-      {/* Customer sub-routes under /r/:slug/table/:tableId */}
+      {/* Customer canonical sub-routes under /r/:slug/table/:tableId */}
       <Route path="/r/:slug/table/:tableId" element={<ClientLayout><ErrorBoundary><TableWelcome /></ErrorBoundary></ClientLayout>} />
       <Route path="/r/:slug/table/:tableId/menu" element={<ClientLayout><ErrorBoundary><MenuPage /></ErrorBoundary></ClientLayout>} />
       <Route path="/r/:slug/table/:tableId/cart" element={<ClientLayout><ErrorBoundary><CartPage /></ErrorBoundary></ClientLayout>} />
+      <Route path="/r/:slug/table/:tableId/checkout" element={<ClientLayout><ErrorBoundary><CheckoutPage /></ErrorBoundary></ClientLayout>} />
       <Route path="/r/:slug/table/:tableId/assistance" element={<ClientLayout><ErrorBoundary><ServerCallPage /></ErrorBoundary></ClientLayout>} />
+      <Route path="/r/:slug/table/:tableId/order/:orderId" element={<ClientLayout><ErrorBoundary><OrderPage /></ErrorBoundary></ClientLayout>} />
 
-      {/* Old QR routes - redirect to welcome page */}
-      <Route path="/r/:slug/menu/:tableId" element={<Navigate to="../table/:tableId" replace />} />
-      <Route path="/r/:restaurantSlug/table/:tableId" element={<ClientLayout><TableSlugPage /></ClientLayout>} />
+      {/* Old QR routes - redirect to canonical */}
+      <Route path="/r/:slug/menu/:tableId" element={<OldMenuRedirect />} />
+      <Route path="/r/:restaurantSlug/table/:tableId" element={<OldSlugRedirect />} />
 
       {/* Legacy routes - keep working */}
       <Route path="/menu/:restaurantSlug/:tableId" element={<ClientLayout><ErrorBoundary><MenuPage /></ErrorBoundary></ClientLayout>} />

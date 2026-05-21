@@ -32,10 +32,11 @@ export async function updateServerCallStatus(req, res) {
     const { status } = req.body;
     const validStatuses = ['pending', 'acknowledged', 'resolved'];
     const newStatus = validStatuses.includes(status) ? status : 'resolved';
-    console.log('[updateServerCallStatus]', { id, status: newStatus });
+    const rid = Number(getRestaurantId(req));
+    console.log('[updateServerCallStatus]', { id, status: newStatus, restaurantId: rid });
     const call = await queryOne(`
-      UPDATE server_calls SET status = $1::text WHERE id = $2::int RETURNING *
-    `, [newStatus, id]);
+      UPDATE server_calls SET status = $1::text WHERE id = $2::int AND (restaurant_id = $3 OR restaurant_id IS NULL) RETURNING *
+    `, [newStatus, id, rid]);
     if (!call) return res.status(404).json({ error: 'Appel non trouvé' });
     try {
       req.app.get('io').emit('server_call_updated', call);

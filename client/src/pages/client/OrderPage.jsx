@@ -43,7 +43,8 @@ function ElapsedTime({ createdAt }) {
 }
 
 export default function OrderPage() {
-  const { orderNumber, slug } = useParams();
+  const { orderNumber, slug, orderId } = useParams();
+  const effectiveOrderNumber = orderNumber || orderId;
   const navigate = useNavigate();
   const { t, tStatus, setRestaurantSlug } = useApp();
   const [order, setOrder] = useState(null);
@@ -54,7 +55,7 @@ export default function OrderPage() {
     if (slug) setRestaurantSlug(slug);
     setLoading(true);
     setError(null);
-    getOrder(orderNumber).then((data) => {
+    getOrder(effectiveOrderNumber).then((data) => {
       if (data) setOrder(data);
       else setError('Order not found');
     }).catch((err) => {
@@ -66,7 +67,7 @@ export default function OrderPage() {
 
     const interval = setInterval(async () => {
       try {
-        const updated = await getOrder(orderNumber);
+        const updated = await getOrder(effectiveOrderNumber);
         if (updated) setOrder(updated);
       } catch (err) {
         console.error('[OrderPage] poll error:', err);
@@ -84,10 +85,10 @@ export default function OrderPage() {
         }
         return prev;
       });
-      getOrder(orderNumber).then(setOrder).catch(() => {});
+      getOrder(effectiveOrderNumber).then(setOrder).catch(() => {});
     }) : () => {};
     const unsubPay = socket ? onPaymentUpdated(() => {
-      getOrder(orderNumber).then(setOrder).catch(() => {});
+      getOrder(effectiveOrderNumber).then(setOrder).catch(() => {});
     }) : () => {};
 
     return () => {
@@ -95,7 +96,7 @@ export default function OrderPage() {
       unsubStatus();
       unsubPay();
     };
-  }, [orderNumber, slug, setRestaurantSlug, t]);
+  }, [effectiveOrderNumber, slug, setRestaurantSlug, t]);
 
   if (loading) {
     return (
@@ -138,7 +139,7 @@ export default function OrderPage() {
         <div className="w-20 h-20 rounded-full bg-wave-500/10 flex items-center justify-center mb-4">
           <CheckCircle size={40} className="text-wave-500" />
         </div>
-        <h1 className="text-2xl font-bold text-white mb-1">{t('Order')} #{orderNumber}</h1>
+        <h1 className="text-2xl font-bold text-white mb-1">{t('Order')} #{effectiveOrderNumber}</h1>
         <p className="text-white/50">{t('Your order has been received!')}</p>
       </div>
 

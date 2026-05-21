@@ -78,18 +78,19 @@ export async function updateOrderStatus(req, res) {
     // Auto-update table status
     if (order.table_id) {
       try {
+        const tableIds = [order.table_id, restaurantId];
         if (status === 'served') {
-          await query(`UPDATE restaurant_tables SET status = 'waiting_payment'::text WHERE id = $1`, [order.table_id]);
+          await query(`UPDATE restaurant_tables SET status = 'waiting_payment'::text WHERE id = $1 AND restaurant_id = $2`, tableIds);
           req.app.get('io').emit('table_status_updated', { tableId: order.table_id, status: 'waiting_payment' });
         } else if (status === 'paid') {
-          await query(`UPDATE restaurant_tables SET status = 'available'::text WHERE id = $1`, [order.table_id]);
+          await query(`UPDATE restaurant_tables SET status = 'available'::text WHERE id = $1 AND restaurant_id = $2`, tableIds);
           req.app.get('io').emit('table_status_updated', { tableId: order.table_id, status: 'available' });
         } else if (status === 'cancelled') {
           const activeOrders = await queryOne(`
-            SELECT COUNT(*) as count FROM orders WHERE table_id = $1 AND order_status NOT IN ('served', 'paid', 'cancelled')
-          `, [order.table_id]);
+            SELECT COUNT(*) as count FROM orders WHERE table_id = $1 AND order_status NOT IN ('served', 'paid', 'cancelled') AND (restaurant_id = $2 OR restaurant_id IS NULL)
+          `, tableIds);
           if (!activeOrders || parseInt(activeOrders.count) === 0) {
-            await query(`UPDATE restaurant_tables SET status = 'available'::text WHERE id = $1`, [order.table_id]);
+            await query(`UPDATE restaurant_tables SET status = 'available'::text WHERE id = $1 AND restaurant_id = $2`, tableIds);
             req.app.get('io').emit('table_status_updated', { tableId: order.table_id, status: 'available' });
           }
         }
@@ -99,15 +100,15 @@ export async function updateOrderStatus(req, res) {
     }
 
     if (status === 'paid') {
-      const existingPay = await queryOne('SELECT id FROM payments WHERE order_id = $1', [orderId]);
+      const existingPay = await queryOne('SELECT id FROM payments WHERE order_id = $1 AND EXISTS (SELECT 1 FROM orders WHERE id = $1 AND (restaurant_id = $2 OR restaurant_id IS NULL))', [orderId, restaurantId]);
       if (existingPay) {
-        const paySql = `UPDATE payments SET status = 'paid'::text WHERE order_id = $1`;
-        console.log('[updateOrderStatus] payment update SQL:', paySql, { params: [orderId] });
-        await query(paySql, [orderId]);
+        const paySql = `UPDATE payments SET status = 'paid'::text WHERE order_id = $1 AND EXISTS (SELECT 1 FROM orders WHERE id = $1 AND (restaurant_id = $2 OR restaurant_id IS NULL))`;
+        console.log('[updateOrderStatus] payment update SQL:', paySql, { params: [orderId, restaurantId] });
+        await query(paySql, [orderId, restaurantId]);
       } else {
-        const paySql = `INSERT INTO payments (order_id, method, amount, status, transaction_reference) VALUES ($1, COALESCE((SELECT payment_method FROM orders WHERE id = $1), 'Cash'), $2, 'paid', 'PAID-' || $1) RETURNING *`;
-        console.log('[updateOrderStatus] payment insert SQL:', paySql, { params: [orderId, Number(order.total_amount) || 0] });
-        await queryOne(paySql, [orderId, Number(order.total_amount) || 0]);
+        const paySql = `INSERT INTO payments (order_id, method, amount, status, transaction_reference) SELECT $1, COALESCE((SELECT payment_method FROM orders WHERE id = $1 AND (restaurant_id = $2 OR restaurant_id IS NULL)), 'Cash'), $3, 'paid', 'PAID-' || $1 WHERE EXISTS (SELECT 1 FROM orders WHERE id = $1 AND (restaurant_id = $2 OR restaurant_id IS NULL)) RETURNING *`;
+        console.log('[updateOrderStatus] payment insert SQL:', paySql, { params: [orderId, restaurantId, Number(order.total_amount) || 0] });
+        await queryOne(paySql, [orderId, restaurantId, Number(order.total_amount) || 0]);
       }
       try {
         req.app.get('io').emit('payment_updated', { orderId, status: 'paid' });

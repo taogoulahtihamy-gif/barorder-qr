@@ -46,7 +46,7 @@ export default function DashboardPage() {
     if (isFetchingRef.current || now - lastFetchAtRef.current < 2000) return;
     isFetchingRef.current = true;
     lastFetchAtRef.current = now;
-    console.log('[REFETCH TRIGGERED] dashboard');
+    if (import.meta.env.DEV) console.log('[REFETCH TRIGGERED] dashboard');
     try {
       const result = await getDashboard();
       if (result) setData(result);

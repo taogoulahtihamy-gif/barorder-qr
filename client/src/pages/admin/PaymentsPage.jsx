@@ -30,7 +30,7 @@ export default function PaymentsPage() {
     if (isFetchingRef.current || now - lastFetchAtRef.current < 2000) return;
     isFetchingRef.current = true;
     lastFetchAtRef.current = now;
-    console.log('[REFETCH TRIGGERED] payments');
+    if (import.meta.env.DEV) console.log('[REFETCH TRIGGERED] payments');
     try {
       const result = await getPayments();
       if (Array.isArray(result)) setPayments(result);

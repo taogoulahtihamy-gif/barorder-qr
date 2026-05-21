@@ -137,7 +137,7 @@ export default function OrdersPage() {
     if (isFetchingRef.current || now - lastFetchAtRef.current < 2000) return;
     isFetchingRef.current = true;
     lastFetchAtRef.current = now;
-    console.log('[REFETCH TRIGGERED] orders');
+    if (import.meta.env.DEV) console.log('[REFETCH TRIGGERED] orders');
     try {
       const result = await getOrders();
       setOrders(Array.isArray(result) ? result : []);

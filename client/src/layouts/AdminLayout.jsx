@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import toast from 'react-hot-toast';
+import ErrorBoundary from '../components/ErrorBoundary';
 import { useApp } from '../context/AppContext';
 import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated, onNewServerCall, onServerCallUpdated } from '../services/socketService';
 import { playNotificationSound, playServerCallSound, sendBrowserNotification, isSoundEnabled, requestSoundPermission } from '../utils/notificationService';
@@ -163,7 +164,7 @@ export default function AdminLayout() {
   };
 
   if (location.pathname === '/admin/login') {
-    return <Outlet />;
+    return <ErrorBoundary><Outlet /></ErrorBoundary>;
   }
 
   const allowedPages = ROLE_PAGES[user?.role] || [];
@@ -387,7 +388,7 @@ export default function AdminLayout() {
         </header>
 
         <div className="flex-1 overflow-auto p-4 lg:p-6 max-w-full w-full safe-area-bottom">
-          <Outlet />
+          <ErrorBoundary><Outlet /></ErrorBoundary>
         </div>
       </main>
     </div>

@@ -20,7 +20,7 @@ export function connectSocket() {
 
     socket.on('connect', () => {
       reconnectAttempts = 0;
-      console.log('[SOCKET CONNECTED]');
+      if (import.meta.env.DEV) console.log('[SOCKET CONNECTED]');
     });
 
     socket.on('connect_error', (err) => {
@@ -55,7 +55,7 @@ export function disconnectSocket() {
 
 function wrapHandler(eventName, handler) {
   return (...args) => {
-    console.log('[SOCKET EVENT RECEIVED]', eventName);
+    if (import.meta.env.DEV) console.log('[SOCKET EVENT RECEIVED]', eventName);
     handler(...args);
   };
 }

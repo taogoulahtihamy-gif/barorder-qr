@@ -28,7 +28,7 @@ export default function ServerCallsPage() {
     if (isFetchingRef.current || now - lastFetchAtRef.current < 2000) return;
     isFetchingRef.current = true;
     lastFetchAtRef.current = now;
-    console.log('[REFETCH TRIGGERED] server-calls');
+    if (import.meta.env.DEV) console.log('[REFETCH TRIGGERED] server-calls');
     try {
       const result = await getServerCalls(filter || undefined);
       setCalls(Array.isArray(result) ? result : []);

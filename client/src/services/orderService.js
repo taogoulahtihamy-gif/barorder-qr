@@ -67,7 +67,7 @@ export async function createOrder(orderData) {
     paymentMethod: orderData.paymentMethod,
     paymentStatus: orderData.paymentStatus || 'pending',
   };
-  console.log('[orderService] createOrder payload:', JSON.stringify(payload));
+  if (import.meta.env.DEV) console.log('[orderService] createOrder payload:', JSON.stringify(payload));
   const { data } = await api.post('/api/public/orders', payload);
   return mapOrder(data);
 }

@@ -9,7 +9,7 @@ import api from '../../services/api';
 
 export default function TableWelcome() {
   const { slug: slugParam, tableId } = useParams();
-  console.log('[CUSTOMER PARAMS]', { slug: slugParam, tableId });
+  if (import.meta.env.DEV) console.log('[CUSTOMER PARAMS]', { slug: slugParam, tableId });
   const navigate = useNavigate();
   const { t, setTableId, setRestaurantId, setRestaurantSlug, setRestaurant, cartCount, restaurant } = useApp();
   const [loading, setLoading] = useState(true);
@@ -41,7 +41,7 @@ export default function TableWelcome() {
       try {
         const restRes = await api.get(`/api/public/restaurant/${slugParam}`);
         const restaurantData = restRes.data;
-        console.log('[CUSTOMER RESTAURANT]', restaurantData);
+        if (import.meta.env.DEV) console.log('[CUSTOMER RESTAURANT]', restaurantData);
         setRestaurant(restaurantData);
         setRestaurantId(restaurantData?.id || '1');
         setRestaurantSlug(restaurantData?.slug || slugParam);
