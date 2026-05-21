@@ -552,6 +552,7 @@ export const fr = {
   'Enable notifications': 'Enable notifications',
   'Enable sound': 'Activer le son',
   "Tap to enable sound": "Touchez l'écran pour activer le son",
+  'Track my order': 'Suivre ma commande',
 };
 
 export const en = {
@@ -1108,6 +1109,7 @@ export const en = {
   'Enable notifications': 'Enable notifications',
   'Enable sound': 'Enable sound',
   "Tap to enable sound": 'Tap to enable sound',
+  'Track my order': 'Track my order',
 };
 
 export function tStatus(status, lang) {

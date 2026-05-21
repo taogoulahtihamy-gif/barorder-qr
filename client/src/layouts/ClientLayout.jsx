@@ -1,6 +1,7 @@
 import { Phone, Globe } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import ActiveOrderButton from '../components/customer/ActiveOrderButton';
 
 const MONOGRAM_CACHE = {};
 
@@ -43,6 +44,7 @@ export default function ClientLayout({ children }) {
         </div>
       </header>
       <main className="flex-1 pb-safe overflow-x-hidden max-w-full">{children}</main>
+      <ActiveOrderButton />
     </div>
   );
 }

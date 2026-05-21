@@ -37,6 +37,9 @@ export function initCustomerOrderTracking(t) {
 
     const status = data?.order_status || data?.status || '';
     notifyCustomerOrderStatus({ orderNumber: orderNum, status }, t);
+
+    localStorage.setItem('activeOrderStatus', status);
+    try { window.dispatchEvent(new CustomEvent('order-status-changed')); } catch {}
   });
 }
 

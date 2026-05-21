@@ -132,6 +132,8 @@ export default function CheckoutPage() {
         localStorage.setItem('activeOrderId', orderId);
         localStorage.setItem('activeRestaurantSlug', slug || '');
         localStorage.setItem('activeTableId', safeTableId || tableId || '');
+        localStorage.setItem('activeOrderNumber', order.orderNumber || order.id || '');
+        localStorage.setItem('activeOrderStatus', 'new');
         if (slug) {
           navigate(`/r/${slug}/order/${order.orderNumber || order.id}`);
         } else {

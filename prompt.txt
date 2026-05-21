@@ -1,327 +1,172 @@
-Implement professional real-time notifications for BarOrder.
+Implement persistent active order tracking button for customers.
 
 Goal:
-Improve notifications for both customer and admin/staff.
+Allow customer to return to their current order tracking page from anywhere in the client app.
 
 Do NOT break:
-- orders
-- kitchen
+- QR flow
+- cart
 - checkout
-- QR table flow
-- roles
-- restaurants
-- socket sync
-- build
+- realtime notifications
+- restaurant routing
+- multilingual system
 
 ==================================================
-1. CUSTOMER ORDER STATUS NOTIFICATIONS
+1. ACTIVE ORDER STORAGE
 ==================================================
 
-When a customer places an order, they must receive status notifications for:
+When an order is successfully created:
 
-- order accepted
-- order preparing
-- order ready
-- order served
-- order paid
-- order cancelled
+Save in localStorage:
+- activeOrderId
+- activeRestaurantSlug
+- activeTableId
+- activeOrderNumber
+- activeOrderStatus
 
-Customer must be notified even if they are not currently on the order tracking page, as long as:
-- the site tab is still open
-- or the PWA/browser allows notifications
+Example:
+{
+  id,
+  order_number,
+  restaurant_slug,
+  table_id,
+  status
+}
 
-Implement:
-- browser notification permission request
-- sound notification
-- vibration on mobile
-- toast inside app
-- localStorage persistence of active orderId
+==================================================
+2. GLOBAL ACTIVE ORDER BUTTON
+==================================================
+
+Create floating persistent button component:
+
+client/src/components/customer/ActiveOrderButton.jsx
+
+Behavior:
+- visible on all customer pages
+- only visible if active order exists
+- hidden if order status:
+  - paid
+  - cancelled
+  - completed
+
+Position:
+- bottom right mobile
+- bottom right desktop
+
+Style:
+- premium floating pill
+- dark glassmorphism
+- gold/emerald accent
+- animated pulse when order updates
+
+Content:
+FR:
+- Suivre ma commande
+
+EN:
+- Track my order
+
+Show:
+- order number
+- current status badge
+
+==================================================
+3. BUTTON ACTION
+==================================================
+
+On click:
+navigate to:
+- /orders/:orderId
+
+OR existing tracking route.
+
+==================================================
+4. AUTO CLEANUP
+==================================================
+
+If order becomes:
+- paid
+- cancelled
+- completed
+
+Then:
+- remove active order from localStorage
+- hide floating button
+
+==================================================
+5. REALTIME SYNC
+==================================================
+
+When socket receives order status update:
+- update localStorage activeOrderStatus
+- update floating button badge in realtime
+- animate button softly
+
+==================================================
+6. CUSTOMER EXPERIENCE
+==================================================
+
+Customer flow:
+
+1. Scan QR
+2. Add cart
+3. Checkout
+4. Leave tracking page
+5. Browse menu or another page
+6. Floating button still visible
+7. Tap button
+8. Return instantly to tracking page
+
+==================================================
+7. OPTIONAL MINI PANEL
+==================================================
+
+On hover/click:
+show mini popup:
+- Order number
+- Current status
+- Total amount
+- Estimated time
+
+==================================================
+8. STATUS COLORS
+==================================================
+
+Nouvelle:
+- gray
+
+Acceptée:
+- blue
+
+Préparation:
+- orange
+
+Prête:
+- emerald
+
+Servie:
+- green
+
+Payée:
+- gold
+
+Annulée:
+- red
+
+==================================================
+9. MOBILE SAFE AREA
+==================================================
+
+Must not overlap:
+- bottom navbar
+- iPhone safe area
+- browser navigation bar
 
 Use:
-navigator.vibrate([200, 100, 200]) if available.
-
-If vibration is not supported:
-- fail silently
-- do not crash
+padding-bottom env(safe-area-inset-bottom)
 
 ==================================================
-2. CUSTOMER ACTIVE ORDER TRACKING
-==================================================
-
-After checkout:
-- save active order in localStorage:
-  activeOrderId
-  activeRestaurantSlug
-  activeTableId
-
-On app load:
-- if active order exists, listen for its status updates
-- show notification if status changes
-
-This must work even if customer is on:
-- menu
-- cart
-- welcome page
-- assistance page
-
-==================================================
-3. BROWSER/PWA NOTIFICATIONS
-==================================================
-
-Create notification helper:
-client/src/services/notificationService.js
-
-Functions:
-- requestNotificationPermission()
-- notifyCustomerOrderStatus(order)
-- notifyAdminNewOrder(order)
-- notifyKitchenOrder(order)
-- playNotificationSound()
-- vibrateDevice()
-- showToast()
-
-Rules:
-- request permission after user interaction, not automatically on first load
-- show small prompt/button if permission not granted:
-  FR: Activer les notifications
-  EN: Enable notifications
-
-==================================================
-4. STAFF/ADMIN REAL-TIME NOTIFICATIONS
-==================================================
-
-Admin/staff must receive realtime notifications for:
-
-A. New order
-Roles:
-- admin
-- manager
-- kitchen
-- waiter
-
-Notify:
-- toast
-- sound
-- bell badge
-- optional browser notification
-
-B. Order accepted
-Roles:
-- waiter
-- admin
-- manager
-
-C. Order ready
-Roles:
-- waiter
-- admin
-- manager
-
-D. Server call created
-Roles:
-- waiter
-- admin
-- manager
-
-E. Payment updated
-Roles:
-- cashier
-- admin
-- manager
-
-==================================================
-5. SOCKET EVENTS
-==================================================
-
-Backend must emit:
-
-Order created:
-- new_order
-
-Order status updated:
-- order_status_updated
-
-Server call created:
-- server_call_created
-
-Server call updated:
-- server_call_updated
-
-Payment updated:
-- payment_updated
-
-Payload must include:
-- order id
-- order_number
-- status
-- table_id
-- restaurant_id
-- customer_name
-- total_amount
-
-==================================================
-6. FRONTEND SOCKET LISTENERS
-==================================================
-
-Create centralized realtime listener:
-client/src/services/realtimeNotificationService.js
-
-It should:
-- connect once
-- avoid duplicate listeners
-- cleanup properly
-- route notifications by role and restaurant_id
-- ignore unrelated restaurants
-- ignore repeated duplicate events
-
-Deduplication:
-- keep last notified event id in memory/localStorage
-- do not play sound twice for same event
-
-==================================================
-7. SOUND
-==================================================
-
-Use existing sound if available.
-If not, add lightweight default sound:
-client/src/assets/sounds/new-order.mp3
-
-Rules:
-- sound must play only after user has interacted with page
-- if browser blocks autoplay, show toast:
-  FR: Touchez l’écran pour activer le son
-  EN: Tap to enable sound
-
-Add “Activer le son” / “Enable sound” button in admin header if needed.
-
-==================================================
-8. VIBRATION
-==================================================
-
-On mobile:
-- new customer status notification => vibrate
-- new admin/staff order notification => vibrate if supported
-- server call => vibrate
-
-Use safe check:
-if ("vibrate" in navigator) navigator.vibrate([200, 100, 200]);
-
-Do not crash on iPhone if vibration unsupported.
-
-==================================================
-9. NOTIFICATION CENTER
-==================================================
-
-Improve bell icon:
-- show unread count
-- dropdown list of latest notifications
-- mark as read
-- clear all
-
-Notification items:
-- New order
-- Order accepted
-- Order ready
-- Server call
-- Payment update
-
-Persist latest 20 notifications in localStorage.
-
-==================================================
-10. CUSTOMER MESSAGES
-==================================================
-
-FR:
-- Votre commande a été acceptée
-- Votre commande est en préparation
-- Votre commande est prête
-- Votre commande a été servie
-- Paiement confirmé
-- Votre commande a été annulée
-
-EN:
-- Your order has been accepted
-- Your order is being prepared
-- Your order is ready
-- Your order has been served
-- Payment confirmed
-- Your order has been cancelled
-
-==================================================
-11. ADMIN MESSAGES
-==================================================
-
-FR:
-- Nouvelle commande reçue
-- Commande acceptée
-- Commande prête
-- Appel serveur reçu
-- Paiement confirmé
-
-EN:
-- New order received
-- Order accepted
-- Order ready
-- Server call received
-- Payment confirmed
-
-==================================================
-12. BILINGUAL
-==================================================
-
-All notification labels/messages must use existing i18n.
-No hardcoded visible text.
-
-==================================================
-13. SAFETY
-==================================================
-
-Do not create multiple sockets.
-Do not create infinite refetch loops.
-Do not trigger print.
-Do not block checkout.
-Do not crash if notification permission denied.
-
-==================================================
-14. ACCEPTANCE TESTS
-==================================================
-
-Test customer:
-1. Open /r/le-palais/table/3
-2. Enable notifications/sound
-3. Create order
-4. Go back to menu or another client page
-5. Admin accepts order
-Expected:
-- customer receives toast/browser notification if allowed
-- sound plays if enabled
-- vibration fires if supported
-
-6. Admin marks ready
-Expected:
-- customer receives “Commande prête”
-
-Test admin:
-1. Open /admin/orders
-2. Create order from client
-Expected:
-- admin hears sound
-- bell badge updates
-- toast appears
-
-Test kitchen:
-1. New order arrives
-Expected:
-- kitchen notification appears
-- sound/vibration if enabled
-
-Test server call:
-1. Client clicks Appeler serveur
-Expected:
-- waiter/admin notification within 1–2 seconds
-
-==================================================
-15. BUILD AND PUSH
+10. BUILD VALIDATION
 ==================================================
 
 Run:
@@ -329,12 +174,12 @@ npm run build
 
 Then:
 git add .
-git commit -m "Add realtime sound vibration and notification center"
+git commit -m "Add persistent active order floating tracker"
 git push origin main
 
 Final output must include:
-- files modified
-- events handled
-- notification permission behavior
-- sound/vibration behavior
+- files created
+- localStorage structure
+- visibility logic
+- cleanup logic
 - build result
