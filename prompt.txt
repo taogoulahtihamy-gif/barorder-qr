@@ -1,109 +1,81 @@
-URGENT FIX customer QR table welcome branding and tableId display.
+URGENT FIX QR scan customer welcome error.
 
-Current problem:
-Restaurant creation works and saves.
-But when opening QR route on mobile:
- /r/:slug/table/:tableId
+Current state:
+- Header correctly shows Le Palais and logo.
+- But when scanning QR route /r/le-palais/table/:tableId, page shows:
+“Une erreur est survenue”
+- So restaurant loading works, but customer table welcome content crashes.
 
-The page still shows:
-- generic “BarOrder”
-- generic QR icon
-- “Table :tableId”
-- no restaurant logo
-- no real restaurant name
+Fix only customer QR table welcome page.
 
-Fix only customer QR/table welcome page and related data loading.
-
-Do NOT modify:
-- admin restaurant creation
-- restaurant CRUD
+Do NOT touch:
+- admin
+- restaurants CRUD
 - orders
 - kitchen
 - users
 - roles
-- payments
 
-1. Fix route params
-In customer route /r/:slug/table/:tableId:
-- read slug from useParams()
-- read tableId from useParams()
-- never display literal string ":tableId"
-- show actual tableId value
+Tasks:
 
-Expected:
+1. Inspect customer table route:
+- /r/:slug/table/:tableId
+- TableWelcome
+- CustomerWelcome
+- CustomerLayout
+- restaurant loading hook
+- table loading hook
+- server call button
+
+2. Find crash source:
+Search for unsafe access:
+- table.id
+- table.number
+- restaurant.logo_url
+- restaurant.primary_color
+- restaurant.name
+- t(...)
+- tStatus(...)
+- useParams tableId
+- Number(tableId)
+- tableId.map or undefined.map
+
+3. Add safe fallbacks:
+- if restaurant exists but table is not fetched, use tableId from route
+- show “Table 3” from params
+- do not crash if table object is null
+- do not require table database record to render welcome page
+
+4. Correct table display:
+Never display literal “:tableId”.
+Always display:
 FR: Table 3
 EN: Table 3
 
-2. Fix restaurant data loading
-On /r/:slug/table/:tableId:
-- fetch restaurant by slug
-- use returned restaurant.name
-- use returned restaurant.logo_url
-- use returned restaurant.primary_color
-
-If restaurant loading:
-show premium loader.
-
-If restaurant not found:
-show clean error.
-
-3. Replace generic BarOrder
-If restaurant data exists:
-- header title = restaurant.name
-- hero title = restaurant.name
-- logo = restaurant.logo_url
-
-Only use “BarOrder” fallback when restaurant data is missing.
-
-4. Logo display
-If logo_url exists:
-- display actual logo image
-- rounded-xl or rounded-full
-- object-cover / object-contain
-- no broken image icon
-
-If logo_url missing:
-- show fallback monogram from restaurant initials
-- not generic QR icon
-
-5. Fix top header
-Top left should show restaurant name, not BarOrder, when restaurant is loaded.
-
-6. Fix buttons routing
-“Voir le menu” must go to:
+5. Button routing:
+Voir le menu must navigate to:
  /r/:slug/table/:tableId/menu
 
-Keep tableId and slug.
+Appeler un serveur must use same slug/tableId.
 
-“Appeler un serveur” must use same slug/tableId.
+6. If table does not exist in database:
+show clean message:
+“Cette table n’existe pas”
+But do not crash.
 
-7. Bilingual
-Use i18n:
-FR:
-- Voir le menu
-- Appeler un serveur
-- Table
-EN:
-- View menu
-- Call a server
-- Table
+7. Add console error detail in development only:
+console.error("[CUSTOMER WELCOME ERROR]", error)
 
-8. Debug
-Add temporary console logs only in development:
-console.log("[CUSTOMER PARAMS]", { slug, tableId })
-console.log("[CUSTOMER RESTAURANT]", restaurant)
-
-Remove production noisy logs.
-
-9. Build and push
+8. Build and push:
 npm run build
 git add .
-git commit -m "Fix customer QR branding and table id display"
+git commit -m "Fix QR table welcome crash"
 git push origin main
 
 Acceptance:
-- /r/le-palais/table/3 displays Le Palais
-- displays real logo if saved
-- displays Table 3, not Table :tableId
-- menu button opens correct table menu
-- no generic BarOrder when restaurant is loaded
+- scanning QR opens welcome page
+- Le Palais logo/name visible
+- Table number visible
+- no error screen
+- Voir le menu works
+- Appeler serveur works

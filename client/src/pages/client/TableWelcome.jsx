@@ -58,6 +58,7 @@ export default function TableWelcome() {
         setTimeout(() => setVisible(true), 50);
       } catch (restErr) {
         console.warn('[TableWelcome] restaurant fetch failed:', restErr.message);
+        console.error('[CUSTOMER WELCOME ERROR]', restErr);
         setRestaurantId('1');
         setRestaurantSlug(slugParam || '');
         setData({ table: null, restaurant: null });
@@ -138,7 +139,7 @@ export default function TableWelcome() {
             {t('Bienvenue chez')} {restaurantName}
           </h1>
           <p className="text-xl sm:text-2xl font-medium" style={{ color: primaryColor }}>
-            {t('Table')} <span className="text-white">{tableName}</span>
+            {t('Table')} <span className="text-white">{tableDisplay}</span>
           </p>
         </div>
 

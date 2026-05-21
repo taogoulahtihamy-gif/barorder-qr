@@ -534,6 +534,7 @@ export const fr = {
   'Bienvenue chez': 'Bienvenue chez',
   'Importer logo': 'Importer logo',
   'Table introuvable': 'Table introuvable',
+  'Restaurant introuvable': 'Restaurant introuvable',
 };
 
 export const en = {
@@ -1072,6 +1073,7 @@ export const en = {
   'Bienvenue chez': 'Welcome to',
   'Importer logo': 'Upload logo',
   'Table introuvable': 'Table not found',
+  'Restaurant introuvable': 'Restaurant not found',
 };
 
 export function tStatus(status, lang) {
