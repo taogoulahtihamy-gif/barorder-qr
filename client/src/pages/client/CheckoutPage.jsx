@@ -134,6 +134,7 @@ export default function CheckoutPage() {
         localStorage.setItem('activeTableId', safeTableId || tableId || '');
         localStorage.setItem('activeOrderNumber', order.orderNumber || order.id || '');
         localStorage.setItem('activeOrderStatus', 'new');
+        localStorage.setItem('activeOrderTotal', String(order.totalAmount || order.total_amount || total || ''));
         if (slug) {
           navigate(`/r/${slug}/order/${order.orderNumber || order.id}`);
         } else {

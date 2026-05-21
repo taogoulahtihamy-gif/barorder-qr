@@ -11,10 +11,11 @@ const STATUS_COLORS = {
   ready: { dot: 'bg-emerald-500', text: 'text-emerald-400', bg: 'bg-emerald-500/10' },
   served: { dot: 'bg-green-500', text: 'text-green-400', bg: 'bg-green-500/10' },
   paid: { dot: 'bg-yellow-500', text: 'text-yellow-400', bg: 'bg-yellow-500/10' },
+  completed: { dot: 'bg-zinc-500', text: 'text-zinc-400', bg: 'bg-zinc-500/10' },
   cancelled: { dot: 'bg-red-500', text: 'text-red-400', bg: 'bg-red-500/10' },
 };
 
-const TERMINAL_STATUSES = ['paid', 'cancelled'];
+const TERMINAL_STATUSES = ['paid', 'cancelled', 'completed'];
 
 function loadActive() {
   try {
@@ -26,6 +27,7 @@ function loadActive() {
       slug: localStorage.getItem('activeRestaurantSlug') || '',
       tableId: localStorage.getItem('activeTableId') || '',
       status: localStorage.getItem('activeOrderStatus') || 'new',
+      total: localStorage.getItem('activeOrderTotal') || '',
     };
   } catch { return null; }
 }
@@ -44,6 +46,7 @@ export default function ActiveOrderButton() {
     localStorage.removeItem('activeRestaurantSlug');
     localStorage.removeItem('activeTableId');
     localStorage.removeItem('activeOrderStatus');
+    localStorage.removeItem('activeOrderTotal');
     setActive(null);
     setOpen(false);
   }, []);
@@ -109,6 +112,12 @@ export default function ActiveOrderButton() {
                 <span className="text-sm text-white/60">#{active.number}</span>
                 <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${colors.bg} ${colors.text}`}>
                   {tStatus(active.status)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-white/60">{t('Total')}</span>
+                <span className="text-white font-medium">
+                  {active.total ? `${Number(active.total).toLocaleString()} FCFA` : '---'}
                 </span>
               </div>
               <div className="flex items-center gap-1.5 text-xs text-white/30">
