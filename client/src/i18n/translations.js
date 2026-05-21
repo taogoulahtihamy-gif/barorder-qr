@@ -535,6 +535,23 @@ export const fr = {
   'Importer logo': 'Importer logo',
   'Table introuvable': 'Table introuvable',
   'Restaurant introuvable': 'Restaurant introuvable',
+
+  'order.accepted': 'Votre commande a été acceptée',
+  'order.preparing': 'Votre commande est en préparation',
+  'order.ready': 'Votre commande est prête',
+  'order.served': 'Votre commande a été servie',
+  'order.paid': 'Paiement confirmé',
+  'order.cancelled': 'Votre commande a été annulée',
+
+  'Nouvelle commande reçue': 'Nouvelle commande reçue',
+  'Commande acceptée': 'Commande acceptée',
+  'Appel serveur reçu': 'Appel serveur reçu',
+  'Paiement confirmé': 'Paiement confirmé',
+
+  'Activer les notifications': 'Activer les notifications',
+  'Enable notifications': 'Enable notifications',
+  'Enable sound': 'Activer le son',
+  "Tap to enable sound": "Touchez l'écran pour activer le son",
 };
 
 export const en = {
@@ -1074,6 +1091,23 @@ export const en = {
   'Importer logo': 'Upload logo',
   'Table introuvable': 'Table not found',
   'Restaurant introuvable': 'Restaurant not found',
+
+  'order.accepted': 'Your order has been accepted',
+  'order.preparing': 'Your order is being prepared',
+  'order.ready': 'Your order is ready',
+  'order.served': 'Your order has been served',
+  'order.paid': 'Payment confirmed',
+  'order.cancelled': 'Your order has been cancelled',
+
+  'Nouvelle commande reçue': 'New order received',
+  'Commande acceptée': 'Order accepted',
+  'Appel serveur reçu': 'Server call received',
+  'Paiement confirmé': 'Payment confirmed',
+
+  'Activer les notifications': 'Enable notifications',
+  'Enable notifications': 'Enable notifications',
+  'Enable sound': 'Enable sound',
+  "Tap to enable sound": 'Tap to enable sound',
 };
 
 export function tStatus(status, lang) {

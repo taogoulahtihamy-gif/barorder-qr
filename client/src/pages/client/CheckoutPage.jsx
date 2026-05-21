@@ -7,7 +7,7 @@ import Button from '../../components/Button';
 import Card from '../../components/Card';
 import { formatPrice } from '../../utils/formatters';
 import { createOrder } from '../../services/orderService';
-import { playNewOrderSound } from '../../services/notificationService';
+import { playNewOrderSound } from '../../utils/notificationService';
 
 const PAYMENT_EXPIRY = 5 * 60 * 1000;
 
@@ -124,10 +124,14 @@ export default function CheckoutPage() {
 
       setTimeout(() => {
         const slug = order.restaurantSlug || restaurantSlug;
+        const orderId = order.orderNumber || order.id;
         localStorage.setItem('lastOrder', JSON.stringify({
-          orderNumber: order.orderNumber || order.id,
+          orderNumber: orderId,
           slug: slug || '',
         }));
+        localStorage.setItem('activeOrderId', orderId);
+        localStorage.setItem('activeRestaurantSlug', slug || '');
+        localStorage.setItem('activeTableId', safeTableId || tableId || '');
         if (slug) {
           navigate(`/r/${slug}/order/${order.orderNumber || order.id}`);
         } else {

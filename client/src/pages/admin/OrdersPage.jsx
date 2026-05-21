@@ -12,7 +12,7 @@ import { getOrders, updateOrderStatus, mapOrder } from '../../services/adminServ
 import { connectSocket, onNewOrder, onOrderStatusUpdated, onPaymentUpdated } from '../../services/socketService';
 import { formatCurrency } from '../../utils/formatters';
 import { printKitchenTicket, printCustomerReceipt, printCashierInvoice } from '../../utils/printService';
-import { playNewOrderSound, vibrateIfSupported } from '../../services/notificationService';
+import { playNewOrderSound, vibrateIfSupported } from '../../utils/notificationService';
 
 const statusActions = {
   new: ['accepted', 'cancelled'],
