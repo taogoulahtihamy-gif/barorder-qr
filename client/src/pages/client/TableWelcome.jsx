@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowRight, Phone, MapPin, Clock, ChefHat, ShoppingBag, Bell } from 'lucide-react';
+import { ArrowRight, Phone, MapPin, ShoppingBag, Bell } from 'lucide-react';
 import Card from '../../components/Card';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import BottomNav from '../../components/BottomNav';
@@ -9,10 +9,12 @@ import api from '../../services/api';
 
 export default function TableWelcome() {
   const { slug: slugParam, tableId } = useParams();
+  console.log('[CUSTOMER PARAMS]', { slug: slugParam, tableId });
   const navigate = useNavigate();
-  const { t, setTableId, setRestaurantId, setRestaurantSlug, setRestaurant, cartCount } = useApp();
+  const { t, setTableId, setRestaurantId, setRestaurantSlug, setRestaurant, cartCount, restaurant } = useApp();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
+  const [fetched, setFetched] = useState(false);
   const [visible, setVisible] = useState(false);
 
   const recentOrder = (() => {
@@ -27,25 +29,58 @@ export default function TableWelcome() {
   })();
 
   useEffect(() => {
-    if (!tableId || isNaN(Number(tableId))) return;
+    if (!slugParam || !tableId || isNaN(Number(tableId))) {
+      setLoading(false);
+      setFetched(true);
+      return;
+    }
     const tid = Number(tableId);
     setTableId(tid);
-    api.get(`/api/public/table/${tid}`).then((res) => {
-      const { table, restaurant } = res.data;
-      setData({ table, restaurant });
-      setRestaurant(restaurant);
-      setRestaurantId(restaurant?.id || '1');
-      setRestaurantSlug(restaurant?.slug || slugParam || '');
-      setLoading(false);
-      setTimeout(() => setVisible(true), 50);
-    }).catch(() => {
-      setRestaurantId('1');
-      setRestaurantSlug(slugParam || '');
-      setLoading(false);
-      setTimeout(() => setVisible(true), 50);
-    });
+
+    async function loadData() {
+      try {
+        const restRes = await api.get(`/api/public/restaurant/${slugParam}`);
+        const restaurantData = restRes.data;
+        console.log('[CUSTOMER RESTAURANT]', restaurantData);
+        setRestaurant(restaurantData);
+        setRestaurantId(restaurantData?.id || '1');
+        setRestaurantSlug(restaurantData?.slug || slugParam);
+        let tableData = null;
+        try {
+          const tableRes = await api.get(`/api/public/table/${tid}`);
+          tableData = tableRes.data?.table || null;
+        } catch (tableErr) {
+          console.warn('[TableWelcome] table fetch failed:', tableErr.message);
+        }
+        setData({ table: tableData, restaurant: restaurantData });
+        setFetched(true);
+        setLoading(false);
+        setTimeout(() => setVisible(true), 50);
+      } catch (restErr) {
+        console.warn('[TableWelcome] restaurant fetch failed:', restErr.message);
+        setRestaurantId('1');
+        setRestaurantSlug(slugParam || '');
+        setData({ table: null, restaurant: null });
+        setFetched(true);
+        setLoading(false);
+        setTimeout(() => setVisible(true), 50);
+      }
+    }
+    loadData();
   }, [tableId, slugParam, setTableId, setRestaurantId, setRestaurantSlug, setRestaurant]);
 
+  if (!slugParam) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center mb-6 mx-auto">
+            <span className="text-red-400 text-3xl">!</span>
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">{t('Restaurant introuvable')}</h2>
+        </div>
+      </div>
+    );
+  }
   if (!tableId || isNaN(Number(tableId))) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-4">
@@ -54,20 +89,20 @@ export default function TableWelcome() {
             <span className="text-red-400 text-3xl">!</span>
           </div>
           <h2 className="text-xl font-bold text-white mb-2">{t('Table introuvable')}</h2>
-          <p className="text-white/50">{t('Table not found')}</p>
         </div>
       </div>
     );
   }
-  if (loading || !data?.table) return <LoadingSpinner size="lg" />;
+  if (loading) return <LoadingSpinner size="lg" />;
 
-  const restaurantName = data?.restaurant?.name || 'BarOrder';
-  const tableName = data?.table?.table_number || tableId;
-  const slug = data?.restaurant?.slug || slugParam;
-  const logoUrl = data?.restaurant?.logo_url || '';
-  const primaryColor = data?.restaurant?.primary_color || '#D4AF37';
-  const phone = data?.restaurant?.phone || '';
-  const address = data?.restaurant?.address || '';
+  const currentRestaurant = data?.restaurant || restaurant || {};
+  const restaurantName = currentRestaurant.name || 'BarOrder';
+  const tableDisplay = data?.table?.table_number != null ? data.table.table_number : tableId;
+  const slug = currentRestaurant.slug || slugParam;
+  const logoUrl = currentRestaurant.logo_url || '';
+  const primaryColor = currentRestaurant.primary_color || '#D4AF37';
+  const phone = currentRestaurant.phone || '';
+  const address = currentRestaurant.address || '';
   const base = slug && tableId ? `/r/${slug}/table/${tableId}` : '';
   const monogram = restaurantName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
 

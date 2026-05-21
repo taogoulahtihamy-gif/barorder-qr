@@ -1,194 +1,109 @@
-URGENT FIX multi-restaurant bugs and restore premium client welcome page.
+URGENT FIX customer QR table welcome branding and tableId display.
 
-Problems:
-1. Customer welcome page is degraded:
-- no real restaurant logo
-- shows generic BarOrder
-- shows “Table :tableId”
-- design is worse than before
+Current problem:
+Restaurant creation works and saves.
+But when opening QR route on mobile:
+ /r/:slug/table/:tableId
 
-2. Creating restaurant fails:
-column "is_active" of relation "restaurants" does not exist
+The page still shows:
+- generic “BarOrder”
+- generic QR icon
+- “Table :tableId”
+- no restaurant logo
+- no real restaurant name
 
-3. Add restaurant form has only logo URL.
-Need an “Importer logo” button like admin settings.
+Fix only customer QR/table welcome page and related data loading.
 
-Do NOT break:
-- existing Le Palais data
-- QR routes
-- admin login
+Do NOT modify:
+- admin restaurant creation
+- restaurant CRUD
 - orders
 - kitchen
 - users
 - roles
-- products
-- menu
-- checkout
+- payments
 
-==================================================
-1. FIX DATABASE RESTAURANTS COLUMN
-==================================================
+1. Fix route params
+In customer route /r/:slug/table/:tableId:
+- read slug from useParams()
+- read tableId from useParams()
+- never display literal string ":tableId"
+- show actual tableId value
 
-Add safe migration on backend startup or migration file:
-
-ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
-ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS logo_url TEXT;
-ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS primary_color TEXT DEFAULT '#d4a843';
-ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'FCFA';
-ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS address TEXT;
-ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS phone TEXT;
-
-Do not drop data.
-
-Ensure restaurant CRUD uses is_active only after column exists.
-
-==================================================
-2. RESTORE PREMIUM CLIENT WELCOME PAGE
-==================================================
-
-For route:
-/r/:slug/table/:tableId
-
-It must show:
-- real restaurant name from backend
-- real restaurant logo if logo_url exists
-- table number from route param
-- not “Table :tableId”
-- not generic BarOrder unless restaurant not loaded
-
-Correct display:
-FR: Bienvenue chez Le Palais
-EN: Welcome to Le Palais
-
+Expected:
 FR: Table 3
 EN: Table 3
 
-Buttons:
-FR: Voir le menu
-EN: View menu
+2. Fix restaurant data loading
+On /r/:slug/table/:tableId:
+- fetch restaurant by slug
+- use returned restaurant.name
+- use returned restaurant.logo_url
+- use returned restaurant.primary_color
 
-FR: Appeler un serveur
-EN: Call a server
+If restaurant loading:
+show premium loader.
 
-Use restaurant.primary_color if available.
-Use restaurant.logo_url if available.
+If restaurant not found:
+show clean error.
 
-If logo is missing:
-- show premium fallback monogram using first letters of restaurant name
-- not generic QR icon only
+3. Replace generic BarOrder
+If restaurant data exists:
+- header title = restaurant.name
+- hero title = restaurant.name
+- logo = restaurant.logo_url
 
-==================================================
-3. FIX ROUTE PARAM TABLE ID
-==================================================
+Only use “BarOrder” fallback when restaurant data is missing.
 
-Find where “Table :tableId” is displayed.
-Fix:
-- use params.tableId value
-- not literal string ":tableId"
+4. Logo display
+If logo_url exists:
+- display actual logo image
+- rounded-xl or rounded-full
+- object-cover / object-contain
+- no broken image icon
 
-If tableId missing:
-show clean error:
-FR: Table introuvable
-EN: Table not found
+If logo_url missing:
+- show fallback monogram from restaurant initials
+- not generic QR icon
 
-==================================================
-4. RESTAURANT LOGO UPLOAD
-==================================================
+5. Fix top header
+Top left should show restaurant name, not BarOrder, when restaurant is loaded.
 
-In /admin/restaurants add/edit modal:
-Add button:
-FR: Importer logo
-EN: Upload logo
+6. Fix buttons routing
+“Voir le menu” must go to:
+ /r/:slug/table/:tableId/menu
 
-Like admin settings.
+Keep tableId and slug.
 
-Options:
-- file input accept image/png,image/jpeg,image/webp
-- preview uploaded logo
-- store logo URL in logo_url
+“Appeler un serveur” must use same slug/tableId.
 
-If project already has upload service/storage:
-reuse it.
+7. Bilingual
+Use i18n:
+FR:
+- Voir le menu
+- Appeler un serveur
+- Table
+EN:
+- View menu
+- Call a server
+- Table
 
-If no upload backend exists:
-implement base64/local preview only OR create simple backend upload endpoint:
-POST /api/admin/uploads/logo
+8. Debug
+Add temporary console logs only in development:
+console.log("[CUSTOMER PARAMS]", { slug, tableId })
+console.log("[CUSTOMER RESTAURANT]", restaurant)
 
-Return:
-{ url: "..." }
+Remove production noisy logs.
 
-But do not break if upload service unavailable.
-Keep manual logo_url input as fallback.
-
-==================================================
-5. RESTAURANT FORM UX
-==================================================
-
-Restaurant modal must include:
-- Nom
-- Slug
-- Adresse
-- Téléphone
-- Devise
-- Couleur principale
-- Logo URL
-- Importer logo
-- Preview logo
-- Actif/Inactif toggle
-
-Creating restaurant must work without error.
-
-==================================================
-6. PUBLIC /RESTAURANTS PAGE
-==================================================
-
-Restaurant cards must show:
-- logo
-- name
-- address
-- phone
-- active status
-- button Voir le menu
-
-Use logo_url if present.
-
-==================================================
-7. CLIENT BRANDING EVERYWHERE
-==================================================
-
-Use restaurant branding on:
-- welcome page
-- menu page header
-- cart page header
-- checkout page
-- order tracking
-
-Do not show generic BarOrder if restaurant data is loaded.
-
-==================================================
-8. BILINGUAL
-==================================================
-
-All new labels use i18n FR/EN.
-No hardcoded visible text.
-
-==================================================
-9. BUILD AND PUSH
-==================================================
-
-Run:
+9. Build and push
 npm run build
-
-Then:
 git add .
-git commit -m "Fix restaurant creation logo upload and client branding"
+git commit -m "Fix customer QR branding and table id display"
 git push origin main
 
 Acceptance:
-- create restaurant works, no is_active error
-- add restaurant modal has Importer logo button
-- logo preview works
-- /r/le-palais/table/3 shows Le Palais logo/name
-- table shows “Table 3”, not “Table :tableId”
-- client welcome page looks premium again
-- BarOrder generic only appears as fallback
+- /r/le-palais/table/3 displays Le Palais
+- displays real logo if saved
+- displays Table 3, not Table :tableId
+- menu button opens correct table menu
+- no generic BarOrder when restaurant is loaded
